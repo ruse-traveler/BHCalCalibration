@@ -1,4 +1,4 @@
-// 'JCalibrateHCal.h'
+// 'JCalibrateHCalProcessor.h'
 // Derek Anderson
 // 11.02.2022
 //

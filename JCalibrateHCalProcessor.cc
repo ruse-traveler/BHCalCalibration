@@ -1,4 +1,4 @@
-// 'JCalibrateHCal.cc'
+// 'JCalibrateHCalProcessor.cc'
 // Derek Anderson
 // 11.02.2022
 //
