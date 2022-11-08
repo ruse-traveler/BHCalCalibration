@@ -6,6 +6,7 @@
 # A simple script to run the
 # JCalibrateHCal JANA plugin
 
-input="../hcal/input/nov_sim_campaign/pi-_2GeV_45to135deg.0001.eicrecon.tree.edm4eic.root"
+input="../hcal/input/edm4hep/ohCalTest.p2t5n5000pip.d31m10y2022.edm4hep.root"
+collections="HcalBarrelRawHits,HcalBarrelRecHits,HcalBarrelClusters,GeneratedParticles"
 
-eicrecon -Pplugins=JCalibrateHCal $input
+eicrecon -Pplugins=JCalibrateHCal -Ppodio:output_include_collections=$collections $input
