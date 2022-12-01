@@ -57,65 +57,65 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hParMomY               = new TH1D("hParMomY",               "", nMomBin,   rMomBin[0],   rMomBin[1]);
   hParMomZ               = new TH1D("hParMomZ",               "", nMomBin,   rMomBin[0],   rMomBin[1]);
   // reconstructed hit histograms
-  hRecHitEne             = new TH1D("hRecHitEne",             "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hRecHitPosZ            = new TH1D("hRecHitPosZ",            "", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
-  hRecHitParDiff         = new TH1D("hRecHitParDiff",         "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hRecHitPosYvsX         = new TH2D("hRecHitPosYvsX",         "", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
-  hRecHitVsParEne        = new TH2D("hRecHitVsParEne",        "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalRecHitEne             = new TH1D("hHCalRecHitEne",             "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalRecHitPosZ            = new TH1D("hHCalRecHitPosZ",            "", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
+  hHCalRecHitParDiff         = new TH1D("hHCalRecHitParDiff",         "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalRecHitPosYvsX         = new TH2D("hHCalRecHitPosYvsX",         "", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hHCalRecHitVsParEne        = new TH2D("hHCalRecHitVsParEne",        "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // reconstructed cluster histograms
-  hClusterEne            = new TH1D("hClusterEne",            "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hClusterPosZ           = new TH1D("hClusterPosZ",           "", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
-  hClusterNumHit         = new TH1I("hClusterNumHit",         "", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hClusterParDiff        = new TH1D("hClusterParDiff",        "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hClusterPosYvsX        = new TH2D("hClusterPosYvsX",        "", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
-  hClusterVsParEne       = new TH2D("hClusterVsParEne",       "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalClustEne            = new TH1D("hHCalClustEne",            "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalClustPosZ           = new TH1D("hHCalClustPosZ",           "", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
+  hHCalClustNumHit         = new TH1I("hHCalClustNumHit",         "", nNumBin,   rNumBin[0],   rNumBin[1]);
+  hHCalClustParDiff        = new TH1D("hHCalClustParDiff",        "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalClustPosYvsX        = new TH2D("hHCalClustPosYvsX",        "", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hHCalClustVsParEne       = new TH2D("hHCalClustVsParEne",       "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // reconstructed cluster debug histograms
-  hDebugClusterSum5      = new TH1D("hDebugClusterSum5",      "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hDebugClusterSum10     = new TH1D("hDebugClusterSum10",     "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hDebugClusterSum100    = new TH1D("hDebugClusterSum100",    "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hDebugClusterSum1000   = new TH1D("hDebugClusterSum1000",   "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hDebugClusterDiff5     = new TH1D("hDebugClusterDiff5",     "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hDebugClusterDiff10    = new TH1D("hDebugClusterDiff10",    "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hDebugClusterDiff100   = new TH1D("hDebugClusterDiff100",   "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hDebugClusterDiff1000  = new TH1D("hDebugClusterDiff1000",  "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalDebugClustSum5      = new TH1D("hHCalDebugClustSum5",      "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalDebugClustSum10     = new TH1D("hHCalDebugClustSum10",     "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalDebugClustSum100    = new TH1D("hHCalDebugClustSum100",    "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalDebugClustSum1000   = new TH1D("hHCalDebugClustSum1000",   "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalDebugClustDiff5     = new TH1D("hHCalDebugClustDiff5",     "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalDebugClustDiff10    = new TH1D("hHCalDebugClustDiff10",    "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalDebugClustDiff100   = new TH1D("hHCalDebugClustDiff100",   "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalDebugClustDiff1000  = new TH1D("hHCalDebugClustDiff1000",  "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   // truth cluster histograms
-  hTruClustEne           = new TH1D("hTruClustEne",           "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hTruClustPosZ          = new TH1D("hTruClustPosZ",          "", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
-  hTruClustNumHit        = new TH1I("hTruClustNumHit",        "", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hTruClustParDiff       = new TH1D("hTruClustParDiff",       "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hTruClustPosYvsX       = new TH2D("hTruClustPosYvsX",       "", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
-  hTruClustVsParEne      = new TH2D("hTruClustVsParEne",      "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalTruClustEne           = new TH1D("hHCalTruClustEne",           "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalTruClustPosZ          = new TH1D("hHCalTruClustPosZ",          "", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
+  hHCalTruClustNumHit        = new TH1I("hHCalTruClustNumHit",        "", nNumBin,   rNumBin[0],   rNumBin[1]);
+  hHCalTruClustParDiff       = new TH1D("hHCalTruClustParDiff",       "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalTruClustPosYvsX       = new TH2D("hHCalTruClustPosYvsX",       "", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hHCalTruClustVsParEne      = new TH2D("hHCalTruClustVsParEne",      "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // truth cluster debug histograms
-  hDebugTruClustSum5     = new TH1D("hDebugTruClustSum5",     "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hDebugTruClustSum10    = new TH1D("hDebugTruClustSum10",    "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hDebugTruClustSum100   = new TH1D("hDebugTruClustSum100",   "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hDebugTruClustSum1000  = new TH1D("hDebugTruClustSum1000",  "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hDebugTruClustDiff5    = new TH1D("hDebugTruClustDiff5",    "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hDebugTruClustDiff10   = new TH1D("hDebugTruClustDiff10",   "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hDebugTruClustDiff100  = new TH1D("hDebugTruClustDiff100",  "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hDebugTruClustDiff1000 = new TH1D("hDebugTruClustDiff1000", "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalDebugTruClustSum5     = new TH1D("hHCalDebugTruClustSum5",     "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalDebugTruClustSum10    = new TH1D("hHCalDebugTruClustSum10",    "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalDebugTruClustSum100   = new TH1D("hHCalDebugTruClustSum100",   "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalDebugTruClustSum1000  = new TH1D("hHCalDebugTruClustSum1000",  "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalDebugTruClustDiff5    = new TH1D("hHCalDebugTruClustDiff5",    "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalDebugTruClustDiff10   = new TH1D("hHCalDebugTruClustDiff10",   "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalDebugTruClustDiff100  = new TH1D("hHCalDebugTruClustDiff100",  "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalDebugTruClustDiff1000 = new TH1D("hHCalDebugTruClustDiff1000", "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   // event-wise histograms
-  hEvtNumPar             = new TH1I("hEvtNumPar",             "", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtNumHit             = new TH1I("hEvtNumHit",             "", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtNumClust           = new TH1I("hEvtNumClust",           "", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtNumTruClust        = new TH1I("hEvtNumTruClust",        "", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtSumHitEne          = new TH1D("hEvtSumHitEne",          "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtSumClustEne        = new TH1D("hEvtSumClustEne",        "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtSumTruClustEne     = new TH1D("hEvtSumTruClustEne",     "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtLeadClustEne       = new TH1D("hEvtLeadClustEne",       "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtLeadTruClustEne    = new TH1D("hEvtLeadTruClustEne",    "", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtSumHitDiff         = new TH1D("hEvtSumHitDiff",         "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtSumClustDiff       = new TH1D("hEvtSumClustDiff",       "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtSumTruClustDiff    = new TH1D("hEvtSumTruClustDiff",    "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtLeadClustDiff      = new TH1D("hEvtLeadClustDiff",      "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtLeadTruClustDiff   = new TH1D("hEvtLeadTruClustDiff",   "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtNumClustVsHit      = new TH2I("hEvtNumClustVsHit",      "", nNumBin,   rNumBin[0],   rNumBin[1],   nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtNumTruClustVsClust = new TH2I("hEvtNumTruClustVsClust", "", nNumBin,   rNumBin[0],   rNumBin[1],   nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtSumHitVsPar        = new TH2D("hEvtSumHitVsPar",        "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtSumClustVsPar      = new TH2D("hEvtSumClustVsPar",      "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtSumTruClustVsPar   = new TH2D("hEvtSumTruClustVsPar",   "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtLeadClustVsPar     = new TH2D("hEvtLeadClustVsPar",     "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtLeadTruClustVsPar  = new TH2D("hEvtLeadTruClustVsPar",  "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalNumPar             = new TH1I("hEvtHCalNumPar",             "", nNumBin,   rNumBin[0],   rNumBin[1]);
+  hEvtHCalNumHit             = new TH1I("hEvtHCalNumHit",             "", nNumBin,   rNumBin[0],   rNumBin[1]);
+  hEvtHCalNumClust           = new TH1I("hEvtHCalNumClust",           "", nNumBin,   rNumBin[0],   rNumBin[1]);
+  hEvtHCalNumTruClust        = new TH1I("hEvtHCalNumTruClust",        "", nNumBin,   rNumBin[0],   rNumBin[1]);
+  hEvtHCalSumHitEne          = new TH1D("hEvtHCalSumHitEne",          "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalSumClustEne        = new TH1D("hEvtHCalSumClustEne",        "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalSumTruClustEne     = new TH1D("hEvtHCalSumTruClustEne",     "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalLeadClustEne       = new TH1D("hEvtHCalLeadClustEne",       "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalLeadTruClustEne    = new TH1D("hEvtHCalLeadTruClustEne",    "", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalSumHitDiff         = new TH1D("hEvtHCalSumHitDiff",         "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hEvtHCalSumClustDiff       = new TH1D("hEvtHCalSumClustDiff",       "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hEvtHCalSumTruClustDiff    = new TH1D("hEvtHCalSumTruClustDiff",    "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hEvtHCalLeadClustDiff      = new TH1D("hEvtHCalLeadClustDiff",      "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hEvtHCalLeadTruClustDiff   = new TH1D("hEvtHCalLeadTruClustDiff",   "", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hEvtHCalNumClustVsHit      = new TH2I("hEvtHCalNumClustVsHit",      "", nNumBin,   rNumBin[0],   rNumBin[1],   nNumBin,   rNumBin[0],   rNumBin[1]);
+  hEvtHCalNumTruClustVsClust = new TH2I("hEvtHCalNumTruClustVsClust", "", nNumBin,   rNumBin[0],   rNumBin[1],   nNumBin,   rNumBin[0],   rNumBin[1]);
+  hEvtHCalSumHitVsPar        = new TH2D("hEvtHCalSumHitVsPar",        "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalSumClustVsPar      = new TH2D("hEvtHCalSumClustVsPar",      "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalSumTruClustVsPar   = new TH2D("hEvtHCalSumTruClustVsPar",   "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalLeadClustVsPar     = new TH2D("hEvtHCalLeadClustVsPar",     "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalLeadTruClustVsPar  = new TH2D("hEvtHCalLeadTruClustVsPar",  "", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // errors
   hParChrg               -> Sumw2();
   hParMass               -> Sumw2();
@@ -124,59 +124,59 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hParMomX               -> Sumw2();
   hParMomY               -> Sumw2();
   hParMomZ               -> Sumw2();
-  hRecHitEne             -> Sumw2();
-  hRecHitPosZ            -> Sumw2();
-  hRecHitParDiff         -> Sumw2();
-  hRecHitPosYvsX         -> Sumw2();
-  hRecHitVsParEne        -> Sumw2();
-  hClusterEne            -> Sumw2();
-  hClusterPosZ           -> Sumw2();
-  hClusterNumHit         -> Sumw2();
-  hClusterParDiff        -> Sumw2();
-  hClusterPosYvsX        -> Sumw2();
-  hClusterVsParEne       -> Sumw2();
-  hDebugClusterSum5      -> Sumw2();
-  hDebugClusterSum10     -> Sumw2();
-  hDebugClusterSum100    -> Sumw2();
-  hDebugClusterSum1000   -> Sumw2();
-  hDebugClusterDiff5     -> Sumw2();
-  hDebugClusterDiff10    -> Sumw2();
-  hDebugClusterDiff100   -> Sumw2();
-  hDebugClusterDiff1000  -> Sumw2();
-  hTruClustEne           -> Sumw2();
-  hTruClustPosZ          -> Sumw2();
-  hTruClustNumHit        -> Sumw2();
-  hTruClustParDiff       -> Sumw2();
-  hTruClustPosYvsX       -> Sumw2();
-  hTruClustVsParEne      -> Sumw2();
-  hDebugTruClustSum5     -> Sumw2();
-  hDebugTruClustSum10    -> Sumw2();
-  hDebugTruClustSum100   -> Sumw2();
-  hDebugTruClustSum1000  -> Sumw2();
-  hDebugTruClustDiff5    -> Sumw2();
-  hDebugTruClustDiff10   -> Sumw2();
-  hDebugTruClustDiff100  -> Sumw2();
-  hDebugTruClustDiff1000 -> Sumw2();
-  hEvtNumPar             -> Sumw2();
-  hEvtNumHit             -> Sumw2();
-  hEvtNumClust           -> Sumw2();
-  hEvtNumTruClust        -> Sumw2();
-  hEvtSumHitEne          -> Sumw2();
-  hEvtSumClustEne        -> Sumw2();
-  hEvtSumTruClustEne     -> Sumw2();
-  hEvtLeadClustEne       -> Sumw2();
-  hEvtLeadTruClustEne    -> Sumw2();
-  hEvtSumHitDiff         -> Sumw2();
-  hEvtSumClustDiff       -> Sumw2();
-  hEvtSumTruClustDiff    -> Sumw2();
-  hEvtLeadClustDiff      -> Sumw2();
-  hEvtLeadTruClustDiff   -> Sumw2();
-  hEvtNumClustVsHit      -> Sumw2();
-  hEvtNumTruClustVsClust -> Sumw2();
-  hEvtSumHitVsPar        -> Sumw2();
-  hEvtSumClustVsPar      -> Sumw2();
-  hEvtLeadClustVsPar     -> Sumw2();
-  hEvtLeadTruClustVsPar  -> Sumw2();
+  hHCalRecHitEne             -> Sumw2();
+  hHCalRecHitPosZ            -> Sumw2();
+  hHCalRecHitParDiff         -> Sumw2();
+  hHCalRecHitPosYvsX         -> Sumw2();
+  hHCalRecHitVsParEne        -> Sumw2();
+  hHCalClustEne            -> Sumw2();
+  hHCalClustPosZ           -> Sumw2();
+  hHCalClustNumHit         -> Sumw2();
+  hHCalClustParDiff        -> Sumw2();
+  hHCalClustPosYvsX        -> Sumw2();
+  hHCalClustVsParEne       -> Sumw2();
+  hHCalDebugClustSum5      -> Sumw2();
+  hHCalDebugClustSum10     -> Sumw2();
+  hHCalDebugClustSum100    -> Sumw2();
+  hHCalDebugClustSum1000   -> Sumw2();
+  hHCalDebugClustDiff5     -> Sumw2();
+  hHCalDebugClustDiff10    -> Sumw2();
+  hHCalDebugClustDiff100   -> Sumw2();
+  hHCalDebugClustDiff1000  -> Sumw2();
+  hHCalTruClustEne           -> Sumw2();
+  hHCalTruClustPosZ          -> Sumw2();
+  hHCalTruClustNumHit        -> Sumw2();
+  hHCalTruClustParDiff       -> Sumw2();
+  hHCalTruClustPosYvsX       -> Sumw2();
+  hHCalTruClustVsParEne      -> Sumw2();
+  hHCalDebugTruClustSum5     -> Sumw2();
+  hHCalDebugTruClustSum10    -> Sumw2();
+  hHCalDebugTruClustSum100   -> Sumw2();
+  hHCalDebugTruClustSum1000  -> Sumw2();
+  hHCalDebugTruClustDiff5    -> Sumw2();
+  hHCalDebugTruClustDiff10   -> Sumw2();
+  hHCalDebugTruClustDiff100  -> Sumw2();
+  hHCalDebugTruClustDiff1000 -> Sumw2();
+  hEvtHCalNumPar             -> Sumw2();
+  hEvtHCalNumHit             -> Sumw2();
+  hEvtHCalNumClust           -> Sumw2();
+  hEvtHCalNumTruClust        -> Sumw2();
+  hEvtHCalSumHitEne          -> Sumw2();
+  hEvtHCalSumClustEne        -> Sumw2();
+  hEvtHCalSumTruClustEne     -> Sumw2();
+  hEvtHCalLeadClustEne       -> Sumw2();
+  hEvtHCalLeadTruClustEne    -> Sumw2();
+  hEvtHCalSumHitDiff         -> Sumw2();
+  hEvtHCalSumClustDiff       -> Sumw2();
+  hEvtHCalSumTruClustDiff    -> Sumw2();
+  hEvtHCalLeadClustDiff      -> Sumw2();
+  hEvtHCalLeadTruClustDiff   -> Sumw2();
+  hEvtHCalNumClustVsHit      -> Sumw2();
+  hEvtHCalNumTruClustVsClust -> Sumw2();
+  hEvtHCalSumHitVsPar        -> Sumw2();
+  hEvtHCalSumClustVsPar      -> Sumw2();
+  hEvtHCalLeadClustVsPar     -> Sumw2();
+  hEvtHCalLeadTruClustVsPar  -> Sumw2();
   return;
 
 }  // end 'InitWithGlobalRootLock()'
@@ -194,14 +194,14 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   double eClustSum(0.);
   double eTruClustSum(0.);
 
-  // sum hit energy
+  // sum hcal hit energy
   for (auto hit : bhcalRecHits()) {
     eHitSum += hit -> getEnergy();
-  }  // end 1st hit loop
+  }  // end 1st hcal hit loop
 
   // if hit sum is 0, skip event
-  const bool isHitSumNonzero = (eHitSum > 0.);
-  if (!isHitSumNonzero) {
+  const bool isHCalHitSumNonzero = (eHitSum > 0.);
+  if (!isHCalHitSumNonzero) {
     return;
   }
 
@@ -251,7 +251,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   hParMomY -> Fill(pMcPar[1]);
   hParMomZ -> Fill(pMcPar[2]);
 
-  // reconstructed hit loop
+  // reco. hcal hit loop
   unsigned long nHit(0);
   for (auto hit : bhcalRecHits()) {
 
@@ -263,13 +263,13 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto diffHit = (eHit - eMcPar) / eHit;
 
     // fill hit histograms and increment sums/counters
-    hRecHitEne      -> Fill(eHit);
-    hRecHitPosZ     -> Fill(rHitZ);
-    hRecHitParDiff  -> Fill(diffHit);
-    hRecHitPosYvsX  -> Fill(rHitX, rHitY);
-    hRecHitVsParEne -> Fill(eMcPar, eHit);
+    hHCalRecHitEne      -> Fill(eHit);
+    hHCalRecHitPosZ     -> Fill(rHitZ);
+    hHCalRecHitParDiff  -> Fill(diffHit);
+    hHCalRecHitPosYvsX  -> Fill(rHitX, rHitY);
+    hHCalRecHitVsParEne -> Fill(eMcPar, eHit);
     ++nHit;
-  }  // end 2nd hit loop
+  }  // end 2nd hcal hit loop
 
   // for highest energy clusters
   int    iLeadClust(-1);
@@ -279,7 +279,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   double diffLeadClust(0.);
   double diffLeadTruClust(0.);
 
-  // reconstructed cluster loop
+  // reco. hcal cluster loop
   unsigned long iClust(0);
   unsigned long nClust(0);
   for (auto cluster : bhcalClusters()) {
@@ -293,12 +293,12 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto diffClust = (eClust - eMcPar) / eClust;
 
     // fill cluster histograms and increment counters
-    hClusterEne      -> Fill(eClust);
-    hClusterPosZ     -> Fill(rClustZ);
-    hClusterNumHit   -> Fill(nHitClust);
-    hClusterParDiff  -> Fill(diffClust);
-    hClusterPosYvsX  -> Fill(rClustX, rClustY);
-    hClusterVsParEne -> Fill(eMcPar, eClust);
+    hHCalClustEne      -> Fill(eClust);
+    hHCalClustPosZ     -> Fill(rClustZ);
+    hHCalClustNumHit   -> Fill(nHitClust);
+    hHCalClustParDiff  -> Fill(diffClust);
+    hHCalClustPosYvsX  -> Fill(rClustX, rClustY);
+    hHCalClustVsParEne -> Fill(eMcPar, eClust);
     eClustSum += eClust;
     ++nClust;
 
@@ -310,15 +310,15 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
       diffLeadClust = diffClust;
     }
     ++iClust;
-  }  // end reconstructed cluster loop
+  }  // end reco. hcal cluster loop
 
-  // for debugging reco clusters
+  // for debugging reco. hcal clusters
   double eDebugSumClust5(0.);
   double eDebugSumClust10(0.);
   double eDebugSumClust100(0.);
   double eDebugSumClust1000(0.);
 
-  // debug reconstructed cluster loop
+  // debug reco. hcal cluster loop
   unsigned long iDebugClust(0);
   for (auto debugCluster : bhcalClusters()) {
 
@@ -374,9 +374,9 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
 
     }
     ++iDebugClust;
-  }  // end debug reco. cluster loop
+  }  // end debug reco. hcal cluster loop
 
-  // true cluster loop
+  // true hcal cluster loop
   unsigned long iTruClust(0);
   unsigned long nTruClust(0);
   for (auto truthCluster : bhcalTruthClusters()) {
@@ -390,12 +390,12 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto diffTruClust = (eTruClust - eMcPar) / eTruClust;
 
     // fill cluster histograms and increment counters
-    hTruClustEne      -> Fill(eTruClust);
-    hTruClustPosZ     -> Fill(rTruClustZ);
-    hTruClustNumHit   -> Fill(nHitTruClust);
-    hTruClustParDiff  -> Fill(diffTruClust);
-    hTruClustPosYvsX  -> Fill(rTruClustX, rTruClustY);
-    hTruClustVsParEne -> Fill(eMcPar, eTruClust);
+    hHCalTruClustEne      -> Fill(eTruClust);
+    hHCalTruClustPosZ     -> Fill(rTruClustZ);
+    hHCalTruClustNumHit   -> Fill(nHitTruClust);
+    hHCalTruClustParDiff  -> Fill(diffTruClust);
+    hHCalTruClustPosYvsX  -> Fill(rTruClustX, rTruClustY);
+    hHCalTruClustVsParEne -> Fill(eMcPar, eTruClust);
     eTruClustSum += eTruClust;
     ++nTruClust;
 
@@ -407,15 +407,15 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
       diffLeadTruClust = diffTruClust;
     }
     ++iTruClust;
-  }  // end true cluster loop
+  }  // end true hcal cluster loop
 
-  // for debugging truth clusters
+  // for debugging truth hcal clusters
   double eDebugSumTruClust5(0.);
   double eDebugSumTruClust10(0.);
   double eDebugSumTruClust100(0.);
   double eDebugSumTruClust1000(0.);
 
-  // debug reconstructed cluster loop
+  // debug truth hcal cluster loop
   unsigned long iDebugTruClust(0);
   for (auto debugTruthCluster : bhcalTruthClusters()) {
 
@@ -457,7 +457,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
         if (isIn100mm)  toAddTruClust100  += eOtherTruClust;
         if (isIn1000mm) toAddTruClust1000 += eOtherTruClust;
         ++iOtherTruClust;
-      }  // end other true cluster loo
+      }  // end other true hcal cluster loo
 
       // add sums to lead energy
       eDebugSumTruClust5     = eLeadTruClust;
@@ -478,28 +478,28 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   const auto diffClustSum    = (eClustSum - eMcPar) / eClustSum;
   const auto diffTruClustSum = (eTruClustSum - eMcPar) / eTruClustSum;
 
-  // fill event-wise histograms
-  hEvtNumPar             -> Fill(nPar);
-  hEvtNumHit             -> Fill(nHit);
-  hEvtNumClust           -> Fill(nClust);
-  hEvtNumTruClust        -> Fill(nTruClust);
-  hEvtSumHitEne          -> Fill(eHitSum);
-  hEvtSumClustEne        -> Fill(eClustSum);
-  hEvtSumTruClustEne     -> Fill(eTruClustSum);
-  hEvtLeadClustEne       -> Fill(eLeadClust);
-  hEvtLeadTruClustEne    -> Fill(eLeadTruClust);
-  hEvtSumHitDiff         -> Fill(diffHitSum);
-  hEvtSumClustDiff       -> Fill(diffClustSum);
-  hEvtSumTruClustDiff    -> Fill(diffTruClustSum);
-  hEvtLeadClustDiff      -> Fill(diffLeadClust);
-  hEvtLeadTruClustDiff   -> Fill(diffLeadTruClust);
-  hEvtNumClustVsHit      -> Fill(nHit, nClust);
-  hEvtNumTruClustVsClust -> Fill(nClust, nTruClust);
-  hEvtSumHitVsPar        -> Fill(eMcPar, eHitSum);
-  hEvtSumClustVsPar      -> Fill(eMcPar, eClustSum);
-  hEvtSumTruClustVsPar   -> Fill(eMcPar, eTruClustSum);
-  hEvtLeadClustVsPar     -> Fill(eMcPar, eLeadClust);
-  hEvtLeadTruClustVsPar  -> Fill(eMcPar, eLeadTruClust);
+  // fill event-wise hcal histograms
+  hEvtHCalNumPar             -> Fill(nPar);
+  hEvtHCalNumHit             -> Fill(nHit);
+  hEvtHCalNumClust           -> Fill(nClust);
+  hEvtHCalNumTruClust        -> Fill(nTruClust);
+  hEvtHCalSumHitEne          -> Fill(eHitSum);
+  hEvtHCalSumClustEne        -> Fill(eClustSum);
+  hEvtHCalSumTruClustEne     -> Fill(eTruClustSum);
+  hEvtHCalLeadClustEne       -> Fill(eLeadClust);
+  hEvtHCalLeadTruClustEne    -> Fill(eLeadTruClust);
+  hEvtHCalSumHitDiff         -> Fill(diffHitSum);
+  hEvtHCalSumClustDiff       -> Fill(diffClustSum);
+  hEvtHCalSumTruClustDiff    -> Fill(diffTruClustSum);
+  hEvtHCalLeadClustDiff      -> Fill(diffLeadClust);
+  hEvtHCalLeadTruClustDiff   -> Fill(diffLeadTruClust);
+  hEvtHCalNumClustVsHit      -> Fill(nHit, nClust);
+  hEvtHCalNumTruClustVsClust -> Fill(nClust, nTruClust);
+  hEvtHCalSumHitVsPar        -> Fill(eMcPar, eHitSum);
+  hEvtHCalSumClustVsPar      -> Fill(eMcPar, eClustSum);
+  hEvtHCalSumTruClustVsPar   -> Fill(eMcPar, eTruClustSum);
+  hEvtHCalLeadClustVsPar     -> Fill(eMcPar, eLeadClust);
+  hEvtHCalLeadTruClustVsPar  -> Fill(eMcPar, eLeadTruClust);
 
   // do debugging calculations
   const auto diffDebugClustSum5       = (eDebugSumClust5 - eMcPar) / eDebugSumClust5;
@@ -511,23 +511,23 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   const auto diffDebugTruClustSum100  = (eDebugSumTruClust100 - eMcPar) / eDebugSumTruClust5;
   const auto diffDebugTruClustSum1000 = (eDebugSumTruClust1000 - eMcPar) / eDebugSumTruClust5;
 
-  // fill reco. cluster debug histograms
-  hDebugClusterSum5       -> Fill(eDebugSumClust5);
-  hDebugClusterSum10      -> Fill(eDebugSumClust10);
-  hDebugClusterSum100     -> Fill(eDebugSumClust100);
-  hDebugClusterSum1000    -> Fill(eDebugSumClust1000);
-  hDebugTruClustSum5      -> Fill(eDebugSumClust5);
-  hDebugTruClustSum10     -> Fill(eDebugSumClust10);
-  hDebugTruClustSum100    -> Fill(eDebugSumClust100);
-  hDebugTruClustSum1000   -> Fill(eDebugSumClust1000);
-  hDebugClusterDiff5      -> Fill(diffDebugClustSum5);
-  hDebugClusterDiff10     -> Fill(diffDebugClustSum10);
-  hDebugClusterDiff100    -> Fill(diffDebugClustSum100);
-  hDebugClusterDiff1000   -> Fill(diffDebugClustSum1000);
-  hDebugTruClustDiff5     -> Fill(diffDebugClustSum5);
-  hDebugTruClustDiff10    -> Fill(diffDebugClustSum10);
-  hDebugTruClustDiff100   -> Fill(diffDebugClustSum100);
-  hDebugTruClustDiff1000  -> Fill(diffDebugClustSum1000);
+  // fill reco. cluster hcal debug histograms
+  hHCalDebugClustSum5        -> Fill(eDebugSumClust5);
+  hHCalDebugClustSum10       -> Fill(eDebugSumClust10);
+  hHCalDebugClustSum100      -> Fill(eDebugSumClust100);
+  hHCalDebugClustSum1000     -> Fill(eDebugSumClust1000);
+  hHCalDebugTruClustSum5     -> Fill(eDebugSumClust5);
+  hHCalDebugTruClustSum10    -> Fill(eDebugSumClust10);
+  hHCalDebugTruClustSum100   -> Fill(eDebugSumClust100);
+  hHCalDebugTruClustSum1000  -> Fill(eDebugSumClust1000);
+  hHCalDebugClustDiff5       -> Fill(diffDebugClustSum5);
+  hHCalDebugClustDiff10      -> Fill(diffDebugClustSum10);
+  hHCalDebugClustDiff100     -> Fill(diffDebugClustSum100);
+  hHCalDebugClustDiff1000    -> Fill(diffDebugClustSum1000);
+  hHCalDebugTruClustDiff5    -> Fill(diffDebugClustSum5);
+  hHCalDebugTruClustDiff10   -> Fill(diffDebugClustSum10);
+  hHCalDebugTruClustDiff100  -> Fill(diffDebugClustSum100);
+  hHCalDebugTruClustDiff1000 -> Fill(diffDebugClustSum1000);
   return;
 
 }  // end 'ProcessSequential(std::shared_ptr<JEvent>&)'
@@ -581,107 +581,107 @@ void JCalibrateHCalProcessor::FinishWithGlobalRootLock() {
   const TString sNumTruClustEvt("N_{truth clust} per event");
 
   // set particle axis titles
-  hParChrg              -> GetXaxis() -> SetTitle(sCharge.Data());
-  hParChrg              -> GetYaxis() -> SetTitle(sCount.Data());
-  hParMass              -> GetXaxis() -> SetTitle(sMass.Data());
-  hParMass              -> GetYaxis() -> SetTitle(sCount.Data());
-  hParEne               -> GetXaxis() -> SetTitle(sEnePar.Data());
-  hParEne               -> GetYaxis() -> SetTitle(sCount.Data());
-  hParMom               -> GetXaxis() -> SetTitle(sMomPar.Data());
-  hParMom               -> GetYaxis() -> SetTitle(sCount.Data());
-  hParMomX              -> GetXaxis() -> SetTitle(sMomParX.Data());
-  hParMomX              -> GetYaxis() -> SetTitle(sCount.Data());
-  hParMomY              -> GetXaxis() -> SetTitle(sMomParY.Data());
-  hParMomY              -> GetYaxis() -> SetTitle(sCount.Data());
-  hParMomZ              -> GetXaxis() -> SetTitle(sMomParZ.Data());
-  hParMomZ              -> GetYaxis() -> SetTitle(sCount.Data());
-  // set reconstructed hit axis titles
-  hRecHitEne            -> GetXaxis() -> SetTitle(sEneHit.Data());
-  hRecHitEne            -> GetYaxis() -> SetTitle(sCount.Data());
-  hRecHitPosZ           -> GetXaxis() -> SetTitle(sPosHitZ.Data());
-  hRecHitPosZ           -> GetYaxis() -> SetTitle(sCount.Data());
-  hRecHitParDiff        -> GetXaxis() -> SetTitle(sEneHitDiff.Data());
-  hRecHitParDiff        -> GetYaxis() -> SetTitle(sCount.Data());
-  hRecHitPosYvsX        -> GetXaxis() -> SetTitle(sPosHitX.Data());
-  hRecHitPosYvsX        -> GetYaxis() -> SetTitle(sPosHitY.Data());
-  hRecHitPosYvsX        -> GetZaxis() -> SetTitle(sCount.Data());
-  hRecHitVsParEne       -> GetXaxis() -> SetTitle(sEnePar.Data());
-  hRecHitVsParEne       -> GetYaxis() -> SetTitle(sEneHit.Data());
-  hRecHitVsParEne       -> GetZaxis() -> SetTitle(sCount.Data());
-  // set reconstructed cluster axis titles
-  hClusterEne           -> GetXaxis() -> SetTitle(sEneClust.Data());
-  hClusterEne           -> GetYaxis() -> SetTitle(sCount.Data());
-  hClusterPosZ          -> GetXaxis() -> SetTitle(sPosClustZ.Data());
-  hClusterPosZ          -> GetYaxis() -> SetTitle(sCount.Data());
-  hClusterNumHit        -> GetXaxis() -> SetTitle(sNumHitClust.Data());
-  hClusterNumHit        -> GetYaxis() -> SetTitle(sCount.Data());
-  hClusterParDiff       -> GetXaxis() -> SetTitle(sEneClustDiff.Data());
-  hClusterParDiff       -> GetYaxis() -> SetTitle(sCount.Data());
-  hClusterPosYvsX       -> GetXaxis() -> SetTitle(sPosClustX.Data());
-  hClusterPosYvsX       -> GetYaxis() -> SetTitle(sPosClustY.Data());
-  hClusterPosYvsX       -> GetZaxis() -> SetTitle(sCount.Data());
-  hClusterVsParEne      -> GetXaxis() -> SetTitle(sEnePar.Data());
-  hClusterVsParEne      -> GetYaxis() -> SetTitle(sEneClust.Data());
-  hClusterVsParEne      -> GetZaxis() -> SetTitle(sCount.Data());
-  // set truth cluster axis titles
-  hTruClustEne          -> GetXaxis() -> SetTitle(sEneTruClust.Data());
-  hTruClustEne          -> GetYaxis() -> SetTitle(sCount.Data());
-  hTruClustPosZ         -> GetXaxis() -> SetTitle(sPosTruClustZ.Data());
-  hTruClustPosZ         -> GetYaxis() -> SetTitle(sCount.Data());
-  hTruClustNumHit       -> GetXaxis() -> SetTitle(sNumHitTruClust.Data());
-  hTruClustNumHit       -> GetYaxis() -> SetTitle(sCount.Data());
-  hTruClustParDiff      -> GetXaxis() -> SetTitle(sEneTruClustDiff.Data());
-  hTruClustParDiff      -> GetYaxis() -> SetTitle(sCount.Data());
-  hTruClustPosYvsX      -> GetXaxis() -> SetTitle(sPosTruClustX.Data());
-  hTruClustPosYvsX      -> GetYaxis() -> SetTitle(sPosTruClustY.Data());
-  hTruClustPosYvsX      -> GetZaxis() -> SetTitle(sCount.Data());
-  hTruClustVsParEne     -> GetXaxis() -> SetTitle(sEnePar.Data());
-  hTruClustVsParEne     -> GetYaxis() -> SetTitle(sEneTruClust.Data());
-  hTruClustVsParEne     -> GetZaxis() -> SetTitle(sCount.Data());
-  // set event-wise axis titles
-  hEvtNumPar            -> GetXaxis() -> SetTitle(sNumParEvt.Data());
-  hEvtNumPar            -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtNumHit            -> GetXaxis() -> SetTitle(sNumHitEvt.Data());
-  hEvtNumHit            -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtNumClust          -> GetXaxis() -> SetTitle(sNumClustEvt.Data());
-  hEvtNumClust          -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtNumTruClust       -> GetXaxis() -> SetTitle(sNumTruClustEvt.Data());
-  hEvtNumTruClust       -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtSumHitEne         -> GetXaxis() -> SetTitle(sEneHitSum.Data());
-  hEvtSumHitEne         -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtSumClustEne       -> GetXaxis() -> SetTitle(sEneClustSum.Data());
-  hEvtSumClustEne       -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtSumTruClustEne    -> GetXaxis() -> SetTitle(sEneTruClustSum.Data());
-  hEvtSumTruClustEne    -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtLeadClustEne      -> GetXaxis() -> SetTitle(sEneClustLead.Data());
-  hEvtLeadClustEne      -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtLeadTruClustEne   -> GetXaxis() -> SetTitle(sEneTruClustLead.Data());
-  hEvtLeadTruClustEne   -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtSumHitDiff        -> GetXaxis() -> SetTitle(sEneHitSumDiff.Data());
-  hEvtSumHitDiff        -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtSumClustDiff      -> GetXaxis() -> SetTitle(sEneClustSumDiff.Data());
-  hEvtSumClustDiff      -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtSumTruClustDiff   -> GetXaxis() -> SetTitle(sEneTruClustSumDiff.Data());
-  hEvtSumTruClustDiff   -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtLeadClustDiff     -> GetXaxis() -> SetTitle(sEneClustLeadDiff.Data());
-  hEvtLeadClustDiff     -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtLeadTruClustDiff  -> GetXaxis() -> SetTitle(sEneTruClustLeadDiff.Data());
-  hEvtLeadTruClustDiff  -> GetYaxis() -> SetTitle(sCount.Data());
-  hEvtSumHitVsPar       -> GetXaxis() -> SetTitle(sEnePar.Data());
-  hEvtSumHitVsPar       -> GetYaxis() -> SetTitle(sEneHitSum.Data());
-  hEvtSumHitVsPar       -> GetZaxis() -> SetTitle(sCount.Data());
-  hEvtSumClustVsPar     -> GetXaxis() -> SetTitle(sEnePar.Data());
-  hEvtSumClustVsPar     -> GetYaxis() -> SetTitle(sEneClustSum.Data());
-  hEvtSumClustVsPar     -> GetZaxis() -> SetTitle(sCount.Data());
-  hEvtSumTruClustVsPar  -> GetXaxis() -> SetTitle(sEnePar.Data());
-  hEvtSumTruClustVsPar  -> GetYaxis() -> SetTitle(sEneTruClustSum.Data());
-  hEvtSumTruClustVsPar  -> GetZaxis() -> SetTitle(sCount.Data());
-  hEvtLeadClustVsPar    -> GetXaxis() -> SetTitle(sEnePar.Data());
-  hEvtLeadClustVsPar    -> GetYaxis() -> SetTitle(sEneClustLead.Data());
-  hEvtLeadClustVsPar    -> GetZaxis() -> SetTitle(sCount.Data());
-  hEvtLeadTruClustVsPar -> GetXaxis() -> SetTitle(sEnePar.Data());
-  hEvtLeadTruClustVsPar -> GetYaxis() -> SetTitle(sEneTruClustLead.Data());
-  hEvtLeadTruClustVsPar -> GetZaxis() -> SetTitle(sCount.Data());
+  hParChrg                  -> GetXaxis() -> SetTitle(sCharge.Data());
+  hParChrg                  -> GetYaxis() -> SetTitle(sCount.Data());
+  hParMass                  -> GetXaxis() -> SetTitle(sMass.Data());
+  hParMass                  -> GetYaxis() -> SetTitle(sCount.Data());
+  hParEne                   -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hParEne                   -> GetYaxis() -> SetTitle(sCount.Data());
+  hParMom                   -> GetXaxis() -> SetTitle(sMomPar.Data());
+  hParMom                   -> GetYaxis() -> SetTitle(sCount.Data());
+  hParMomX                  -> GetXaxis() -> SetTitle(sMomParX.Data());
+  hParMomX                  -> GetYaxis() -> SetTitle(sCount.Data());
+  hParMomY                  -> GetXaxis() -> SetTitle(sMomParY.Data());
+  hParMomY                  -> GetYaxis() -> SetTitle(sCount.Data());
+  hParMomZ                  -> GetXaxis() -> SetTitle(sMomParZ.Data());
+  hParMomZ                  -> GetYaxis() -> SetTitle(sCount.Data());
+  // set reco. hit hcal axis titles
+  hHCalRecHitEne            -> GetXaxis() -> SetTitle(sEneHit.Data());
+  hHCalRecHitEne            -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalRecHitPosZ           -> GetXaxis() -> SetTitle(sPosHitZ.Data());
+  hHCalRecHitPosZ           -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalRecHitParDiff        -> GetXaxis() -> SetTitle(sEneHitDiff.Data());
+  hHCalRecHitParDiff        -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalRecHitPosYvsX        -> GetXaxis() -> SetTitle(sPosHitX.Data());
+  hHCalRecHitPosYvsX        -> GetYaxis() -> SetTitle(sPosHitY.Data());
+  hHCalRecHitPosYvsX        -> GetZaxis() -> SetTitle(sCount.Data());
+  hHCalRecHitVsParEne       -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hHCalRecHitVsParEne       -> GetYaxis() -> SetTitle(sEneHit.Data());
+  hHCalRecHitVsParEne       -> GetZaxis() -> SetTitle(sCount.Data());
+  // set reco. cluster hcal axis titles
+  hHCalClustEne             -> GetXaxis() -> SetTitle(sEneClust.Data());
+  hHCalClustEne             -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalClustPosZ            -> GetXaxis() -> SetTitle(sPosClustZ.Data());
+  hHCalClustPosZ            -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalClustNumHit          -> GetXaxis() -> SetTitle(sNumHitClust.Data());
+  hHCalClustNumHit          -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalClustParDiff         -> GetXaxis() -> SetTitle(sEneClustDiff.Data());
+  hHCalClustParDiff         -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalClustPosYvsX         -> GetXaxis() -> SetTitle(sPosClustX.Data());
+  hHCalClustPosYvsX         -> GetYaxis() -> SetTitle(sPosClustY.Data());
+  hHCalClustPosYvsX         -> GetZaxis() -> SetTitle(sCount.Data());
+  hHCalClustVsParEne        -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hHCalClustVsParEne        -> GetYaxis() -> SetTitle(sEneClust.Data());
+  hHCalClustVsParEne        -> GetZaxis() -> SetTitle(sCount.Data());
+  // set truth cluster hcal axis titles
+  hHCalTruClustEne          -> GetXaxis() -> SetTitle(sEneTruClust.Data());
+  hHCalTruClustEne          -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalTruClustPosZ         -> GetXaxis() -> SetTitle(sPosTruClustZ.Data());
+  hHCalTruClustPosZ         -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalTruClustNumHit       -> GetXaxis() -> SetTitle(sNumHitTruClust.Data());
+  hHCalTruClustNumHit       -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalTruClustParDiff      -> GetXaxis() -> SetTitle(sEneTruClustDiff.Data());
+  hHCalTruClustParDiff      -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalTruClustPosYvsX      -> GetXaxis() -> SetTitle(sPosTruClustX.Data());
+  hHCalTruClustPosYvsX      -> GetYaxis() -> SetTitle(sPosTruClustY.Data());
+  hHCalTruClustPosYvsX      -> GetZaxis() -> SetTitle(sCount.Data());
+  hHCalTruClustVsParEne     -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hHCalTruClustVsParEne     -> GetYaxis() -> SetTitle(sEneTruClust.Data());
+  hHCalTruClustVsParEne     -> GetZaxis() -> SetTitle(sCount.Data());
+  // set event-wise hcal axis titles
+  hEvtHCalNumPar            -> GetXaxis() -> SetTitle(sNumParEvt.Data());
+  hEvtHCalNumPar            -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalNumHit            -> GetXaxis() -> SetTitle(sNumHitEvt.Data());
+  hEvtHCalNumHit            -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalNumClust          -> GetXaxis() -> SetTitle(sNumClustEvt.Data());
+  hEvtHCalNumClust          -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalNumTruClust       -> GetXaxis() -> SetTitle(sNumTruClustEvt.Data());
+  hEvtHCalNumTruClust       -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalSumHitEne         -> GetXaxis() -> SetTitle(sEneHitSum.Data());
+  hEvtHCalSumHitEne         -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalSumClustEne       -> GetXaxis() -> SetTitle(sEneClustSum.Data());
+  hEvtHCalSumClustEne       -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalSumTruClustEne    -> GetXaxis() -> SetTitle(sEneTruClustSum.Data());
+  hEvtHCalSumTruClustEne    -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalLeadClustEne      -> GetXaxis() -> SetTitle(sEneClustLead.Data());
+  hEvtHCalLeadClustEne      -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalLeadTruClustEne   -> GetXaxis() -> SetTitle(sEneTruClustLead.Data());
+  hEvtHCalLeadTruClustEne   -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalSumHitDiff        -> GetXaxis() -> SetTitle(sEneHitSumDiff.Data());
+  hEvtHCalSumHitDiff        -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalSumClustDiff      -> GetXaxis() -> SetTitle(sEneClustSumDiff.Data());
+  hEvtHCalSumClustDiff      -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalSumTruClustDiff   -> GetXaxis() -> SetTitle(sEneTruClustSumDiff.Data());
+  hEvtHCalSumTruClustDiff   -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalLeadClustDiff     -> GetXaxis() -> SetTitle(sEneClustLeadDiff.Data());
+  hEvtHCalLeadClustDiff     -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalLeadTruClustDiff  -> GetXaxis() -> SetTitle(sEneTruClustLeadDiff.Data());
+  hEvtHCalLeadTruClustDiff  -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtHCalSumHitVsPar       -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtHCalSumHitVsPar       -> GetYaxis() -> SetTitle(sEneHitSum.Data());
+  hEvtHCalSumHitVsPar       -> GetZaxis() -> SetTitle(sCount.Data());
+  hEvtHCalSumClustVsPar     -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtHCalSumClustVsPar     -> GetYaxis() -> SetTitle(sEneClustSum.Data());
+  hEvtHCalSumClustVsPar     -> GetZaxis() -> SetTitle(sCount.Data());
+  hEvtHCalSumTruClustVsPar  -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtHCalSumTruClustVsPar  -> GetYaxis() -> SetTitle(sEneTruClustSum.Data());
+  hEvtHCalSumTruClustVsPar  -> GetZaxis() -> SetTitle(sCount.Data());
+  hEvtHCalLeadClustVsPar    -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtHCalLeadClustVsPar    -> GetYaxis() -> SetTitle(sEneClustLead.Data());
+  hEvtHCalLeadClustVsPar    -> GetZaxis() -> SetTitle(sCount.Data());
+  hEvtHCalLeadTruClustVsPar -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtHCalLeadTruClustVsPar -> GetYaxis() -> SetTitle(sEneTruClustLead.Data());
+  hEvtHCalLeadTruClustVsPar -> GetZaxis() -> SetTitle(sCount.Data());
   return;
 
 }  // end 'FinishWithGlobalRootLock()'

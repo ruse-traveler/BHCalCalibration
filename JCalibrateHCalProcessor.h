@@ -38,77 +38,80 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     // Data objects we will need from JANA
     PrefetchT<edm4eic::ReconstructedParticle> genParticles       = {this, "GeneratedParticles"};
     PrefetchT<edm4eic::CalorimeterHit>        bhcalRecHits       = {this, "HcalBarrelRecHits"};
+    PrefetchT<edm4eic::CalorimeterHit>        becalRecHits       = {this, "EcalBarrelSciGlassRecHits"};
     PrefetchT<edm4eic::Cluster>               bhcalClusters      = {this, "HcalBarrelClusters"};
+    PrefetchT<edm4eic::Cluster>               becalClusters      = {this, "EcalBarrelSciGlassClusters"};
     PrefetchT<edm4eic::Cluster>               bhcalTruthClusters = {this, "HcalBarrelTruthClusters"};
+    PrefetchT<edm4eic::Cluster>               becalTruthClusters = {this, "EcalBarrelSciGlassTruthClusters"};
 
     // particle histograms
-    TH1D *hParChrg               = nullptr;
-    TH1D *hParMass               = nullptr;
-    TH1D *hParEne                = nullptr;
-    TH1D *hParMom                = nullptr;
-    TH1D *hParMomX               = nullptr;
-    TH1D *hParMomY               = nullptr;
-    TH1D *hParMomZ               = nullptr;
-    // reconstructed hit histograms
-    TH1D *hRecHitEne             = nullptr;
-    TH1D *hRecHitPosZ            = nullptr;
-    TH1D *hRecHitParDiff         = nullptr;
-    TH2D *hRecHitPosYvsX         = nullptr;
-    TH2D *hRecHitVsParEne        = nullptr;
-    // reconstructed cluster histograms
-    TH1D *hClusterEne            = nullptr;
-    TH1D *hClusterPosZ           = nullptr;
-    TH1I *hClusterNumHit         = nullptr;
-    TH1D *hClusterParDiff        = nullptr;
-    TH2D *hClusterPosYvsX        = nullptr;
-    TH2D *hClusterVsParEne       = nullptr;
-    // reconstructed cluster debug histograms
-    TH1D *hDebugClusterSum5      = nullptr;
-    TH1D *hDebugClusterSum10     = nullptr;
-    TH1D *hDebugClusterSum100    = nullptr;
-    TH1D *hDebugClusterSum1000   = nullptr;
-    TH1D *hDebugClusterDiff5     = nullptr;
-    TH1D *hDebugClusterDiff10    = nullptr;
-    TH1D *hDebugClusterDiff100   = nullptr;
-    TH1D *hDebugClusterDiff1000  = nullptr;
-    // truth cluster histograms
-    TH1D *hTruClustEne           = nullptr;
-    TH1D *hTruClustPosZ          = nullptr;
-    TH1I *hTruClustNumHit        = nullptr;
-    TH1D *hTruClustParDiff       = nullptr;
-    TH2D *hTruClustPosYvsX       = nullptr;
-    TH2D *hTruClustVsParEne      = nullptr;
-    // truth cluster debug histograms
-    TH1D *hDebugTruClustSum5     = nullptr;
-    TH1D *hDebugTruClustSum10    = nullptr;
-    TH1D *hDebugTruClustSum100   = nullptr;
-    TH1D *hDebugTruClustSum1000  = nullptr;
-    TH1D *hDebugTruClustDiff5    = nullptr;
-    TH1D *hDebugTruClustDiff10   = nullptr;
-    TH1D *hDebugTruClustDiff100  = nullptr;
-    TH1D *hDebugTruClustDiff1000 = nullptr;
-    // event-wise histograms
-    TH1I *hEvtNumPar             = nullptr;
-    TH1I *hEvtNumHit             = nullptr;
-    TH1I *hEvtNumClust           = nullptr;
-    TH1I *hEvtNumTruClust        = nullptr;
-    TH1D *hEvtSumHitEne          = nullptr;
-    TH1D *hEvtSumClustEne        = nullptr;
-    TH1D *hEvtSumTruClustEne     = nullptr;
-    TH1D *hEvtLeadClustEne       = nullptr;
-    TH1D *hEvtLeadTruClustEne    = nullptr;
-    TH1D *hEvtSumHitDiff         = nullptr;
-    TH1D *hEvtSumClustDiff       = nullptr;
-    TH1D *hEvtSumTruClustDiff    = nullptr;
-    TH1D *hEvtLeadClustDiff      = nullptr;
-    TH1D *hEvtLeadTruClustDiff   = nullptr;
-    TH2I *hEvtNumClustVsHit      = nullptr;
-    TH2I *hEvtNumTruClustVsClust = nullptr;
-    TH2D *hEvtSumHitVsPar        = nullptr;
-    TH2D *hEvtSumClustVsPar      = nullptr;
-    TH2D *hEvtSumTruClustVsPar   = nullptr;
-    TH2D *hEvtLeadClustVsPar     = nullptr;
-    TH2D *hEvtLeadTruClustVsPar  = nullptr;
+    TH1D *hParChrg                   = nullptr;
+    TH1D *hParMass                   = nullptr;
+    TH1D *hParEne                    = nullptr;
+    TH1D *hParMom                    = nullptr;
+    TH1D *hParMomX                   = nullptr;
+    TH1D *hParMomY                   = nullptr;
+    TH1D *hParMomZ                   = nullptr;
+    // hcal reconstructed hit histograms
+    TH1D *hHCalRecHitEne             = nullptr;
+    TH1D *hHCalRecHitPosZ            = nullptr;
+    TH1D *hHCalRecHitParDiff         = nullptr;
+    TH2D *hHCalRecHitPosYvsX         = nullptr;
+    TH2D *hHCalRecHitVsParEne        = nullptr;
+    // hcal reconstructed cluster histograms
+    TH1D *hHCalClustEne              = nullptr;
+    TH1D *hHCalClustPosZ             = nullptr;
+    TH1I *hHCalClustNumHit           = nullptr;
+    TH1D *hHCalClustParDiff          = nullptr;
+    TH2D *hHCalClustPosYvsX          = nullptr;
+    TH2D *hHCalClustVsParEne         = nullptr;
+    // hcal reco. cluster debug histograms
+    TH1D *hHCalDebugClustSum5        = nullptr;
+    TH1D *hHCalDebugClustSum10       = nullptr;
+    TH1D *hHCalDebugClustSum100      = nullptr;
+    TH1D *hHCalDebugClustSum1000     = nullptr;
+    TH1D *hHCalDebugClustDiff5       = nullptr;
+    TH1D *hHCalDebugClustDiff10      = nullptr;
+    TH1D *hHCalDebugClustDiff100     = nullptr;
+    TH1D *hHCalDebugClustDiff1000    = nullptr;
+    // hcal truth cluster histograms
+    TH1D *hHCalTruClustEne           = nullptr;
+    TH1D *hHCalTruClustPosZ          = nullptr;
+    TH1I *hHCalTruClustNumHit        = nullptr;
+    TH1D *hHCalTruClustParDiff       = nullptr;
+    TH2D *hHCalTruClustPosYvsX       = nullptr;
+    TH2D *hHCalTruClustVsParEne      = nullptr;
+    // hcal truth cluster debug histograms
+    TH1D *hHCalDebugTruClustSum5     = nullptr;
+    TH1D *hHCalDebugTruClustSum10    = nullptr;
+    TH1D *hHCalDebugTruClustSum100   = nullptr;
+    TH1D *hHCalDebugTruClustSum1000  = nullptr;
+    TH1D *hHCalDebugTruClustDiff5    = nullptr;
+    TH1D *hHCalDebugTruClustDiff10   = nullptr;
+    TH1D *hHCalDebugTruClustDiff100  = nullptr;
+    TH1D *hHCalDebugTruClustDiff1000 = nullptr;
+    // hcal event-wise histograms
+    TH1I *hEvtHCalNumPar             = nullptr;
+    TH1I *hEvtHCalNumHit             = nullptr;
+    TH1I *hEvtHCalNumClust           = nullptr;
+    TH1I *hEvtHCalNumTruClust        = nullptr;
+    TH1D *hEvtHCalSumHitEne          = nullptr;
+    TH1D *hEvtHCalSumClustEne        = nullptr;
+    TH1D *hEvtHCalSumTruClustEne     = nullptr;
+    TH1D *hEvtHCalLeadClustEne       = nullptr;
+    TH1D *hEvtHCalLeadTruClustEne    = nullptr;
+    TH1D *hEvtHCalSumHitDiff         = nullptr;
+    TH1D *hEvtHCalSumClustDiff       = nullptr;
+    TH1D *hEvtHCalSumTruClustDiff    = nullptr;
+    TH1D *hEvtHCalLeadClustDiff      = nullptr;
+    TH1D *hEvtHCalLeadTruClustDiff   = nullptr;
+    TH2I *hEvtHCalNumClustVsHit      = nullptr;
+    TH2I *hEvtHCalNumTruClustVsClust = nullptr;
+    TH2D *hEvtHCalSumHitVsPar        = nullptr;
+    TH2D *hEvtHCalSumClustVsPar      = nullptr;
+    TH2D *hEvtHCalSumTruClustVsPar   = nullptr;
+    TH2D *hEvtHCalLeadClustVsPar     = nullptr;
+    TH2D *hEvtHCalLeadTruClustVsPar  = nullptr;
 
   public:
 
