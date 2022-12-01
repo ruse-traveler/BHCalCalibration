@@ -864,7 +864,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   const auto diffDebugTruHCalClustSum1000 = (eDebugSumTruHCalClust1000 - eMcPar) / eDebugSumTruHCalClust5;
   const auto diffDebugTruECalClustSum1000 = (eDebugSumTruECalClust1000 - eMcPar) / eDebugSumTruECalClust5;
 
-  // fill reco. cluster hcal debug histograms
+  // fill cluster hcal debug histograms
   hHCalDebugClustSum5        -> Fill(eDebugSumHCalClust5);
   hHCalDebugClustSum10       -> Fill(eDebugSumHCalClust10);
   hHCalDebugClustSum100      -> Fill(eDebugSumHCalClust100);
@@ -882,7 +882,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   hHCalDebugTruClustDiff100  -> Fill(diffDebugTruHCalClustSum100);
   hHCalDebugTruClustDiff1000 -> Fill(diffDebugTruHCalClustSum1000);
 
-  // fill reco. cluster ecal debug histograms
+  // fill cluster ecal debug histograms
   hECalDebugClustSum5        -> Fill(eDebugSumECalClust5);
   hECalDebugClustSum10       -> Fill(eDebugSumECalClust10);
   hECalDebugClustSum100      -> Fill(eDebugSumECalClust100);
@@ -910,45 +910,53 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
 //-------------------------------------------
 void JCalibrateHCalProcessor::FinishWithGlobalRootLock() {
 
-  // axis titles
+  // generic axis titles
   const TString sCount("counts");
-  const TString sCharge("charge");
+
+  // particle axis titles
   const TString sMass("m_{par} [GeV/c^{2}]");
+  const TString sCharge("charge");
   const TString sEnePar("E_{par} [GeV]");
-  const TString sEneHit("e_{hit} [GeV]");
-  const TString sEneClust("e_{clust} [GeV]");
-  const TString sEneTruClust("e^{truth}_{clust} [GeV]");
-  const TString sEneHitDiff("#Deltae_{hit} / e_{hit} = (e_{hit} - E_{par}) / e_{hit} [GeV]");
-  const TString sEneClustDiff("#Deltae_{clust} / e_{clust} = (e_{clust} - E_{par}) / e_{clust} [GeV]");
-  const TString sEneTruClustDiff("#Deltae^{truth}_{clust} / e^{truth}_{clust} / (e^{truth}_{clust} - E_{par}) / e^{truth}_{clust} [GeV]");
-  const TString sEneHitSum("E^{sum}_{hit} = #Sigmae_{hit} [GeV]");
-  const TString sEneClustSum("E^{sum}_{clust} = #Sigmae_{clust} [GeV]");
-  const TString sEneTruClustSum("E^{sum/truth}_{clust} = #Sigmae^{truth}_{clust} [GeV]");
-  const TString sEneClustLead("E^{lead}_{clust} [GeV]");
-  const TString sEneTruClustLead("E^{lead/truth}_{clust} [GeV]");
-  const TString sEneHitSumDiff("#DeltaE^{sum}_{hit} / E^{sum}_{hit} = (E^{sum}_{hit} - E_{par}) / E^{sum}_{hit} [GeV]");
-  const TString sEneClustSumDiff("#DeltaE^{sum}_{clust} / E^{sum}_{clust} = (E^{sum}_{clust} - E_{par}) / E^{sum}_{clust} [GeV]");
-  const TString sEneTruClustSumDiff("#DeltaE^{sum/truth}_{clust} / E^{sum/truth}_{clust} = (E^{sum/truth}_{clust} - E_{par}) / E^{sum/truth}_{clust} [GeV]");
-  const TString sEneClustLeadDiff("#DeltaE^{lead}_{clust} / E^{lead}_{clust} = (E^{lead}_{clust} - E_{par}) / E^{lead}_{clust} [GeV]");
-  const TString sEneTruClustLeadDiff("#DeltaE^{lead/truth}_{clust} / E^{lead/truth}_{clust} = (E^{lead/truth} _{clust} - E_{par}) / E^{lead/truth}_{clust} [GeV]");
   const TString sMomPar("p_{par} [GeV/c]");
   const TString sMomParX("p_{x, par} [GeV/c]");
   const TString sMomParY("p_{y, par} [GeV/c]");
   const TString sMomParZ("p_{z, par} [GeV/c]");
+  const TString sNumParEvt("N_{par} per event");
+
+  // hit axis titles
   const TString sPosHitX("x_{hit} [mm]");
   const TString sPosHitY("y_{hit} [mm]");
   const TString sPosHitZ("z_{hit} [mm]");
+  const TString sEneHit("e_{hit} [GeV]");
+  const TString sEneHitSum("E^{sum}_{hit} = #Sigmae_{hit} [GeV]");
+  const TString sEneHitDiff("#Deltae_{hit} / e_{hit} = (e_{hit} - E_{par}) / e_{hit} [GeV]");
+  const TString sEneHitSumDiff("#DeltaE^{sum}_{hit} / E^{sum}_{hit} = (E^{sum}_{hit} - E_{par}) / E^{sum}_{hit} [GeV]");
+  const TString sNumHitEvt("N_{hit} per event");
+
+  // reco. cluster axis titles
   const TString sPosClustX("x_{clust} [mm]");
   const TString sPosClustY("y_{clust} [mm]");
   const TString sPosClustZ("z_{clust} [mm]");
+  const TString sEneClust("e_{clust} [GeV]");
+  const TString sEneClustSum("E^{sum}_{clust} = #Sigmae_{clust} [GeV]");
+  const TString sEneClustDiff("#Deltae_{clust} / e_{clust} = (e_{clust} - E_{par}) / e_{clust} [GeV]");
+  const TString sEneClustLead("E^{lead}_{clust} [GeV]");
+  const TString sEneClustSumDiff("#DeltaE^{sum}_{clust} / E^{sum}_{clust} = (E^{sum}_{clust} - E_{par}) / E^{sum}_{clust} [GeV]");
+  const TString sEneClustLeadDiff("#DeltaE^{lead}_{clust} / E^{lead}_{clust} = (E^{lead}_{clust} - E_{par}) / E^{lead}_{clust} [GeV]");
+  const TString sNumHitClust("N_{hit} per cluster");
+  const TString sNumClustEvt("N_{clust} per event");
+
+  // truth cluster axis titles
   const TString sPosTruClustX("x_{truth clust} [mm]");
   const TString sPosTruClustY("y_{truth clust} [mm]");
   const TString sPosTruClustZ("z_{truth clust} [mm]");
-  const TString sNumHitClust("N_{hit} per cluster");
+  const TString sEneTruClust("e^{truth}_{clust} [GeV]");
+  const TString sEneTruClustDiff("#Deltae^{truth}_{clust} / e^{truth}_{clust} / (e^{truth}_{clust} - E_{par}) / e^{truth}_{clust} [GeV]");
+  const TString sEneTruClustSum("E^{sum/truth}_{clust} = #Sigmae^{truth}_{clust} [GeV]");
+  const TString sEneTruClustLead("E^{lead/truth}_{clust} [GeV]");
+  const TString sEneTruClustSumDiff("#DeltaE^{sum/truth}_{clust} / E^{sum/truth}_{clust} = (E^{sum/truth}_{clust} - E_{par}) / E^{sum/truth}_{clust} [GeV]");
+  const TString sEneTruClustLeadDiff("#DeltaE^{lead/truth}_{clust} / E^{lead/truth}_{clust} = (E^{lead/truth} _{clust} - E_{par}) / E^{lead/truth}_{clust} [GeV]");
   const TString sNumHitTruClust("N_{hit} per truth cluster");
-  const TString sNumParEvt("N_{par} per event");
-  const TString sNumHitEvt("N_{hit} per event");
-  const TString sNumClustEvt("N_{clust} per event");
   const TString sNumTruClustEvt("N_{truth clust} per event");
 
   // set particle axis titles
@@ -1140,6 +1148,93 @@ void JCalibrateHCalProcessor::FinishWithGlobalRootLock() {
   hEvtECalLeadTruClustVsPar -> GetXaxis() -> SetTitle(sEnePar.Data());
   hEvtECalLeadTruClustVsPar -> GetYaxis() -> SetTitle(sEneTruClustLead.Data());
   hEvtECalLeadTruClustVsPar -> GetZaxis() -> SetTitle(sCount.Data());
+
+  // debug sum axis titles
+  const TString sDebugClustSum5("E^{sum}_{clust}(5 mm) = E^{lead}_{clust} + #Sigma_{#Deltar < 5 mm} e_{clust}");
+  const TString sDebugClustSum10("E^{sum}_{clust}(10 mm) = E^{lead}_{clust} + #Sigma_{#Deltar < 10 mm} e_{clust}");
+  const TString sDebugClustSum100("E^{sum}_{clust}(1 cm) = E^{lead}_{clust} + #Sigma_{#Deltar < 1 cm} e_{clust}");
+  const TString sDebugClustSum1000("E^{sum}_{clust}(1 m) = E^{lead}_{clust} + #Sigma_{#Deltar < 1 m} e_{clust}");
+  const TString sDebugTruClustSum5("E^{sum/truth}_{clust}(5 mm) = E^{lead}_{clust} + #Sigma_{#Deltar < 5 mm} e_{clust}");
+  const TString sDebugTruClustSum10("E^{sum/truth}_{clust}(10 mm) = E^{lead/truth}_{clust} + #Sigma_{#Deltar < 10 mm} e^{truth}_{clust}");
+  const TString sDebugTruClustSum100("E^{sum/truth}_{clust}(1 cm) = E^{lead/truth}_{clust} + #Sigma_{#Deltar < 1 cm} e^{truth}_{clust}");
+  const TString sDebugTruClustSum1000("E^{sum/truth}_{clust}(1 m) = E^{lead/truth}_{clust} + #Sigma_{#Deltar < 1 m} e^{truth}_{clust}");
+
+  // debug difference axis titles
+  const TString sDebugClustDiff5("#Delta#^{sum}_{clust}(5 mm) = [E^{sum}_{clust}(5 mm) - E_{par}] / E^{sum}_{clust}(5 mm)");
+  const TString sDebugClustDiff10("#Delta#^{sum}_{clust}(10 mm) = [E^{sum}_{clust}(10 mm) - E_{par}] / E^{sum}_{clust}(10 mm)");
+  const TString sDebugClustDiff100("#Delta#^{sum}_{clust}(1 cm) = [E^{sum}_{clust}(1 cm) - E_{par}] / E^{sum}_{clust}(1 cm)");
+  const TString sDebugClustDiff1000("#Delta#^{sum}_{clust}(1 m) = [E^{sum}_{clust}(1 m) - E_{par}] / E^{sum}_{clust}(1 m)");
+  const TString sDebugTruClustDiff5("#Delta#^{sum/truth}_{clust}(5 mm) = [E^{sum/truth}_{clust}(5 mm) - E_{par}] / E^{sum/truth}_{clust}(5 mm)");
+  const TString sDebugTruClustDiff10("#Delta#^{sum/truth}_{clust}(10 mm) = [E^{sum/truth}_{clust}(10 mm) - E_{par}] / E^{sum/truth}_{clust}(10 mm)");
+  const TString sDebugTruClustDiff100("#Delta#^{sum/truth}_{clust}(1 cm) = [E^{sum/truth}_{clust}(1 cm) - E_{par}] / E^{sum/truth}_{clust}(1 cm)");
+  const TString sDebugTruClustDiff1000("#Delta#^{sum/truth}_{clust}(1 m) = [E^{sum/truth}_{clust}(1 m) - E_{par}] / E^{sum/truth}_{clust}(1 m)");
+
+  // set hcal debug axis titles
+  hHCalDebugClustSum5        -> GetXaxis() -> SetTitle(sDebugClustSum5.Data());
+  hHCalDebugClustSum5        -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugClustSum10       -> GetXaxis() -> SetTitle(sDebugClustSum10.Data());
+  hHCalDebugClustSum10       -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugClustSum100      -> GetXaxis() -> SetTitle(sDebugClustSum100.Data());
+  hHCalDebugClustSum100      -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugClustSum1000     -> GetXaxis() -> SetTitle(sDebugClustSum1000.Data());
+  hHCalDebugClustSum1000     -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugTruClustSum5     -> GetXaxis() -> SetTitle(sDebugTruClustSum5.Data());
+  hHCalDebugTruClustSum5     -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugTruClustSum10    -> GetXaxis() -> SetTitle(sDebugTruClustSum10.Data());
+  hHCalDebugTruClustSum10    -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugTruClustSum100   -> GetXaxis() -> SetTitle(sDebugTruClustSum100.Data());
+  hHCalDebugTruClustSum100   -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugTruClustSum1000  -> GetXaxis() -> SetTitle(sDebugTruClustSum1000.Data());
+  hHCalDebugTruClustSum1000  -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugClustDiff5       -> GetXaxis() -> SetTitle(sDebugClustDiff5.Data());
+  hHCalDebugClustDiff5       -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugClustDiff10      -> GetXaxis() -> SetTitle(sDebugClustDiff10.Data());
+  hHCalDebugClustDiff10      -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugClustDiff100     -> GetXaxis() -> SetTitle(sDebugClustDiff100.Data());
+  hHCalDebugClustDiff100     -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugClustDiff1000    -> GetXaxis() -> SetTitle(sDebugClustDiff1000.Data());
+  hHCalDebugClustDiff1000    -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugTruClustDiff5    -> GetXaxis() -> SetTitle(sDebugTruClustDiff5.Data());
+  hHCalDebugTruClustDiff5    -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugTruClustDiff10   -> GetXaxis() -> SetTitle(sDebugTruClustDiff10.Data());
+  hHCalDebugTruClustDiff10   -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugTruClustDiff100  -> GetXaxis() -> SetTitle(sDebugTruClustDiff100.Data());
+  hHCalDebugTruClustDiff100  -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalDebugTruClustDiff1000 -> GetXaxis() -> SetTitle(sDebugTruClustDiff1000.Data());
+  hHCalDebugTruClustDiff1000 -> GetYaxis() -> SetTitle(sCount.Data());
+  // set ecal debug axis titles
+  hECalDebugClustSum5        -> GetXaxis() -> SetTitle(sDebugClustSum5.Data());
+  hECalDebugClustSum5        -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugClustSum10       -> GetXaxis() -> SetTitle(sDebugClustSum10.Data());
+  hECalDebugClustSum10       -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugClustSum100      -> GetXaxis() -> SetTitle(sDebugClustSum100.Data());
+  hECalDebugClustSum100      -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugClustSum1000     -> GetXaxis() -> SetTitle(sDebugClustSum1000.Data());
+  hECalDebugClustSum1000     -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugTruClustSum5     -> GetXaxis() -> SetTitle(sDebugTruClustSum5.Data());
+  hECalDebugTruClustSum5     -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugTruClustSum10    -> GetXaxis() -> SetTitle(sDebugTruClustSum10.Data());
+  hECalDebugTruClustSum10    -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugTruClustSum100   -> GetXaxis() -> SetTitle(sDebugTruClustSum100.Data());
+  hECalDebugTruClustSum100   -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugTruClustSum1000  -> GetXaxis() -> SetTitle(sDebugTruClustSum1000.Data());
+  hECalDebugTruClustSum1000  -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugClustDiff5       -> GetXaxis() -> SetTitle(sDebugClustDiff5.Data());
+  hECalDebugClustDiff5       -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugClustDiff10      -> GetXaxis() -> SetTitle(sDebugClustDiff10.Data());
+  hECalDebugClustDiff10      -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugClustDiff100     -> GetXaxis() -> SetTitle(sDebugClustDiff100.Data());
+  hECalDebugClustDiff100     -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugClustDiff1000    -> GetXaxis() -> SetTitle(sDebugClustDiff1000.Data());
+  hECalDebugClustDiff1000    -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugTruClustDiff5    -> GetXaxis() -> SetTitle(sDebugTruClustDiff5.Data());
+  hECalDebugTruClustDiff5    -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugTruClustDiff10   -> GetXaxis() -> SetTitle(sDebugTruClustDiff10.Data());
+  hECalDebugTruClustDiff10   -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugTruClustDiff100  -> GetXaxis() -> SetTitle(sDebugTruClustDiff100.Data());
+  hECalDebugTruClustDiff100  -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalDebugTruClustDiff1000 -> GetXaxis() -> SetTitle(sDebugTruClustDiff1000.Data());
+  hECalDebugTruClustDiff1000 -> GetYaxis() -> SetTitle(sCount.Data());
   return;
 
 }  // end 'FinishWithGlobalRootLock()'
