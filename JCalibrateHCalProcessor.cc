@@ -303,18 +303,28 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
 void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEvent>& event) {
 
   // hit and cluster sums
-  double eHitSum(0.);
-  double eClustSum(0.);
-  double eTruClustSum(0.);
+  double eHCalHitSum(0.);
+  double eECalHitSum(0.);
+  double eHCalClustSum(0.);
+  double eECalClustSum(0.);
+  double eTruHCalClustSum(0.);
+  double eTruECalClustSum(0.);
 
   // sum hcal hit energy
-  for (auto hit : bhcalRecHits()) {
-    eHitSum += hit -> getEnergy();
+  for (auto bhCalHit : bhcalRecHits()) {
+    eHCalHitSum += bhCalHit -> getEnergy();
   }  // end 1st hcal hit loop
 
-  // if hit sum is 0, skip event
-  const bool isHCalHitSumNonzero = (eHitSum > 0.);
-  if (!isHCalHitSumNonzero) {
+  // ecal hit energy
+  for (auto beCalHit : becalRecHits()) {
+    eECalHitSum += beCalHit -> getEnergy();
+  }  // end 1st ecal hit loop
+
+  // if both hit sums are 0, skip event
+  const bool isHCalHitSumNonzero = (eHCalHitSum > 0.);
+  const bool isECalHitSumNonzero = (eECalHitSum > 0.);
+  const bool areHitSumsNonzero   = (isHCalHitSumNonzero || isECalHitSumNonzero);
+  if (!areHitSumsNonzero) {
     return;
   }
 
@@ -365,282 +375,530 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   hParMomZ -> Fill(pMcPar[2]);
 
   // reco. hcal hit loop
-  unsigned long nHit(0);
-  for (auto hit : bhcalRecHits()) {
+  unsigned long nHCalHit(0);
+  for (auto bhCalHit : bhcalRecHits()) {
 
     // grab hit properties
-    const auto rHitX   = hit -> getPosition().x;
-    const auto rHitY   = hit -> getPosition().y;
-    const auto rHitZ   = hit -> getPosition().z;
-    const auto eHit    = hit -> getEnergy();
-    const auto diffHit = (eHit - eMcPar) / eHit;
+    const auto rHCalHitX   = bhCalHit -> getPosition().x;
+    const auto rHCalHitY   = bhCalHit -> getPosition().y;
+    const auto rHCalHitZ   = bhCalHit -> getPosition().z;
+    const auto eHCalHit    = bhCalHit -> getEnergy();
+    const auto diffHCalHit = (eHCalHit - eMcPar) / eHCalHit;
 
     // fill hit histograms and increment sums/counters
-    hHCalRecHitEne      -> Fill(eHit);
-    hHCalRecHitPosZ     -> Fill(rHitZ);
-    hHCalRecHitParDiff  -> Fill(diffHit);
-    hHCalRecHitPosYvsX  -> Fill(rHitX, rHitY);
-    hHCalRecHitVsParEne -> Fill(eMcPar, eHit);
-    ++nHit;
+    hHCalRecHitEne      -> Fill(eHCalHit);
+    hHCalRecHitPosZ     -> Fill(rHCalHitZ);
+    hHCalRecHitParDiff  -> Fill(diffHCalHit);
+    hHCalRecHitPosYvsX  -> Fill(rHCalHitX, rHCalHitY);
+    hHCalRecHitVsParEne -> Fill(eMcPar, eHCalHit);
+    ++nHCalHit;
+  }  // end 2nd hcal hit loop
+
+  // reco. ecal hit loop
+  unsigned long nECalHit(0);
+  for (auto beCalHit : becalRecHits()) {
+
+    // grab hit properties
+    const auto rECalHitX   = beCalHit -> getPosition().x;
+    const auto rECalHitY   = beCalHit -> getPosition().y;
+    const auto rECalHitZ   = beCalHit -> getPosition().z;
+    const auto eECalHit    = beCalHit -> getEnergy();
+    const auto diffECalHit = (eECalHit - eMcPar) / eECalHit;
+
+    // fill hit histograms and increment sums/counters
+    hECalRecHitEne      -> Fill(eECalHit);
+    hECalRecHitPosZ     -> Fill(rECalHitZ);
+    hECalRecHitParDiff  -> Fill(diffECalHit);
+    hECalRecHitPosYvsX  -> Fill(rECalHitX, rECalHitY);
+    hECalRecHitVsParEne -> Fill(eMcPar, eECalHit);
+    ++nECalHit;
   }  // end 2nd hcal hit loop
 
   // for highest energy clusters
-  int    iLeadClust(-1);
-  int    iLeadTruClust(-1);
-  double eLeadClust(0.);
-  double eLeadTruClust(0.);
-  double diffLeadClust(0.);
-  double diffLeadTruClust(0.);
+  int    iLeadHCalClust(-1);
+  int    iLeadECalClust(-1);
+  int    iLeadTruHCalClust(-1);
+  int    iLeadTruECalClust(-1);
+  double eLeadHCalClust(0.);
+  double eLeadECalClust(0.);
+  double eLeadTruHCalClust(0.);
+  double eLeadTruECalClust(0.);
+  double diffLeadHCalClust(0.);
+  double diffLeadECalClust(0.);
+  double diffLeadTruHCalClust(0.);
+  double diffLeadTruECalClust(0.);
 
   // reco. hcal cluster loop
-  unsigned long iClust(0);
-  unsigned long nClust(0);
-  for (auto cluster : bhcalClusters()) {
+  unsigned long iHCalClust(0);
+  unsigned long nHCalClust(0);
+  for (auto bhCalClust : bhcalClusters()) {
 
     // grab cluster properties
-    const auto rClustX   = cluster -> getPosition().x;
-    const auto rClustY   = cluster -> getPosition().y;
-    const auto rClustZ   = cluster -> getPosition().z;
-    const auto eClust    = cluster -> getEnergy();
-    const auto nHitClust = cluster -> hits_size();
-    const auto diffClust = (eClust - eMcPar) / eClust;
+    const auto rHCalClustX   = bhCalClust -> getPosition().x;
+    const auto rHCalClustY   = bhCalClust -> getPosition().y;
+    const auto rHCalClustZ   = bhCalClust -> getPosition().z;
+    const auto eHCalClust    = bhCalClust -> getEnergy();
+    const auto nHitHCalClust = bhCalClust -> hits_size();
+    const auto diffHCalClust = (eHCalClust - eMcPar) / eHCalClust;
 
     // fill cluster histograms and increment counters
-    hHCalClustEne      -> Fill(eClust);
-    hHCalClustPosZ     -> Fill(rClustZ);
-    hHCalClustNumHit   -> Fill(nHitClust);
-    hHCalClustParDiff  -> Fill(diffClust);
-    hHCalClustPosYvsX  -> Fill(rClustX, rClustY);
-    hHCalClustVsParEne -> Fill(eMcPar, eClust);
-    eClustSum += eClust;
-    ++nClust;
+    hHCalClustEne      -> Fill(eHCalClust);
+    hHCalClustPosZ     -> Fill(rHCalClustZ);
+    hHCalClustNumHit   -> Fill(nHitHCalClust);
+    hHCalClustParDiff  -> Fill(diffHCalClust);
+    hHCalClustPosYvsX  -> Fill(rHCalClustX, rHCalClustY);
+    hHCalClustVsParEne -> Fill(eMcPar, eHCalClust);
+    eHCalClustSum += eHCalClust;
+    ++nHCalClust;
 
     // select leading cluster
-    const bool isBiggerEne = (eClust > eLeadClust);
+    const bool isBiggerEne = (eHCalClust > eLeadHCalClust);
     if (isBiggerEne) {
-      iLeadClust    = iClust;
-      eLeadClust    = eClust;
-      diffLeadClust = diffClust;
+      iLeadHCalClust    = iHCalClust;
+      eLeadHCalClust    = eHCalClust;
+      diffLeadHCalClust = diffHCalClust;
     }
-    ++iClust;
+    ++iHCalClust;
   }  // end reco. hcal cluster loop
 
-  // for debugging reco. hcal clusters
-  double eDebugSumClust5(0.);
-  double eDebugSumClust10(0.);
-  double eDebugSumClust100(0.);
-  double eDebugSumClust1000(0.);
+  // reco. ecal cluster loop
+  unsigned long iECalClust(0);
+  unsigned long nECalClust(0);
+  for (auto beCalClust : becalClusters()) {
 
-  // debug reco. hcal cluster loop
-  unsigned long iDebugClust(0);
-  for (auto debugCluster : bhcalClusters()) {
+    // grab cluster properties
+    const auto rECalClustX   = beCalClust -> getPosition().x;
+    const auto rECalClustY   = beCalClust -> getPosition().y;
+    const auto rECalClustZ   = beCalClust -> getPosition().z;
+    const auto eECalClust    = beCalClust -> getEnergy();
+    const auto nHitECalClust = beCalClust -> hits_size();
+    const auto diffECalClust = (eECalClust - eMcPar) / eECalClust;
+
+    // fill cluster histograms and increment counters
+    hECalClustEne      -> Fill(eECalClust);
+    hECalClustPosZ     -> Fill(rECalClustZ);
+    hECalClustNumHit   -> Fill(nHitECalClust);
+    hECalClustParDiff  -> Fill(diffECalClust);
+    hECalClustPosYvsX  -> Fill(rECalClustX, rECalClustY);
+    hECalClustVsParEne -> Fill(eMcPar, eECalClust);
+    eECalClustSum += eECalClust;
+    ++nECalClust;
 
     // select leading cluster
-    const bool isLeadCluster = (iDebugClust == iLeadClust);
-    if (isLeadCluster) {
+    const bool isBiggerEne = (eECalClust > eLeadECalClust);
+    if (isBiggerEne) {
+      iLeadECalClust    = iECalClust;
+      eLeadECalClust    = eECalClust;
+      diffLeadECalClust = diffECalClust;
+    }
+    ++iECalClust;
+  }  // end reco. ecal cluster loop
+
+  // for debugging reco. clusters
+  double eDebugSumHCalClust5(eLeadHCalClust);
+  double eDebugSumECalClust5(eLeadECalClust);
+  double eDebugSumHCalClust10(eLeadHCalClust);
+  double eDebugSumECalClust10(eLeadECalClust);
+  double eDebugSumHCalClust100(eLeadHCalClust);
+  double eDebugSumECalClust100(eLeadECalClust);
+  double eDebugSumHCalClust1000(eLeadHCalClust);
+  double eDebugSumECalClust1000(eLeadECalClust);
+
+  // debug reco. hcal cluster loop
+  unsigned long iDebugHCalClust(0);
+  for (auto debugHCalClust : bhcalClusters()) {
+
+    // select leading cluster
+    const bool isLeadHCalClust = (iDebugHCalClust == iLeadHCalClust);
+    if (isLeadHCalClust) {
 
       // grab lead cluster properties
-      const auto rLeadClustX = debugCluster -> getPosition().x;
-      const auto rLeadClustY = debugCluster -> getPosition().y;
-      const auto eLeadClust  = debugCluster -> getEnergy();
+      const auto rLeadHCalClustX = debugHCalClust -> getPosition().x;
+      const auto rLeadHCalClustY = debugHCalClust -> getPosition().y;
+      const auto eLeadHCalClust  = debugHCalClust -> getEnergy();
 
-      unsigned long iOtherClust(0);
-      double        toAddClust5(0.);
-      double        toAddClust10(0.);
-      double        toAddClust100(0.);
-      double        toAddClust1000(0.);
-      for (auto otherCluster : bhcalClusters()) {
+      unsigned long iOtherHCalClust(0);
+      double        toAddHCalClust5(0.);
+      double        toAddHCalClust10(0.);
+      double        toAddHCalClust100(0.);
+      double        toAddHCalClust1000(0.);
+      for (auto otherHCalClust : bhcalClusters()) {
 
         // ignore same cluster
-        const bool isSameClust = (iOtherClust == iDebugClust);
-        if (isSameClust) continue;
+        const bool isSameHCalClust = (iOtherHCalClust == iDebugHCalClust);
+        if (isSameHCalClust) continue;
 
         // grab other cluster properties
-        const auto rOtherClustX = otherCluster -> getPosition().x;
-        const auto rOtherClustY = otherCluster -> getPosition().y;
-        const auto eOtherClust  = otherCluster -> getEnergy();
-        const auto drLeadOtherX = rOtherClustX - rLeadClustX;
-        const auto drLeadOtherY = rOtherClustY - rLeadClustY;
-        const auto drLeadOther  = std::sqrt((drLeadOtherX * drLeadOtherX) + (drLeadOtherY * drLeadOtherY));
+        const auto rOtherHCalClustX = otherHCalClust -> getPosition().x;
+        const auto rOtherHCalClustY = otherHCalClust -> getPosition().y;
+        const auto eOtherHCalClust  = otherHCalClust -> getEnergy();
+        const auto drLeadOtherX     = rOtherHCalClustX - rLeadHCalClustX;
+        const auto drLeadOtherY     = rOtherHCalClustY - rLeadHCalClustY;
+        const auto drLeadOther      = std::sqrt((drLeadOtherX * drLeadOtherX) + (drLeadOtherY * drLeadOtherY));
 
         // increment relevant sums and counters
         const bool isIn5mm    = (drLeadOther < 5.);
         const bool isIn10mm   = (drLeadOther < 10.);
         const bool isIn100mm  = (drLeadOther < 100.);
         const bool isIn1000mm = (drLeadOther < 1000.);
-        if (isIn5mm)    toAddClust5    += eOtherClust;
-        if (isIn10mm)   toAddClust10   += eOtherClust;
-        if (isIn100mm)  toAddClust100  += eOtherClust;
-        if (isIn1000mm) toAddClust1000 += eOtherClust;
-        ++iOtherClust;
+        if (isIn5mm)    toAddHCalClust5    += eOtherHCalClust;
+        if (isIn10mm)   toAddHCalClust10   += eOtherHCalClust;
+        if (isIn100mm)  toAddHCalClust100  += eOtherHCalClust;
+        if (isIn1000mm) toAddHCalClust1000 += eOtherHCalClust;
+        ++iOtherHCalClust;
       }  // end other reco. cluster loo
 
       // add sums to lead energy
-      eDebugSumClust5     = eLeadClust;
-      eDebugSumClust10    = eLeadClust;
-      eDebugSumClust100   = eLeadClust;
-      eDebugSumClust1000  = eLeadClust;
-      eDebugSumClust5    += toAddClust5;
-      eDebugSumClust10   += toAddClust10;
-      eDebugSumClust100  += toAddClust100;
-      eDebugSumClust1000 += toAddClust1000;
-
+      eDebugSumHCalClust5    += toAddHCalClust5;
+      eDebugSumHCalClust10   += toAddHCalClust10;
+      eDebugSumHCalClust100  += toAddHCalClust100;
+      eDebugSumHCalClust1000 += toAddHCalClust1000;
     }
-    ++iDebugClust;
+    ++iDebugHCalClust;
   }  // end debug reco. hcal cluster loop
 
-  // true hcal cluster loop
-  unsigned long iTruClust(0);
-  unsigned long nTruClust(0);
-  for (auto truthCluster : bhcalTruthClusters()) {
-
-    // grab cluster properties
-    const auto rTruClustX   = truthCluster -> getPosition().x;
-    const auto rTruClustY   = truthCluster -> getPosition().y;
-    const auto rTruClustZ   = truthCluster -> getPosition().z;
-    const auto eTruClust    = truthCluster -> getEnergy();
-    const auto nHitTruClust = truthCluster -> hits_size();
-    const auto diffTruClust = (eTruClust - eMcPar) / eTruClust;
-
-    // fill cluster histograms and increment counters
-    hHCalTruClustEne      -> Fill(eTruClust);
-    hHCalTruClustPosZ     -> Fill(rTruClustZ);
-    hHCalTruClustNumHit   -> Fill(nHitTruClust);
-    hHCalTruClustParDiff  -> Fill(diffTruClust);
-    hHCalTruClustPosYvsX  -> Fill(rTruClustX, rTruClustY);
-    hHCalTruClustVsParEne -> Fill(eMcPar, eTruClust);
-    eTruClustSum += eTruClust;
-    ++nTruClust;
+  // debug reco. ecal cluster loop
+  unsigned long iDebugECalClust(0);
+  for (auto debugECalClust : becalClusters()) {
 
     // select leading cluster
-    const bool isBiggerEne = (eTruClust > eLeadTruClust);
-    if (isBiggerEne) {
-      iLeadTruClust    = iTruClust;
-      eLeadTruClust    = eTruClust;
-      diffLeadTruClust = diffTruClust;
-    }
-    ++iTruClust;
-  }  // end true hcal cluster loop
-
-  // for debugging truth hcal clusters
-  double eDebugSumTruClust5(0.);
-  double eDebugSumTruClust10(0.);
-  double eDebugSumTruClust100(0.);
-  double eDebugSumTruClust1000(0.);
-
-  // debug truth hcal cluster loop
-  unsigned long iDebugTruClust(0);
-  for (auto debugTruthCluster : bhcalTruthClusters()) {
-
-    // select leading cluster
-    const bool isLeadTruCluster = (iDebugTruClust == iLeadTruClust);
-    if (isLeadTruCluster) {
+    const bool isLeadECalClust = (iDebugECalClust == iLeadECalClust);
+    if (isLeadECalClust) {
 
       // grab lead cluster properties
-      const auto rLeadTruClustX = debugTruthCluster -> getPosition().x;
-      const auto rLeadTruClustY = debugTruthCluster -> getPosition().y;
-      const auto eLeadTruClust  = debugTruthCluster -> getEnergy();
+      const auto rLeadECalClustX = debugECalClust -> getPosition().x;
+      const auto rLeadECalClustY = debugECalClust -> getPosition().y;
+      const auto eLeadECalClust  = debugECalClust -> getEnergy();
 
-      unsigned long iOtherTruClust(0);
-      double        toAddTruClust5(0.);
-      double        toAddTruClust10(0.);
-      double        toAddTruClust100(0.);
-      double        toAddTruClust1000(0.);
-      for (auto otherTruthCluster : bhcalTruthClusters()) {
+      unsigned long iOtherECalClust(0);
+      double        toAddECalClust5(0.);
+      double        toAddECalClust10(0.);
+      double        toAddECalClust100(0.);
+      double        toAddECalClust1000(0.);
+      for (auto otherECalClust : becalClusters()) {
 
         // ignore same cluster
-        const bool isSameTruClust = (iOtherTruClust == iDebugTruClust);
-        if (isSameTruClust) continue;
+        const bool isSameECalClust = (iOtherECalClust == iDebugECalClust);
+        if (isSameECalClust) continue;
 
         // grab other cluster properties
-        const auto rOtherTruClustX = otherTruthCluster -> getPosition().x;
-        const auto rOtherTruClustY = otherTruthCluster -> getPosition().y;
-        const auto eOtherTruClust  = otherTruthCluster -> getEnergy();
-        const auto drLeadOtherX    = rOtherTruClustX - rLeadTruClustX;
-        const auto drLeadOtherY    = rOtherTruClustY - rLeadTruClustY;
-        const auto drLeadOther     = std::sqrt((drLeadOtherX * drLeadOtherX) + (drLeadOtherY * drLeadOtherY));
+        const auto rOtherECalClustX = otherECalClust -> getPosition().x;
+        const auto rOtherECalClustY = otherECalClust -> getPosition().y;
+        const auto eOtherECalClust  = otherECalClust -> getEnergy();
+        const auto drLeadOtherX     = rOtherECalClustX - rLeadECalClustX;
+        const auto drLeadOtherY     = rOtherECalClustY - rLeadECalClustY;
+        const auto drLeadOther      = std::sqrt((drLeadOtherX * drLeadOtherX) + (drLeadOtherY * drLeadOtherY));
+
+        // increment relevant sums and counters
+        const bool isIn5mm    = (drLeadOther < 5.);
+        const bool isIn10mm   = (drLeadOther < 10.);
+        const bool isIn100mm  = (drLeadOther < 100.);
+        const bool isIn1000mm = (drLeadOther < 1000.);
+        if (isIn5mm)    toAddECalClust5    += eOtherECalClust;
+        if (isIn10mm)   toAddECalClust10   += eOtherECalClust;
+        if (isIn100mm)  toAddECalClust100  += eOtherECalClust;
+        if (isIn1000mm) toAddECalClust1000 += eOtherECalClust;
+        ++iOtherECalClust;
+      }  // end other reco. cluster loo
+
+      // add sums to lead energy
+      eDebugSumECalClust5    += toAddECalClust5;
+      eDebugSumECalClust10   += toAddECalClust10;
+      eDebugSumECalClust100  += toAddECalClust100;
+      eDebugSumECalClust1000 += toAddECalClust1000;
+    }
+    ++iDebugECalClust;
+  }  // end debug reco. ecal cluster loop
+
+  // true hcal cluster loop
+  unsigned long iTruHCalClust(0);
+  unsigned long nTruHCalClust(0);
+  for (auto truthHCalClust : bhcalTruthClusters()) {
+
+    // grab cluster properties
+    const auto rTruHCalClustX   = truthHCalClust -> getPosition().x;
+    const auto rTruHCalClustY   = truthHCalClust -> getPosition().y;
+    const auto rTruHCalClustZ   = truthHCalClust -> getPosition().z;
+    const auto eTruHCalClust    = truthHCalClust -> getEnergy();
+    const auto nHitTruHCalClust = truthHCalClust -> hits_size();
+    const auto diffTruHCalClust = (eTruHCalClust - eMcPar) / eTruHCalClust;
+
+    // fill cluster histograms and increment counters
+    hHCalTruClustEne      -> Fill(eTruHCalClust);
+    hHCalTruClustPosZ     -> Fill(rTruHCalClustZ);
+    hHCalTruClustNumHit   -> Fill(nHitTruHCalClust);
+    hHCalTruClustParDiff  -> Fill(diffTruHCalClust);
+    hHCalTruClustPosYvsX  -> Fill(rTruHCalClustX, rTruHCalClustY);
+    hHCalTruClustVsParEne -> Fill(eMcPar, eTruHCalClust);
+    eTruHCalClustSum += eTruHCalClust;
+    ++nTruHCalClust;
+
+    // select leading cluster
+    const bool isBiggerEne = (eTruHCalClust > eLeadTruHCalClust);
+    if (isBiggerEne) {
+      iLeadTruHCalClust    = iTruHCalClust;
+      eLeadTruHCalClust    = eTruHCalClust;
+      diffLeadTruHCalClust = diffTruHCalClust;
+    }
+    ++iTruHCalClust;
+  }  // end true hcal cluster loop
+
+  // true ecal cluster loop
+  unsigned long iTruECalClust(0);
+  unsigned long nTruECalClust(0);
+  for (auto truthECalClust : becalTruthClusters()) {
+
+    // grab cluster properties
+    const auto rTruECalClustX   = truthECalClust -> getPosition().x;
+    const auto rTruECalClustY   = truthECalClust -> getPosition().y;
+    const auto rTruECalClustZ   = truthECalClust -> getPosition().z;
+    const auto eTruECalClust    = truthECalClust -> getEnergy();
+    const auto nHitTruECalClust = truthECalClust -> hits_size();
+    const auto diffTruECalClust = (eTruECalClust - eMcPar) / eTruECalClust;
+
+    // fill cluster histograms and increment counters
+    hECalTruClustEne      -> Fill(eTruECalClust);
+    hECalTruClustPosZ     -> Fill(rTruECalClustZ);
+    hECalTruClustNumHit   -> Fill(nHitTruECalClust);
+    hECalTruClustParDiff  -> Fill(diffTruECalClust);
+    hECalTruClustPosYvsX  -> Fill(rTruECalClustX, rTruECalClustY);
+    hECalTruClustVsParEne -> Fill(eMcPar, eTruECalClust);
+    eTruECalClustSum += eTruECalClust;
+    ++nTruECalClust;
+
+    // select leading cluster
+    const bool isBiggerEne = (eTruECalClust > eLeadTruECalClust);
+    if (isBiggerEne) {
+      iLeadTruECalClust    = iTruECalClust;
+      eLeadTruECalClust    = eTruECalClust;
+      diffLeadTruECalClust = diffTruECalClust;
+    }
+    ++iTruECalClust;
+  }  // end true ecal cluster loop
+
+  // for debugging truth clusters
+  double eDebugSumTruHCalClust5(eLeadTruHCalClust);
+  double eDebugSumTruECalClust5(eLeadTruECalClust);
+  double eDebugSumTruHCalClust10(eLeadTruHCalClust);
+  double eDebugSumTruECalClust10(eLeadTruECalClust);
+  double eDebugSumTruHCalClust100(eLeadTruHCalClust);
+  double eDebugSumTruECalClust100(eLeadTruECalClust);
+  double eDebugSumTruHCalClust1000(eLeadTruHCalClust);
+  double eDebugSumTruECalClust1000(eLeadTruECalClust);
+
+  // debug truth hcal cluster loop
+  unsigned long iDebugTruHCalClust(0);
+  for (auto debugTruthHCalClust : bhcalTruthClusters()) {
+
+    // select leading cluster
+    const bool isLeadTruHCalClust = (iDebugTruHCalClust == iLeadTruHCalClust);
+    if (isLeadTruHCalClust) {
+
+      // grab lead cluster properties
+      const auto rLeadTruHCalClustX = debugTruthHCalClust -> getPosition().x;
+      const auto rLeadTruHCalClustY = debugTruthHCalClust -> getPosition().y;
+      const auto eLeadTruHCalClust  = debugTruthHCalClust -> getEnergy();
+
+      unsigned long iOtherTruHCalClust(0);
+      double        toAddTruHCalClust5(0.);
+      double        toAddTruHCalClust10(0.);
+      double        toAddTruHCalClust100(0.);
+      double        toAddTruHCalClust1000(0.);
+      for (auto otherTruthHCalClust : bhcalTruthClusters()) {
+
+        // ignore same cluster
+        const bool isSameTruHCalClust = (iOtherTruHCalClust == iDebugTruHCalClust);
+        if (isSameTruHCalClust) continue;
+
+        // grab other cluster properties
+        const auto rOtherTruHCalClustX = otherTruthHCalClust -> getPosition().x;
+        const auto rOtherTruHCalClustY = otherTruthHCalClust -> getPosition().y;
+        const auto eOtherTruHCalClust  = otherTruthHCalClust -> getEnergy();
+        const auto drLeadOtherX        = rOtherTruHCalClustX - rLeadTruHCalClustX;
+        const auto drLeadOtherY        = rOtherTruHCalClustY - rLeadTruHCalClustY;
+        const auto drLeadOther         = std::sqrt((drLeadOtherX * drLeadOtherX) + (drLeadOtherY * drLeadOtherY));
 
         // increment relevant sums and counters
         const bool isIn5mm    = (drLeadOther < 5);
         const bool isIn10mm   = (drLeadOther < 10);
         const bool isIn100mm  = (drLeadOther < 100);
         const bool isIn1000mm = (drLeadOther < 1000);
-        if (isIn5mm)    toAddTruClust5    += eOtherTruClust;
-        if (isIn10mm)   toAddTruClust10   += eOtherTruClust;
-        if (isIn100mm)  toAddTruClust100  += eOtherTruClust;
-        if (isIn1000mm) toAddTruClust1000 += eOtherTruClust;
-        ++iOtherTruClust;
+        if (isIn5mm)    toAddTruHCalClust5    += eOtherTruHCalClust;
+        if (isIn10mm)   toAddTruHCalClust10   += eOtherTruHCalClust;
+        if (isIn100mm)  toAddTruHCalClust100  += eOtherTruHCalClust;
+        if (isIn1000mm) toAddTruHCalClust1000 += eOtherTruHCalClust;
+        ++iOtherTruHCalClust;
       }  // end other true hcal cluster loo
 
       // add sums to lead energy
-      eDebugSumTruClust5     = eLeadTruClust;
-      eDebugSumTruClust10    = eLeadTruClust;
-      eDebugSumTruClust100   = eLeadTruClust;
-      eDebugSumTruClust1000  = eLeadTruClust;
-      eDebugSumTruClust5    += toAddTruClust5;
-      eDebugSumTruClust10   += toAddTruClust10;
-      eDebugSumTruClust100  += toAddTruClust100;
-      eDebugSumTruClust1000 += toAddTruClust1000;
-
+      eDebugSumTruHCalClust5    += toAddTruHCalClust5;
+      eDebugSumTruHCalClust10   += toAddTruHCalClust10;
+      eDebugSumTruHCalClust100  += toAddTruHCalClust100;
+      eDebugSumTruHCalClust1000 += toAddTruHCalClust1000;
     }
-    ++iDebugTruClust;
-  }  // end debug true cluster loop
+    ++iDebugTruHCalClust;
+  }  // end debug truth hcal cluster loop
+
+  // debug truth ecal cluster loop
+  unsigned long iDebugTruECalClust(0);
+  for (auto debugTruthECalClust : becalTruthClusters()) {
+
+    // select leading cluster
+    const bool isLeadTruECalClust = (iDebugTruECalClust == iLeadTruECalClust);
+    if (isLeadTruECalClust) {
+
+      // grab lead cluster properties
+      const auto rLeadTruECalClustX = debugTruthECalClust -> getPosition().x;
+      const auto rLeadTruECalClustY = debugTruthECalClust -> getPosition().y;
+      const auto eLeadTruECalClust  = debugTruthECalClust -> getEnergy();
+
+      unsigned long iOtherTruECalClust(0);
+      double        toAddTruECalClust5(0.);
+      double        toAddTruECalClust10(0.);
+      double        toAddTruECalClust100(0.);
+      double        toAddTruECalClust1000(0.);
+      for (auto otherTruthECalClust : becalTruthClusters()) {
+
+        // ignore same cluster
+        const bool isSameTruECalClust = (iOtherTruECalClust == iDebugTruECalClust);
+        if (isSameTruECalClust) continue;
+
+        // grab other cluster properties
+        const auto rOtherTruECalClustX = otherTruthECalClust -> getPosition().x;
+        const auto rOtherTruECalClustY = otherTruthECalClust -> getPosition().y;
+        const auto eOtherTruECalClust  = otherTruthECalClust -> getEnergy();
+        const auto drLeadOtherX        = rOtherTruECalClustX - rLeadTruECalClustX;
+        const auto drLeadOtherY        = rOtherTruECalClustY - rLeadTruECalClustY;
+        const auto drLeadOther         = std::sqrt((drLeadOtherX * drLeadOtherX) + (drLeadOtherY * drLeadOtherY));
+
+        // increment relevant sums and counters
+        const bool isIn5mm    = (drLeadOther < 5);
+        const bool isIn10mm   = (drLeadOther < 10);
+        const bool isIn100mm  = (drLeadOther < 100);
+        const bool isIn1000mm = (drLeadOther < 1000);
+        if (isIn5mm)    toAddTruECalClust5    += eOtherTruECalClust;
+        if (isIn10mm)   toAddTruECalClust10   += eOtherTruECalClust;
+        if (isIn100mm)  toAddTruECalClust100  += eOtherTruECalClust;
+        if (isIn1000mm) toAddTruECalClust1000 += eOtherTruECalClust;
+        ++iOtherTruECalClust;
+      }  // end other true ecal cluster loo
+
+      // add sums to lead energy
+      eDebugSumTruECalClust5    += toAddTruECalClust5;
+      eDebugSumTruECalClust10   += toAddTruECalClust10;
+      eDebugSumTruECalClust100  += toAddTruECalClust100;
+      eDebugSumTruECalClust1000 += toAddTruECalClust1000;
+    }
+    ++iDebugTruECalClust;
+  }  // end debug truth ecal cluster loop
 
   // do event-wise calculations
-  const auto diffHitSum      = (eHitSum - eMcPar) / eHitSum;
-  const auto diffClustSum    = (eClustSum - eMcPar) / eClustSum;
-  const auto diffTruClustSum = (eTruClustSum - eMcPar) / eTruClustSum;
+  const auto diffHCalHitSum      = (eHCalHitSum - eMcPar) / eHCalHitSum;
+  const auto diffECalHitSum      = (eECalHitSum - eMcPar) / eECalHitSum;
+  const auto diffHCalClustSum    = (eHCalClustSum - eMcPar) / eHCalClustSum;
+  const auto diffECalClustSum    = (eECalClustSum - eMcPar) / eECalClustSum;
+  const auto diffTruHCalClustSum = (eTruHCalClustSum - eMcPar) / eTruHCalClustSum;
+  const auto diffTruECalClustSum = (eTruECalClustSum - eMcPar) / eTruECalClustSum;
 
   // fill event-wise hcal histograms
   hEvtHCalNumPar             -> Fill(nPar);
-  hEvtHCalNumHit             -> Fill(nHit);
-  hEvtHCalNumClust           -> Fill(nClust);
-  hEvtHCalNumTruClust        -> Fill(nTruClust);
-  hEvtHCalSumHitEne          -> Fill(eHitSum);
-  hEvtHCalSumClustEne        -> Fill(eClustSum);
-  hEvtHCalSumTruClustEne     -> Fill(eTruClustSum);
-  hEvtHCalLeadClustEne       -> Fill(eLeadClust);
-  hEvtHCalLeadTruClustEne    -> Fill(eLeadTruClust);
-  hEvtHCalSumHitDiff         -> Fill(diffHitSum);
-  hEvtHCalSumClustDiff       -> Fill(diffClustSum);
-  hEvtHCalSumTruClustDiff    -> Fill(diffTruClustSum);
-  hEvtHCalLeadClustDiff      -> Fill(diffLeadClust);
-  hEvtHCalLeadTruClustDiff   -> Fill(diffLeadTruClust);
-  hEvtHCalNumClustVsHit      -> Fill(nHit, nClust);
-  hEvtHCalNumTruClustVsClust -> Fill(nClust, nTruClust);
-  hEvtHCalSumHitVsPar        -> Fill(eMcPar, eHitSum);
-  hEvtHCalSumClustVsPar      -> Fill(eMcPar, eClustSum);
-  hEvtHCalSumTruClustVsPar   -> Fill(eMcPar, eTruClustSum);
-  hEvtHCalLeadClustVsPar     -> Fill(eMcPar, eLeadClust);
-  hEvtHCalLeadTruClustVsPar  -> Fill(eMcPar, eLeadTruClust);
+  hEvtHCalNumHit             -> Fill(nHCalHit);
+  hEvtHCalNumClust           -> Fill(nHCalClust);
+  hEvtHCalNumTruClust        -> Fill(nTruHCalClust);
+  hEvtHCalSumHitEne          -> Fill(eHCalHitSum);
+  hEvtHCalSumClustEne        -> Fill(eHCalClustSum);
+  hEvtHCalSumTruClustEne     -> Fill(eTruHCalClustSum);
+  hEvtHCalLeadClustEne       -> Fill(eLeadHCalClust);
+  hEvtHCalLeadTruClustEne    -> Fill(eLeadTruHCalClust);
+  hEvtHCalSumHitDiff         -> Fill(diffHCalHitSum);
+  hEvtHCalSumClustDiff       -> Fill(diffHCalClustSum);
+  hEvtHCalSumTruClustDiff    -> Fill(diffTruHCalClustSum);
+  hEvtHCalLeadClustDiff      -> Fill(diffLeadHCalClust);
+  hEvtHCalLeadTruClustDiff   -> Fill(diffLeadTruHCalClust);
+  hEvtHCalNumClustVsHit      -> Fill(nHCalHit, nHCalClust);
+  hEvtHCalNumTruClustVsClust -> Fill(nHCalClust, nTruHCalClust);
+  hEvtHCalSumHitVsPar        -> Fill(eMcPar, eHCalHitSum);
+  hEvtHCalSumClustVsPar      -> Fill(eMcPar, eHCalClustSum);
+  hEvtHCalSumTruClustVsPar   -> Fill(eMcPar, eTruHCalClustSum);
+  hEvtHCalLeadClustVsPar     -> Fill(eMcPar, eLeadHCalClust);
+  hEvtHCalLeadTruClustVsPar  -> Fill(eMcPar, eLeadTruHCalClust);
+
+  // fill event-wise ecal histograms
+  hEvtECalNumPar             -> Fill(nPar);
+  hEvtECalNumHit             -> Fill(nECalHit);
+  hEvtECalNumClust           -> Fill(nECalClust);
+  hEvtECalNumTruClust        -> Fill(nTruECalClust);
+  hEvtECalSumHitEne          -> Fill(eECalHitSum);
+  hEvtECalSumClustEne        -> Fill(eECalClustSum);
+  hEvtECalSumTruClustEne     -> Fill(eTruECalClustSum);
+  hEvtECalLeadClustEne       -> Fill(eLeadECalClust);
+  hEvtECalLeadTruClustEne    -> Fill(eLeadTruECalClust);
+  hEvtECalSumHitDiff         -> Fill(diffECalHitSum);
+  hEvtECalSumClustDiff       -> Fill(diffECalClustSum);
+  hEvtECalSumTruClustDiff    -> Fill(diffTruECalClustSum);
+  hEvtECalLeadClustDiff      -> Fill(diffLeadECalClust);
+  hEvtECalLeadTruClustDiff   -> Fill(diffLeadTruECalClust);
+  hEvtECalNumClustVsHit      -> Fill(nECalHit, nECalClust);
+  hEvtECalNumTruClustVsClust -> Fill(nECalClust, nTruECalClust);
+  hEvtECalSumHitVsPar        -> Fill(eMcPar, eECalHitSum);
+  hEvtECalSumClustVsPar      -> Fill(eMcPar, eECalClustSum);
+  hEvtECalSumTruClustVsPar   -> Fill(eMcPar, eTruECalClustSum);
+  hEvtECalLeadClustVsPar     -> Fill(eMcPar, eLeadECalClust);
+  hEvtECalLeadTruClustVsPar  -> Fill(eMcPar, eLeadTruECalClust);
 
   // do debugging calculations
-  const auto diffDebugClustSum5       = (eDebugSumClust5 - eMcPar) / eDebugSumClust5;
-  const auto diffDebugClustSum10      = (eDebugSumClust10 - eMcPar) / eDebugSumClust5;
-  const auto diffDebugClustSum100     = (eDebugSumClust100 - eMcPar) / eDebugSumClust5;
-  const auto diffDebugClustSum1000    = (eDebugSumClust1000 - eMcPar) / eDebugSumClust5;
-  const auto diffDebugTruClustSum5    = (eDebugSumTruClust5 - eMcPar) / eDebugSumTruClust5;
-  const auto diffDebugTruClustSum10   = (eDebugSumTruClust10 - eMcPar) / eDebugSumTruClust5;
-  const auto diffDebugTruClustSum100  = (eDebugSumTruClust100 - eMcPar) / eDebugSumTruClust5;
-  const auto diffDebugTruClustSum1000 = (eDebugSumTruClust1000 - eMcPar) / eDebugSumTruClust5;
+  const auto diffDebugHCalClustSum5       = (eDebugSumHCalClust5 - eMcPar) / eDebugSumHCalClust5;
+  const auto diffDebugECalClustSum5       = (eDebugSumECalClust5 - eMcPar) / eDebugSumECalClust5;
+  const auto diffDebugHCalClustSum10      = (eDebugSumHCalClust10 - eMcPar) / eDebugSumHCalClust5;
+  const auto diffDebugECalClustSum10      = (eDebugSumECalClust10 - eMcPar) / eDebugSumECalClust5;
+  const auto diffDebugHCalClustSum100     = (eDebugSumHCalClust100 - eMcPar) / eDebugSumHCalClust5;
+  const auto diffDebugECalClustSum100     = (eDebugSumECalClust100 - eMcPar) / eDebugSumECalClust5;
+  const auto diffDebugHCalClustSum1000    = (eDebugSumHCalClust1000 - eMcPar) / eDebugSumHCalClust5;
+  const auto diffDebugECalClustSum1000    = (eDebugSumECalClust1000 - eMcPar) / eDebugSumECalClust5;
+  const auto diffDebugTruHCalClustSum5    = (eDebugSumTruHCalClust5 - eMcPar) / eDebugSumTruHCalClust5;
+  const auto diffDebugTruECalClustSum5    = (eDebugSumTruECalClust5 - eMcPar) / eDebugSumTruECalClust5;
+  const auto diffDebugTruHCalClustSum10   = (eDebugSumTruHCalClust10 - eMcPar) / eDebugSumTruHCalClust5;
+  const auto diffDebugTruECalClustSum10   = (eDebugSumTruECalClust10 - eMcPar) / eDebugSumTruECalClust5;
+  const auto diffDebugTruHCalClustSum100  = (eDebugSumTruHCalClust100 - eMcPar) / eDebugSumTruHCalClust5;
+  const auto diffDebugTruECalClustSum100  = (eDebugSumTruECalClust100 - eMcPar) / eDebugSumTruECalClust5;
+  const auto diffDebugTruHCalClustSum1000 = (eDebugSumTruHCalClust1000 - eMcPar) / eDebugSumTruHCalClust5;
+  const auto diffDebugTruECalClustSum1000 = (eDebugSumTruECalClust1000 - eMcPar) / eDebugSumTruECalClust5;
 
   // fill reco. cluster hcal debug histograms
-  hHCalDebugClustSum5        -> Fill(eDebugSumClust5);
-  hHCalDebugClustSum10       -> Fill(eDebugSumClust10);
-  hHCalDebugClustSum100      -> Fill(eDebugSumClust100);
-  hHCalDebugClustSum1000     -> Fill(eDebugSumClust1000);
-  hHCalDebugTruClustSum5     -> Fill(eDebugSumClust5);
-  hHCalDebugTruClustSum10    -> Fill(eDebugSumClust10);
-  hHCalDebugTruClustSum100   -> Fill(eDebugSumClust100);
-  hHCalDebugTruClustSum1000  -> Fill(eDebugSumClust1000);
-  hHCalDebugClustDiff5       -> Fill(diffDebugClustSum5);
-  hHCalDebugClustDiff10      -> Fill(diffDebugClustSum10);
-  hHCalDebugClustDiff100     -> Fill(diffDebugClustSum100);
-  hHCalDebugClustDiff1000    -> Fill(diffDebugClustSum1000);
-  hHCalDebugTruClustDiff5    -> Fill(diffDebugClustSum5);
-  hHCalDebugTruClustDiff10   -> Fill(diffDebugClustSum10);
-  hHCalDebugTruClustDiff100  -> Fill(diffDebugClustSum100);
-  hHCalDebugTruClustDiff1000 -> Fill(diffDebugClustSum1000);
+  hHCalDebugClustSum5        -> Fill(eDebugSumHCalClust5);
+  hHCalDebugClustSum10       -> Fill(eDebugSumHCalClust10);
+  hHCalDebugClustSum100      -> Fill(eDebugSumHCalClust100);
+  hHCalDebugClustSum1000     -> Fill(eDebugSumHCalClust1000);
+  hHCalDebugTruClustSum5     -> Fill(eDebugSumHCalClust5);
+  hHCalDebugTruClustSum10    -> Fill(eDebugSumHCalClust10);
+  hHCalDebugTruClustSum100   -> Fill(eDebugSumHCalClust100);
+  hHCalDebugTruClustSum1000  -> Fill(eDebugSumHCalClust1000);
+  hHCalDebugClustDiff5       -> Fill(diffDebugHCalClustSum5);
+  hHCalDebugClustDiff10      -> Fill(diffDebugHCalClustSum10);
+  hHCalDebugClustDiff100     -> Fill(diffDebugHCalClustSum100);
+  hHCalDebugClustDiff1000    -> Fill(diffDebugHCalClustSum1000);
+  hHCalDebugTruClustDiff5    -> Fill(diffDebugTruHCalClustSum5);
+  hHCalDebugTruClustDiff10   -> Fill(diffDebugTruHCalClustSum10);
+  hHCalDebugTruClustDiff100  -> Fill(diffDebugTruHCalClustSum100);
+  hHCalDebugTruClustDiff1000 -> Fill(diffDebugTruHCalClustSum1000);
+
+  // fill reco. cluster ecal debug histograms
+  hECalDebugClustSum5        -> Fill(eDebugSumECalClust5);
+  hECalDebugClustSum10       -> Fill(eDebugSumECalClust10);
+  hECalDebugClustSum100      -> Fill(eDebugSumECalClust100);
+  hECalDebugClustSum1000     -> Fill(eDebugSumECalClust1000);
+  hECalDebugTruClustSum5     -> Fill(eDebugSumECalClust5);
+  hECalDebugTruClustSum10    -> Fill(eDebugSumECalClust10);
+  hECalDebugTruClustSum100   -> Fill(eDebugSumECalClust100);
+  hECalDebugTruClustSum1000  -> Fill(eDebugSumECalClust1000);
+  hECalDebugClustDiff5       -> Fill(diffDebugECalClustSum5);
+  hECalDebugClustDiff10      -> Fill(diffDebugECalClustSum10);
+  hECalDebugClustDiff100     -> Fill(diffDebugECalClustSum100);
+  hECalDebugClustDiff1000    -> Fill(diffDebugECalClustSum1000);
+  hECalDebugTruClustDiff5    -> Fill(diffDebugTruECalClustSum5);
+  hECalDebugTruClustDiff10   -> Fill(diffDebugTruECalClustSum10);
+  hECalDebugTruClustDiff100  -> Fill(diffDebugTruECalClustSum100);
+  hECalDebugTruClustDiff1000 -> Fill(diffDebugTruECalClustSum1000);
   return;
 
 }  // end 'ProcessSequential(std::shared_ptr<JEvent>&)'
@@ -721,6 +979,19 @@ void JCalibrateHCalProcessor::FinishWithGlobalRootLock() {
   hHCalRecHitVsParEne       -> GetXaxis() -> SetTitle(sEnePar.Data());
   hHCalRecHitVsParEne       -> GetYaxis() -> SetTitle(sEneHit.Data());
   hHCalRecHitVsParEne       -> GetZaxis() -> SetTitle(sCount.Data());
+  // set reco. hit ecal axis titles
+  hECalRecHitEne            -> GetXaxis() -> SetTitle(sEneHit.Data());
+  hECalRecHitEne            -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalRecHitPosZ           -> GetXaxis() -> SetTitle(sPosHitZ.Data());
+  hECalRecHitPosZ           -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalRecHitParDiff        -> GetXaxis() -> SetTitle(sEneHitDiff.Data());
+  hECalRecHitParDiff        -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalRecHitPosYvsX        -> GetXaxis() -> SetTitle(sPosHitX.Data());
+  hECalRecHitPosYvsX        -> GetYaxis() -> SetTitle(sPosHitY.Data());
+  hECalRecHitPosYvsX        -> GetZaxis() -> SetTitle(sCount.Data());
+  hECalRecHitVsParEne       -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hECalRecHitVsParEne       -> GetYaxis() -> SetTitle(sEneHit.Data());
+  hECalRecHitVsParEne       -> GetZaxis() -> SetTitle(sCount.Data());
   // set reco. cluster hcal axis titles
   hHCalClustEne             -> GetXaxis() -> SetTitle(sEneClust.Data());
   hHCalClustEne             -> GetYaxis() -> SetTitle(sCount.Data());
@@ -736,6 +1007,21 @@ void JCalibrateHCalProcessor::FinishWithGlobalRootLock() {
   hHCalClustVsParEne        -> GetXaxis() -> SetTitle(sEnePar.Data());
   hHCalClustVsParEne        -> GetYaxis() -> SetTitle(sEneClust.Data());
   hHCalClustVsParEne        -> GetZaxis() -> SetTitle(sCount.Data());
+  // set reco. cluster ecal axis titles
+  hECalClustEne             -> GetXaxis() -> SetTitle(sEneClust.Data());
+  hECalClustEne             -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalClustPosZ            -> GetXaxis() -> SetTitle(sPosClustZ.Data());
+  hECalClustPosZ            -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalClustNumHit          -> GetXaxis() -> SetTitle(sNumHitClust.Data());
+  hECalClustNumHit          -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalClustParDiff         -> GetXaxis() -> SetTitle(sEneClustDiff.Data());
+  hECalClustParDiff         -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalClustPosYvsX         -> GetXaxis() -> SetTitle(sPosClustX.Data());
+  hECalClustPosYvsX         -> GetYaxis() -> SetTitle(sPosClustY.Data());
+  hECalClustPosYvsX         -> GetZaxis() -> SetTitle(sCount.Data());
+  hECalClustVsParEne        -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hECalClustVsParEne        -> GetYaxis() -> SetTitle(sEneClust.Data());
+  hECalClustVsParEne        -> GetZaxis() -> SetTitle(sCount.Data());
   // set truth cluster hcal axis titles
   hHCalTruClustEne          -> GetXaxis() -> SetTitle(sEneTruClust.Data());
   hHCalTruClustEne          -> GetYaxis() -> SetTitle(sCount.Data());
@@ -751,6 +1037,21 @@ void JCalibrateHCalProcessor::FinishWithGlobalRootLock() {
   hHCalTruClustVsParEne     -> GetXaxis() -> SetTitle(sEnePar.Data());
   hHCalTruClustVsParEne     -> GetYaxis() -> SetTitle(sEneTruClust.Data());
   hHCalTruClustVsParEne     -> GetZaxis() -> SetTitle(sCount.Data());
+  // set truth cluster ecal axis titles
+  hECalTruClustEne          -> GetXaxis() -> SetTitle(sEneTruClust.Data());
+  hECalTruClustEne          -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalTruClustPosZ         -> GetXaxis() -> SetTitle(sPosTruClustZ.Data());
+  hECalTruClustPosZ         -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalTruClustNumHit       -> GetXaxis() -> SetTitle(sNumHitTruClust.Data());
+  hECalTruClustNumHit       -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalTruClustParDiff      -> GetXaxis() -> SetTitle(sEneTruClustDiff.Data());
+  hECalTruClustParDiff      -> GetYaxis() -> SetTitle(sCount.Data());
+  hECalTruClustPosYvsX      -> GetXaxis() -> SetTitle(sPosTruClustX.Data());
+  hECalTruClustPosYvsX      -> GetYaxis() -> SetTitle(sPosTruClustY.Data());
+  hECalTruClustPosYvsX      -> GetZaxis() -> SetTitle(sCount.Data());
+  hECalTruClustVsParEne     -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hECalTruClustVsParEne     -> GetYaxis() -> SetTitle(sEneTruClust.Data());
+  hECalTruClustVsParEne     -> GetZaxis() -> SetTitle(sCount.Data());
   // set event-wise hcal axis titles
   hEvtHCalNumPar            -> GetXaxis() -> SetTitle(sNumParEvt.Data());
   hEvtHCalNumPar            -> GetYaxis() -> SetTitle(sCount.Data());
@@ -795,6 +1096,50 @@ void JCalibrateHCalProcessor::FinishWithGlobalRootLock() {
   hEvtHCalLeadTruClustVsPar -> GetXaxis() -> SetTitle(sEnePar.Data());
   hEvtHCalLeadTruClustVsPar -> GetYaxis() -> SetTitle(sEneTruClustLead.Data());
   hEvtHCalLeadTruClustVsPar -> GetZaxis() -> SetTitle(sCount.Data());
+  // set event-wise ecal axis titles
+  hEvtECalNumPar            -> GetXaxis() -> SetTitle(sNumParEvt.Data());
+  hEvtECalNumPar            -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalNumHit            -> GetXaxis() -> SetTitle(sNumHitEvt.Data());
+  hEvtECalNumHit            -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalNumClust          -> GetXaxis() -> SetTitle(sNumClustEvt.Data());
+  hEvtECalNumClust          -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalNumTruClust       -> GetXaxis() -> SetTitle(sNumTruClustEvt.Data());
+  hEvtECalNumTruClust       -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalSumHitEne         -> GetXaxis() -> SetTitle(sEneHitSum.Data());
+  hEvtECalSumHitEne         -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalSumClustEne       -> GetXaxis() -> SetTitle(sEneClustSum.Data());
+  hEvtECalSumClustEne       -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalSumTruClustEne    -> GetXaxis() -> SetTitle(sEneTruClustSum.Data());
+  hEvtECalSumTruClustEne    -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalLeadClustEne      -> GetXaxis() -> SetTitle(sEneClustLead.Data());
+  hEvtECalLeadClustEne      -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalLeadTruClustEne   -> GetXaxis() -> SetTitle(sEneTruClustLead.Data());
+  hEvtECalLeadTruClustEne   -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalSumHitDiff        -> GetXaxis() -> SetTitle(sEneHitSumDiff.Data());
+  hEvtECalSumHitDiff        -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalSumClustDiff      -> GetXaxis() -> SetTitle(sEneClustSumDiff.Data());
+  hEvtECalSumClustDiff      -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalSumTruClustDiff   -> GetXaxis() -> SetTitle(sEneTruClustSumDiff.Data());
+  hEvtECalSumTruClustDiff   -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalLeadClustDiff     -> GetXaxis() -> SetTitle(sEneClustLeadDiff.Data());
+  hEvtECalLeadClustDiff     -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalLeadTruClustDiff  -> GetXaxis() -> SetTitle(sEneTruClustLeadDiff.Data());
+  hEvtECalLeadTruClustDiff  -> GetYaxis() -> SetTitle(sCount.Data());
+  hEvtECalSumHitVsPar       -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtECalSumHitVsPar       -> GetYaxis() -> SetTitle(sEneHitSum.Data());
+  hEvtECalSumHitVsPar       -> GetZaxis() -> SetTitle(sCount.Data());
+  hEvtECalSumClustVsPar     -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtECalSumClustVsPar     -> GetYaxis() -> SetTitle(sEneClustSum.Data());
+  hEvtECalSumClustVsPar     -> GetZaxis() -> SetTitle(sCount.Data());
+  hEvtECalSumTruClustVsPar  -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtECalSumTruClustVsPar  -> GetYaxis() -> SetTitle(sEneTruClustSum.Data());
+  hEvtECalSumTruClustVsPar  -> GetZaxis() -> SetTitle(sCount.Data());
+  hEvtECalLeadClustVsPar    -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtECalLeadClustVsPar    -> GetYaxis() -> SetTitle(sEneClustLead.Data());
+  hEvtECalLeadClustVsPar    -> GetZaxis() -> SetTitle(sCount.Data());
+  hEvtECalLeadTruClustVsPar -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hEvtECalLeadTruClustVsPar -> GetYaxis() -> SetTitle(sEneTruClustLead.Data());
+  hEvtECalLeadTruClustVsPar -> GetZaxis() -> SetTitle(sCount.Data());
   return;
 
 }  // end 'FinishWithGlobalRootLock()'
