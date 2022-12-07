@@ -47,36 +47,51 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     // particle histograms
     TH1D *hParChrg                   = nullptr;
     TH1D *hParMass                   = nullptr;
+    TH1D *hParEta                    = nullptr;
+    TH1D *hParPhi                    = nullptr;
     TH1D *hParEne                    = nullptr;
     TH1D *hParMom                    = nullptr;
     TH1D *hParMomX                   = nullptr;
     TH1D *hParMomY                   = nullptr;
     TH1D *hParMomZ                   = nullptr;
+    TH2D *hParEtaVsPhi               = nullptr;
     // hcal reconstructed hit histograms
+    TH1D *hHCalRecHitEta             = nullptr;
+    TH1D *hHCalRecHitPhi             = nullptr;
     TH1D *hHCalRecHitEne             = nullptr;
     TH1D *hHCalRecHitPosZ            = nullptr;
     TH1D *hHCalRecHitParDiff         = nullptr;
     TH2D *hHCalRecHitPosYvsX         = nullptr;
+    TH2D *hHCalRecHitEtaVsPhi        = nullptr;
     TH2D *hHCalRecHitVsParEne        = nullptr;
     // ecal reconstructed hit histograms
+    TH1D *hECalRecHitEta             = nullptr;
+    TH1D *hECalRecHitPhi             = nullptr;
     TH1D *hECalRecHitEne             = nullptr;
     TH1D *hECalRecHitPosZ            = nullptr;
     TH1D *hECalRecHitParDiff         = nullptr;
     TH2D *hECalRecHitPosYvsX         = nullptr;
+    TH2D *hECalRecHitEtaVsPhi        = nullptr;
     TH2D *hECalRecHitVsParEne        = nullptr;
     // hcal reconstructed cluster histograms
+    TH1D *hHCalClustEta              = nullptr;
+    TH1D *hHCalClustPhi              = nullptr;
     TH1D *hHCalClustEne              = nullptr;
     TH1D *hHCalClustPosZ             = nullptr;
     TH1I *hHCalClustNumHit           = nullptr;
     TH1D *hHCalClustParDiff          = nullptr;
     TH2D *hHCalClustPosYvsX          = nullptr;
+    TH2D *hHCalClustEtaVsPhi         = nullptr;
     TH2D *hHCalClustVsParEne         = nullptr;
     // ecal reconstructed cluster histograms
+    TH1D *hECalClustEta              = nullptr;
+    TH1D *hECalClustPhi              = nullptr;
     TH1D *hECalClustEne              = nullptr;
     TH1D *hECalClustPosZ             = nullptr;
     TH1I *hECalClustNumHit           = nullptr;
     TH1D *hECalClustParDiff          = nullptr;
     TH2D *hECalClustPosYvsX          = nullptr;
+    TH2D *hECalClustEtaVsPhi         = nullptr;
     TH2D *hECalClustVsParEne         = nullptr;
     // hcal reco. cluster debug histograms
     TH1D *hHCalDebugClustSum5        = nullptr;
@@ -97,18 +112,24 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH1D *hECalDebugClustDiff100     = nullptr;
     TH1D *hECalDebugClustDiff1000    = nullptr;
     // hcal truth cluster histograms
+    TH1D *hHCalTruClustEta           = nullptr;
+    TH1D *hHCalTruClustPhi           = nullptr;
     TH1D *hHCalTruClustEne           = nullptr;
     TH1D *hHCalTruClustPosZ          = nullptr;
     TH1I *hHCalTruClustNumHit        = nullptr;
     TH1D *hHCalTruClustParDiff       = nullptr;
     TH2D *hHCalTruClustPosYvsX       = nullptr;
+    TH2D *hHCalTruClustEtaVsPhi      = nullptr;
     TH2D *hHCalTruClustVsParEne      = nullptr;
     // ecal truth cluster histograms
+    TH1D *hECalTruClustEta           = nullptr;
+    TH1D *hECalTruClustPhi           = nullptr;
     TH1D *hECalTruClustEne           = nullptr;
     TH1D *hECalTruClustPosZ          = nullptr;
     TH1I *hECalTruClustNumHit        = nullptr;
     TH1D *hECalTruClustParDiff       = nullptr;
     TH2D *hECalTruClustPosYvsX       = nullptr;
+    TH2D *hECalTruClustEtaVsPhi      = nullptr;
     TH2D *hECalTruClustVsParEne      = nullptr;
     // hcal truth cluster debug histograms
     TH1D *hHCalDebugTruClustSum5     = nullptr;

@@ -35,6 +35,8 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   const unsigned long nNumBin(200);
   const unsigned long nChrgBin(6);
   const unsigned long nMassBin(1000);
+  const unsigned long nPhiBin(60);
+  const unsigned long nEtaBin(40);
   const unsigned long nEneBin(200);
   const unsigned long nMomBin(200);
   const unsigned long nPosTrBin(800);
@@ -43,6 +45,8 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   const unsigned long rNumBin[NRange]   = {0,      200};
   const double        rChrgBin[NRange]  = {-3.,    3.};
   const double        rMassBin[NRange]  = {0.,     5.};
+  const double        rPhiBin[NRange]   = {-3.15,  3.15};
+  const double        rEtaBin[NRange]   = {-2.,    2.};
   const double        rEneBin[NRange]   = {0.,     100.};
   const double        rMomBin[NRange]   = {-50.,   50.};
   const double        rPosTrBin[NRange] = {-4000., 4000.};
@@ -51,36 +55,51 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   // particle histograms
   hParChrg                   = new TH1D("hParChrg",                   "Gen. Particles",         nChrgBin,  rChrgBin[0],  rChrgBin[1]);
   hParMass                   = new TH1D("hParMass",                   "Gen. Particles",         nMassBin,  rMassBin[0],  rMassBin[1]);
+  hParPhi                    = new TH1D("hParPhi",                    "Gen. Particles",         nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hParEta                    = new TH1D("hParEta",                    "Gen. Particles",         nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hParEne                    = new TH1D("hParEne",                    "Gen. Particles",         nEneBin,   rEneBin[0],   rEneBin[1]);
   hParMom                    = new TH1D("hParMom",                    "Gen. Particles",         nEneBin,   rEneBin[0],   rEneBin[1]);
   hParMomX                   = new TH1D("hParMomX",                   "Gen. Particles",         nMomBin,   rMomBin[0],   rMomBin[1]);
   hParMomY                   = new TH1D("hParMomY",                   "Gen. Particles",         nMomBin,   rMomBin[0],   rMomBin[1]);
   hParMomZ                   = new TH1D("hParMomZ",                   "Gen. Particles",         nMomBin,   rMomBin[0],   rMomBin[1]);
+  hParEtaVsPhi               = new TH2D("hParEtaVsPhi",               "Gen. Particles",         nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,  rEtaBin[0],   rEtaBin[1]);
   // reco. hcal hit histograms
+  hHCalRecHitPhi             = new TH1D("hHCalRecHitPhi",             "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hHCalRecHitEta             = new TH1D("hHCalRecHitEta",             "Barrel HCal",            nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hHCalRecHitEne             = new TH1D("hHCalRecHitEne",             "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1]);
   hHCalRecHitPosZ            = new TH1D("hHCalRecHitPosZ",            "Barrel HCal",            nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
   hHCalRecHitParDiff         = new TH1D("hHCalRecHitParDiff",         "Barrel HCal",            nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   hHCalRecHitPosYvsX         = new TH2D("hHCalRecHitPosYvsX",         "Barrel HCal",            nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hHCalRecHitEtaVsPhi        = new TH2D("hHCalRecHitEtaVsPhi",        "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hHCalRecHitVsParEne        = new TH2D("hHCalRecHitVsParEne",        "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // reco. ecal hit histograms
+  hECalRecHitPhi             = new TH1D("hECalRecHitPhi",             "Barrel ECal (SciGlass)", nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hECalRecHitEta             = new TH1D("hECalRecHitEta",             "Barrel ECal (SciGlass)", nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hECalRecHitEne             = new TH1D("hECalRecHitEne",             "Barrel ECal (SciGlass)", nEneBin,   rEneBin[0],   rEneBin[1]);
   hECalRecHitPosZ            = new TH1D("hECalRecHitPosZ",            "Barrel ECal (SciGlass)", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
   hECalRecHitParDiff         = new TH1D("hECalRecHitParDiff",         "Barrel ECal (SciGlass)", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   hECalRecHitPosYvsX         = new TH2D("hECalRecHitPosYvsX",         "Barrel ECal (SciGlass)", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hECalRecHitEtaVsPhi        = new TH2D("hECalRecHitEtaVsPhi",        "Barrel ECal (SciGlass)", nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hECalRecHitVsParEne        = new TH2D("hECalRecHitVsParEne",        "Barrel ECal (SciGlass)", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // reco. hcal cluster histograms
+  hHCalClustPhi              = new TH1D("hHCalClustPhi",              "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hHCalClustEta              = new TH1D("hHCalClustEta",              "Barrel HCal",            nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hHCalClustEne              = new TH1D("hHCalClustEne",              "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1]);
   hHCalClustPosZ             = new TH1D("hHCalClustPosZ",             "Barrel HCal",            nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
   hHCalClustNumHit           = new TH1I("hHCalClustNumHit",           "Barrel HCal",            nNumBin,   rNumBin[0],   rNumBin[1]);
   hHCalClustParDiff          = new TH1D("hHCalClustParDiff",          "Barrel HCal",            nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   hHCalClustPosYvsX          = new TH2D("hHCalClustPosYvsX",          "Barrel HCal",            nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hHCalClustEtaVsPhi         = new TH2D("hHCalClustEtaVsPhi",         "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hHCalClustVsParEne         = new TH2D("hHCalClustVsParEne",         "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // reco. ecal cluster histograms
+  hECalClustPhi              = new TH1D("hECalClustPhi",              "Barrel ECal (SciGlass)", nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hECalClustEta              = new TH1D("hECalClustEta",              "Barrel ECal (SciGlass)", nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hECalClustEne              = new TH1D("hECalClustEne",              "Barrel ECal (SciGlass)", nEneBin,   rEneBin[0],   rEneBin[1]);
   hECalClustPosZ             = new TH1D("hECalClustPosZ",             "Barrel ECal (SciGlass)", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
   hECalClustNumHit           = new TH1I("hECalClustNumHit",           "Barrel ECal (SciGlass)", nNumBin,   rNumBin[0],   rNumBin[1]);
   hECalClustParDiff          = new TH1D("hECalClustParDiff",          "Barrel ECal (SciGlass)", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   hECalClustPosYvsX          = new TH2D("hECalClustPosYvsX",          "Barrel ECal (SciGlass)", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hECalClustEtaVsPhi         = new TH2D("hECalClustEtaVsPhi",         "Barrel ECal (SciGlass)", nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hECalClustVsParEne         = new TH2D("hECalClustVsParEne",         "Barrel ECal (SciGlass)", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // reco. hcal cluster debug histograms
   hHCalDebugClustSum5        = new TH1D("hHCalDebugClustSum5",        "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1]);
@@ -101,18 +120,24 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hECalDebugClustDiff100     = new TH1D("hECalDebugClustDiff100",     "Barrel ECal (SciGlass)", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   hECalDebugClustDiff1000    = new TH1D("hECalDebugClustDiff1000",    "Barrel ECal (SciGlass)", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   // truth hcal cluster histograms
+  hHCalTruClustPhi           = new TH1D("hHCalTruClustPhi",           "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hHCalTruClustEta           = new TH1D("hHCalTruClustEta",           "Barrel HCal",            nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hHCalTruClustEne           = new TH1D("hHCalTruClustEne",           "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1]);
   hHCalTruClustPosZ          = new TH1D("hHCalTruClustPosZ",          "Barrel HCal",            nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
   hHCalTruClustNumHit        = new TH1I("hHCalTruClustNumHit",        "Barrel HCal",            nNumBin,   rNumBin[0],   rNumBin[1]);
   hHCalTruClustParDiff       = new TH1D("hHCalTruClustParDiff",       "Barrel HCal",            nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   hHCalTruClustPosYvsX       = new TH2D("hHCalTruClustPosYvsX",       "Barrel HCal",            nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hHCalTruClustEtaVsPhi      = new TH2D("hHCalTruClustEtaVsPhi",      "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hHCalTruClustVsParEne      = new TH2D("hHCalTruClustVsParEne",      "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // truth ecal cluster histograms
+  hECalTruClustPhi           = new TH1D("hECalTruClustPhi",           "Barrel ECal (SciGlass)", nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hECalTruClustEta           = new TH1D("hECalTruClustEta",           "Barrel ECal (SciGlass)", nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hECalTruClustEne           = new TH1D("hECalTruClustEne",           "Barrel ECal (SciGlass)", nEneBin,   rEneBin[0],   rEneBin[1]);
   hECalTruClustPosZ          = new TH1D("hECalTruClustPosZ",          "Barrel ECal (SciGlass)", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
   hECalTruClustNumHit        = new TH1I("hECalTruClustNumHit",        "Barrel ECal (SciGlass)", nNumBin,   rNumBin[0],   rNumBin[1]);
   hECalTruClustParDiff       = new TH1D("hECalTruClustParDiff",       "Barrel ECal (SciGlass)", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   hECalTruClustPosYvsX       = new TH2D("hECalTruClustPosYvsX",       "Barrel ECal (SciGlass)", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hECalTruClustEtaVsPhi      = new TH2D("hECalTruClustEtaVsPhi",      "Barrel ECal (SciGlass)", nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hECalTruClustVsParEne      = new TH2D("hECalTruClustVsParEne",      "Barrel ECal (SciGlass)", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // truth hcal cluster debug histograms
   hHCalDebugTruClustSum5     = new TH1D("hHCalDebugTruClustSum5",     "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1]);
@@ -179,32 +204,47 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   // errors
   hParChrg                   -> Sumw2();
   hParMass                   -> Sumw2();
+  hParPhi                    -> Sumw2();
+  hParEta                    -> Sumw2();
   hParEne                    -> Sumw2();
   hParMom                    -> Sumw2();
   hParMomX                   -> Sumw2();
   hParMomY                   -> Sumw2();
   hParMomZ                   -> Sumw2();
+  hParEtaVsPhi               -> Sumw2();
+  hHCalRecHitPhi             -> Sumw2();
+  hHCalRecHitEta             -> Sumw2();
   hHCalRecHitEne             -> Sumw2();
   hHCalRecHitPosZ            -> Sumw2();
   hHCalRecHitParDiff         -> Sumw2();
   hHCalRecHitPosYvsX         -> Sumw2();
+  hHCalRecHitEtaVsPhi        -> Sumw2();
   hHCalRecHitVsParEne        -> Sumw2();
+  hECalRecHitPhi             -> Sumw2();
+  hECalRecHitEta             -> Sumw2();
   hECalRecHitEne             -> Sumw2();
   hECalRecHitPosZ            -> Sumw2();
   hECalRecHitParDiff         -> Sumw2();
   hECalRecHitPosYvsX         -> Sumw2();
+  hECalRecHitEtaVsPhi        -> Sumw2();
   hECalRecHitVsParEne        -> Sumw2();
+  hHCalClustPhi              -> Sumw2();
+  hHCalClustEta              -> Sumw2();
   hHCalClustEne              -> Sumw2();
   hHCalClustPosZ             -> Sumw2();
   hHCalClustNumHit           -> Sumw2();
   hHCalClustParDiff          -> Sumw2();
   hHCalClustPosYvsX          -> Sumw2();
+  hHCalClustEtaVsPhi         -> Sumw2();
   hHCalClustVsParEne         -> Sumw2();
+  hECalClustPhi              -> Sumw2();
+  hECalClustEta              -> Sumw2();
   hECalClustEne              -> Sumw2();
   hECalClustPosZ             -> Sumw2();
   hECalClustNumHit           -> Sumw2();
   hECalClustParDiff          -> Sumw2();
   hECalClustPosYvsX          -> Sumw2();
+  hECalClustEtaVsPhi         -> Sumw2();
   hECalClustVsParEne         -> Sumw2();
   hHCalDebugClustSum5        -> Sumw2();
   hHCalDebugClustSum10       -> Sumw2();
@@ -222,17 +262,23 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hECalDebugClustDiff10      -> Sumw2();
   hECalDebugClustDiff100     -> Sumw2();
   hECalDebugClustDiff1000    -> Sumw2();
+  hHCalTruClustPhi           -> Sumw2();
+  hHCalTruClustEta           -> Sumw2();
   hHCalTruClustEne           -> Sumw2();
   hHCalTruClustPosZ          -> Sumw2();
   hHCalTruClustNumHit        -> Sumw2();
   hHCalTruClustParDiff       -> Sumw2();
   hHCalTruClustPosYvsX       -> Sumw2();
+  hHCalTruClustEtaVsPhi      -> Sumw2();
   hHCalTruClustVsParEne      -> Sumw2();
+  hECalTruClustPhi           -> Sumw2();
+  hECalTruClustEta           -> Sumw2();
   hECalTruClustEne           -> Sumw2();
   hECalTruClustPosZ          -> Sumw2();
   hECalTruClustNumHit        -> Sumw2();
   hECalTruClustParDiff       -> Sumw2();
   hECalTruClustPosYvsX       -> Sumw2();
+  hECalTruClustEtaVsPhi      -> Sumw2();
   hECalTruClustVsParEne      -> Sumw2();
   hHCalDebugTruClustSum5     -> Sumw2();
   hHCalDebugTruClustSum10    -> Sumw2();
@@ -331,6 +377,8 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   // MC particle properties
   float  cMcPar(0.);
   double mMcPar(0.);
+  double fMcPar(0.);
+  double hMcPar(0.);
   double eMcPar(0.);
   double pTotMcPar(0.);
   double pMcPar[NComp] = {0., 0., 0.};
@@ -347,6 +395,8 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto pParY = par -> getMomentum().y;
     const auto pParZ = par -> getMomentum().z;
     const auto pPar  = std::sqrt((pParX * pParX) + (pParY * pParY) + (pParZ * pParZ));
+    const auto fPar  = std::atan(pParY / pParX);
+    const auto hPar  = std::atanh(pParZ / pPar);
 
     // select MC particle
     const bool isRightCharge   = (cPar == CPar);
@@ -356,6 +406,8 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     if (isMcParticle) {
       cMcPar    = cPar;
       mMcPar    = mPar;
+      fMcPar    = fPar;
+      hMcPar    = hPar;
       eMcPar    = ePar;
       pMcPar[0] = pParX;
       pMcPar[1] = pParY;
@@ -366,13 +418,16 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   }  // end particle loop
 
   // fill particle histograms
-  hParChrg -> Fill(cMcPar);
-  hParMass -> Fill(mMcPar);
-  hParEne  -> Fill(eMcPar);
-  hParMom  -> Fill(pTotMcPar);
-  hParMomX -> Fill(pMcPar[0]);
-  hParMomY -> Fill(pMcPar[1]);
-  hParMomZ -> Fill(pMcPar[2]);
+  hParChrg     -> Fill(cMcPar);
+  hParMass     -> Fill(mMcPar);
+  hParPhi      -> Fill(fMcPar);
+  hParEta      -> Fill(hMcPar);
+  hParEne      -> Fill(eMcPar);
+  hParMom      -> Fill(pTotMcPar);
+  hParMomX     -> Fill(pMcPar[0]);
+  hParMomY     -> Fill(pMcPar[1]);
+  hParMomZ     -> Fill(pMcPar[2]);
+  hParEtaVsPhi -> Fill(fMcPar, hMcPar);
 
   // reco. hcal hit loop
   unsigned long nHCalHit(0);
