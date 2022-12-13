@@ -511,7 +511,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto rHCalClustY   = bhCalClust -> getPosition().y;
     const auto rHCalClustZ   = bhCalClust -> getPosition().z;
     const auto eHCalClust    = bhCalClust -> getEnergy();
-    const auto nHitHCalClust = bhCalClust -> nhits();
+    const auto nHitHCalClust = bhCalClust -> getNhits();
     const auto rHCalClustS   = std::sqrt((rHCalClustX * rHCalClustX) + (rHCalClustY * rHCalClustY));
     const auto rHCalClustR   = std::sqrt((rHCalClustX * rHCalClustX) + (rHCalClustY * rHCalClustY) + (rHCalClustZ * rHCalClustZ));
     const auto fHCalClust    = boost::math::sign(rHCalClustY) * acos(rHCalClustX / rHCalClustS);
@@ -552,7 +552,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto rECalClustY   = beCalClust -> getPosition().y;
     const auto rECalClustZ   = beCalClust -> getPosition().z;
     const auto eECalClust    = beCalClust -> getEnergy();
-    const auto nHitECalClust = beCalClust -> nhits();
+    const auto nHitECalClust = beCalClust -> getNhits();
     const auto rECalClustS   = std::sqrt((rECalClustX * rECalClustX) + (rECalClustY * rECalClustY));
     const auto rECalClustR   = std::sqrt((rECalClustX * rECalClustX) + (rECalClustY * rECalClustY) + (rECalClustZ * rECalClustZ));
     const auto fECalClust    = boost::math::sign(rECalClustY) * acos(rECalClustX / rECalClustS);
@@ -709,7 +709,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto rTruHCalClustY   = truthHCalClust -> getPosition().y;
     const auto rTruHCalClustZ   = truthHCalClust -> getPosition().z;
     const auto eTruHCalClust    = truthHCalClust -> getEnergy();
-    const auto nHitTruHCalClust = truthHCalClust -> nhits();
+    const auto nHitTruHCalClust = truthHCalClust -> getNhits();
     const auto rTruHCalClustS   = std::sqrt((rTruHCalClustX * rTruHCalClustX) + (rTruHCalClustY * rTruHCalClustY));
     const auto rTruHCalClustR   = std::sqrt((rTruHCalClustX * rTruHCalClustX) + (rTruHCalClustY * rTruHCalClustY) + (rTruHCalClustZ * rTruHCalClustZ));
     const auto fTruHCalClust    = boost::math::sign(rTruHCalClustY) * acos(rTruHCalClustX / rTruHCalClustS);
@@ -750,7 +750,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto rTruECalClustY   = truthECalClust -> getPosition().y;
     const auto rTruECalClustZ   = truthECalClust -> getPosition().z;
     const auto eTruECalClust    = truthECalClust -> getEnergy();
-    const auto nHitTruECalClust = truthECalClust -> nhits();
+    const auto nHitTruECalClust = truthECalClust -> getNhits();
     const auto rTruECalClustS   = std::sqrt((rTruECalClustX * rTruECalClustX) + (rTruECalClustY * rTruECalClustY));
     const auto rTruECalClustR   = std::sqrt((rTruECalClustX * rTruECalClustX) + (rTruECalClustY * rTruECalClustY) + (rTruECalClustZ * rTruECalClustZ));
     const auto fTruECalClust    = boost::math::sign(rTruECalClustY) * acos(rTruECalClustX / rTruECalClustS);
