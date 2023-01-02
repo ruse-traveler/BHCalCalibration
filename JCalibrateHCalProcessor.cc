@@ -342,7 +342,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto nHitHCalClust = bhCalClust -> getNhits();
     const auto fHCalClust    = bhCalClust -> getIntrinsicPhi();
     const auto tHCalClust    = bhCalClust -> getIntrinsicTheta();
-    const auto hHCalClust    = (1.) * std::log(std::atan(tHCalcClust / 2.));
+    const auto hHCalClust    = (1.) * std::log(std::atan(tHCalClust / 2.));
     const auto diffHCalClust = (eHCalClust - eMcPar) / eHCalClust;
 
     // fill cluster histograms and increment counters
