@@ -15,9 +15,11 @@
 #include <TString.h>
 // JANA includes
 #include <JANA/JEventProcessorSequentialRoot.h>
+#include <JANA/JEvent.h>
 // EDM includes
 #include <edm4eic/CalorimeterHit.h>
 #include <edm4eic/ReconstructedParticle.h>
+#include <edm4eic/ProtoCluster.h>
 #include <edm4eic/Cluster.h>
 
 // global constants
@@ -61,6 +63,15 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH2D *hHCalRecHitPosYvsX         = nullptr;
     TH2D *hHCalRecHitEtaVsPhi        = nullptr;
     TH2D *hHCalRecHitVsParEne        = nullptr;
+    // hcal cluster hit histograms
+    TH1D *hHCalClustHitEta           = nullptr;
+    TH1D *hHCalClustHitPhi           = nullptr;
+    TH1D *hHCalClustHitEne           = nullptr;
+    TH1D *hHCalClustHitPosZ          = nullptr;
+    TH1D *hHCalClustHitParDiff       = nullptr;
+    TH2D *hHCalClustHitPosYvsX       = nullptr;
+    TH2D *hHCalClustHitEtaVsPhi      = nullptr;
+    TH2D *hHCalClustHitVsParEne      = nullptr;
     // hcal reconstructed cluster histograms
     TH1D *hHCalClustEta              = nullptr;
     TH1D *hHCalClustPhi              = nullptr;

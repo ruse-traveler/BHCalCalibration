@@ -11,7 +11,6 @@
 #include <services/rootfile/RootFile_service.h>
 #include <boost/math/special_functions/sign.hpp>
 
-
 // The following just makes this a JANA plugin
 extern "C" {
   void InitPlugin(JApplication *app) {
@@ -19,7 +18,6 @@ extern "C" {
   app -> Add(new JCalibrateHCalProcessor);
   }
 }
-
 
 
 
@@ -74,6 +72,15 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hHCalRecHitPosYvsX         = new TH2D("hHCalRecHitPosYvsX",         "Barrel HCal",            nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
   hHCalRecHitEtaVsPhi        = new TH2D("hHCalRecHitEtaVsPhi",        "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hHCalRecHitVsParEne        = new TH2D("hHCalRecHitVsParEne",        "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  // hcal cluster hit histograms
+  hHCalClustHitPhi           = new TH1D("hHCalClustHitPhi",           "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hHCalClustHitEta           = new TH1D("hHCalClustHitEta",           "Barrel HCal",            nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hHCalClustHitEne           = new TH1D("hHCalClustHitEne",           "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalClustHitPosZ          = new TH1D("hHCalClustHitPosZ",          "Barrel HCal",            nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
+  hHCalClustHitParDiff       = new TH1D("hHCalClustHitParDiff",       "Barrel HCal",            nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalClustHitPosYvsX       = new TH2D("hHCalClustHitPosYvsX",       "Barrel HCal",            nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hHCalClustHitEtaVsPhi      = new TH2D("hHCalClustHitEtaVsPhi",      "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hHCalClustHitVsParEne      = new TH2D("hHCalClustHitVsParEne",      "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // reco. hcal cluster histograms
   hHCalClustPhi              = new TH1D("hHCalClustPhi",              "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1]);
   hHCalClustEta              = new TH1D("hHCalClustEta",              "Barrel HCal",            nEtaBin,   rEtaBin[0],   rEtaBin[1]);
@@ -153,6 +160,14 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hHCalRecHitPosYvsX         -> Sumw2();
   hHCalRecHitEtaVsPhi        -> Sumw2();
   hHCalRecHitVsParEne        -> Sumw2();
+  hHCalClustHitPhi           -> Sumw2();
+  hHCalClustHitEta           -> Sumw2();
+  hHCalClustHitEne           -> Sumw2();
+  hHCalClustHitPosZ          -> Sumw2();
+  hHCalClustHitParDiff       -> Sumw2();
+  hHCalClustHitPosYvsX       -> Sumw2();
+  hHCalClustHitEtaVsPhi      -> Sumw2();
+  hHCalClustHitVsParEne      -> Sumw2();
   hHCalClustPhi              -> Sumw2();
   hHCalClustEta              -> Sumw2();
   hHCalClustEne              -> Sumw2();
@@ -329,10 +344,56 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   double diffLeadHCalClust(0.);
   double diffLeadTruHCalClust(0.);
 
+  // get protoclusters
+  auto bhCalProtoClusters = event -> Get<edm4eic::ProtoCluster>("HcalBarrelIslandProtoClusters");
+
   // reco. hcal cluster loop
   unsigned long iHCalClust(0);
+  unsigned long nHCalProto(0);
   unsigned long nHCalClust(0);
   for (auto bhCalClust : bhcalClusters()) {
+    
+    // loop over protoclusters
+    unsigned long iHCalProto(0);
+    unsigned long nProtoHits(0);
+    for (auto bhCalProto : bhCalProtoClusters) {
+
+      // check if proto index is same as cluster index
+      // TODO: this might not be the correct way to match reco and proto clusters
+      const bool isSameIndex = (iHCalProto == iHCalClust);
+      if (!isSameIndex) continue;
+
+      // loop over hits
+      nProtoHits = bhCalProto -> hits_size();
+      for (uint32_t iProtoHit = 0; iProtoHit < nProtoHits; iProtoHit++) {
+
+        // get hit
+        const auto bhCalProtoHit = bhCalProto -> getHits(iProtoHit);
+
+        // grab hit properties
+        const auto rHCalProtoHitX   = bhCalProtoHit.getPosition().x;
+        const auto rHCalProtoHitY   = bhCalProtoHit.getPosition().y;
+        const auto rHCalProtoHitZ   = bhCalProtoHit.getPosition().z;
+        const auto eHCalProtoHit    = bhCalProtoHit.getEnergy();
+        const auto rHCalProtoHitS   = std::sqrt((rHCalProtoHitX * rHCalProtoHitX) + (rHCalProtoHitY * rHCalProtoHitY));
+        const auto rHCalProtoHitR   = std::sqrt((rHCalProtoHitS * rHCalProtoHitS) + (rHCalProtoHitZ * rHCalProtoHitZ));
+        const auto fHCalProtoHit    = boost::math::sign(rHCalProtoHitY) * acos(rHCalProtoHitX / rHCalProtoHitS);
+        const auto tHCalProtoHit    = std::acos(rHCalProtoHitZ / rHCalProtoHitR);
+        const auto hHCalProtoHit    = (-1.) * std::log(std::atan(tHCalProtoHit / 2.));
+        const auto diffHCalProtoHit = (eHCalProtoHit - eMcPar) / eHCalProtoHit;
+
+        // fill hit histograms and increment sums/counters
+        hHCalClustHitPhi      -> Fill(fHCalProtoHit);
+        hHCalClustHitEta      -> Fill(hHCalProtoHit);
+        hHCalClustHitEne      -> Fill(eHCalProtoHit);
+        hHCalClustHitPosZ     -> Fill(rHCalProtoHitZ);
+        hHCalClustHitParDiff  -> Fill(diffHCalProtoHit);
+        hHCalClustHitPosYvsX  -> Fill(rHCalProtoHitX, rHCalProtoHitY);
+        hHCalClustHitEtaVsPhi -> Fill(fHCalProtoHit, hHCalProtoHit);
+        hHCalClustHitVsParEne -> Fill(eMcPar, eHCalProtoHit);
+      }
+      ++nHCalProto;
+    }  // end protocluster loop
 
     // grab cluster properties
     const auto rHCalClustX   = bhCalClust -> getPosition().x;
@@ -350,13 +411,14 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     hHCalClustEta      -> Fill(hHCalClust);
     hHCalClustEne      -> Fill(eHCalClust);
     hHCalClustPosZ     -> Fill(rHCalClustZ);
-    hHCalClustNumHit   -> Fill(nHitHCalClust);
+    hHCalClustNumHit   -> Fill(nProtoHits);
     hHCalClustParDiff  -> Fill(diffHCalClust);
     hHCalClustPosYvsX  -> Fill(rHCalClustX, rHCalClustY);
     hHCalClustEtaVsPhi -> Fill(fHCalClust, hHCalClust);
     hHCalClustVsParEne -> Fill(eMcPar, eHCalClust);
     eHCalClustSum += eHCalClust;
     ++nHCalClust;
+    ++iHCalClust;
 
     // select leading cluster
     const bool isBiggerEne = (eHCalClust > eLeadHCalClust);
@@ -365,7 +427,6 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
       eLeadHCalClust    = eHCalClust;
       diffLeadHCalClust = diffHCalClust;
     }
-    ++iHCalClust;
   }  // end reco. hcal cluster loop
 
   // for debugging reco. clusters
@@ -690,6 +751,26 @@ void JCalibrateHCalProcessor::FinishWithGlobalRootLock() {
   hHCalRecHitVsParEne       -> GetXaxis() -> SetTitle(sEnePar.Data());
   hHCalRecHitVsParEne       -> GetYaxis() -> SetTitle(sEneHit.Data());
   hHCalRecHitVsParEne       -> GetZaxis() -> SetTitle(sCount.Data());
+  // set cluster hit hcal axis titles
+  hHCalClustHitPhi          -> GetXaxis() -> SetTitle(sPhiHit.Data());
+  hHCalClustHitPhi          -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalClustHitEta          -> GetXaxis() -> SetTitle(sEtaHit.Data());
+  hHCalClustHitEta          -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalClustHitEne          -> GetXaxis() -> SetTitle(sEneHit.Data());
+  hHCalClustHitEne          -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalClustHitPosZ         -> GetXaxis() -> SetTitle(sPosHitZ.Data());
+  hHCalClustHitPosZ         -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalClustHitParDiff      -> GetXaxis() -> SetTitle(sEneHitDiff.Data());
+  hHCalClustHitParDiff      -> GetYaxis() -> SetTitle(sCount.Data());
+  hHCalClustHitPosYvsX      -> GetXaxis() -> SetTitle(sPosHitX.Data());
+  hHCalClustHitPosYvsX      -> GetYaxis() -> SetTitle(sPosHitY.Data());
+  hHCalClustHitPosYvsX      -> GetZaxis() -> SetTitle(sCount.Data());
+  hHCalClustHitEtaVsPhi     -> GetXaxis() -> SetTitle(sPhiHit.Data());
+  hHCalClustHitEtaVsPhi     -> GetYaxis() -> SetTitle(sEtaHit.Data());
+  hHCalClustHitEtaVsPhi     -> GetZaxis() -> SetTitle(sCount.Data());
+  hHCalClustHitVsParEne     -> GetXaxis() -> SetTitle(sEnePar.Data());
+  hHCalClustHitVsParEne     -> GetYaxis() -> SetTitle(sEneHit.Data());
+  hHCalClustHitVsParEne     -> GetZaxis() -> SetTitle(sCount.Data());
   // set reco. cluster hcal axis titles
   hHCalClustPhi             -> GetXaxis() -> SetTitle(sPhiClust.Data());
   hHCalClustPhi             -> GetYaxis() -> SetTitle(sCount.Data());
