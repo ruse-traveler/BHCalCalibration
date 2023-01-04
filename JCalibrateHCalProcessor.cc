@@ -100,6 +100,15 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hHCalDebugClustDiff10      = new TH1D("hHCalDebugClustDiff10",      "Barrel HCal",            nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   hHCalDebugClustDiff100     = new TH1D("hHCalDebugClustDiff100",     "Barrel HCal",            nDiffBin,  rDiffBin[0],  rDiffBin[1]);
   hHCalDebugClustDiff1000    = new TH1D("hHCalDebugClustDiff1000",    "Barrel HCal",            nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  // hcal cluster hit histograms
+  hHCalTruClustHitPhi        = new TH1D("hHCalTruClustHitPhi",        "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hHCalTruClustHitEta        = new TH1D("hHCalTruClustHitEta",        "Barrel HCal",            nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hHCalTruClustHitEne        = new TH1D("hHCalTruClustHitEne",        "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1]);
+  hHCalTruClustHitPosZ       = new TH1D("hHCalTruClustHitPosZ",       "Barrel HCal",            nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
+  hHCalTruClustHitParDiff    = new TH1D("hHCalTruClustHitParDiff",    "Barrel HCal",            nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hHCalTruClustHitPosYvsX    = new TH2D("hHCalTruClustHitPosYvsX",    "Barrel HCal",            nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hHCalTruClustHitEtaVsPhi   = new TH2D("hHCalTruClustHitEtaVsPhi",   "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hHCalTruClustHitVsParEne   = new TH2D("hHCalTruClustHitVsParEne",   "Barrel HCal",            nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // truth hcal cluster histograms
   hHCalTruClustPhi           = new TH1D("hHCalTruClustPhi",           "Barrel HCal",            nPhiBin,   rPhiBin[0],   rPhiBin[1]);
   hHCalTruClustEta           = new TH1D("hHCalTruClustEta",           "Barrel HCal",            nEtaBin,   rEtaBin[0],   rEtaBin[1]);
@@ -185,6 +194,14 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hHCalDebugClustDiff10      -> Sumw2();
   hHCalDebugClustDiff100     -> Sumw2();
   hHCalDebugClustDiff1000    -> Sumw2();
+  hHCalTruClustHitPhi        -> Sumw2();
+  hHCalTruClustHitEta        -> Sumw2();
+  hHCalTruClustHitEne        -> Sumw2();
+  hHCalTruClustHitPosZ       -> Sumw2();
+  hHCalTruClustHitParDiff    -> Sumw2();
+  hHCalTruClustHitPosYvsX    -> Sumw2();
+  hHCalTruClustHitEtaVsPhi   -> Sumw2();
+  hHCalTruClustHitVsParEne   -> Sumw2();
   hHCalTruClustPhi           -> Sumw2();
   hHCalTruClustEta           -> Sumw2();
   hHCalTruClustEne           -> Sumw2();
@@ -236,11 +253,8 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
 
   // hit and cluster sums
   double eHCalHitSum(0.);
-  double eECalHitSum(0.);
   double eHCalClustSum(0.);
-  double eECalClustSum(0.);
   double eTruHCalClustSum(0.);
-  double eTruECalClustSum(0.);
 
   // sum hcal hit energy
   for (auto bhCalHit : bhcalRecHits()) {
@@ -359,7 +373,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     for (auto bhCalProto : bhCalProtoClusters) {
 
       // check if proto index is same as cluster index
-      // TODO: this might not be the correct way to match reco and proto clusters
+      // FIXME: this might not be the correct way to match reco and proto clusters
       const bool isSameIndex = (iHCalProto == iHCalClust);
       if (!isSameIndex) continue;
 
@@ -488,10 +502,56 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     ++iDebugHCalClust;
   }  // end debug reco. hcal cluster loop
 
+  // get truth protoclusters
+  auto bhCalTruProtoClusters = event -> Get<edm4eic::ProtoCluster>("HcalBarrelTruthProtoClusters");
+
   // true hcal cluster loop
   unsigned long iTruHCalClust(0);
+  unsigned long nTruHCalProto(0);
   unsigned long nTruHCalClust(0);
   for (auto truthHCalClust : bhcalTruthClusters()) {
+    
+    // loop over protoclusters
+    unsigned long iTruHCalProto(0);
+    unsigned long nTruProtoHits(0);
+    for (auto bhCalTruProto : bhCalTruProtoClusters) {
+
+      // check if truth proto index is same as truth cluster index
+      // FIXME: this might not be the correct way to match reco and proto clusters
+      const bool isSameIndex = (iTruHCalProto == iTruHCalClust);
+      if (!isSameIndex) continue;
+
+      // loop over hits
+      nTruProtoHits = bhCalTruProto -> hits_size();
+      for (uint32_t iTruProtoHit = 0; iTruProtoHit < nTruProtoHits; iTruProtoHit++) {
+
+        // get hit
+        const auto bhCalTruProtoHit = bhCalTruProto -> getHits(iTruProtoHit);
+
+        // grab hit properties
+        const auto rTruHCalProtoHitX   = bhCalTruProtoHit.getPosition().x;
+        const auto rTruHCalProtoHitY   = bhCalTruProtoHit.getPosition().y;
+        const auto rTruHCalProtoHitZ   = bhCalTruProtoHit.getPosition().z;
+        const auto eTruHCalProtoHit    = bhCalTruProtoHit.getEnergy();
+        const auto rTruHCalProtoHitS   = std::sqrt((rTruHCalProtoHitX * rTruHCalProtoHitX) + (rTruHCalProtoHitY * rTruHCalProtoHitY));
+        const auto rTruHCalProtoHitR   = std::sqrt((rTruHCalProtoHitS * rTruHCalProtoHitS) + (rTruHCalProtoHitZ * rTruHCalProtoHitZ));
+        const auto fTruHCalProtoHit    = boost::math::sign(rTruHCalProtoHitY) * acos(rTruHCalProtoHitX / rTruHCalProtoHitS);
+        const auto tTruHCalProtoHit    = std::acos(rTruHCalProtoHitZ / rTruHCalProtoHitR);
+        const auto hTruHCalProtoHit    = (-1.) * std::log(std::atan(tTruHCalProtoHit / 2.));
+        const auto diffTruHCalProtoHit = (eTruHCalProtoHit - eMcPar) / eTruHCalProtoHit;
+
+        // fill hit histograms and increment sums/counters
+        hHCalTruClustHitPhi      -> Fill(fTruHCalProtoHit);
+        hHCalTruClustHitEta      -> Fill(hTruHCalProtoHit);
+        hHCalTruClustHitEne      -> Fill(eTruHCalProtoHit);
+        hHCalTruClustHitPosZ     -> Fill(rTruHCalProtoHitZ);
+        hHCalTruClustHitParDiff  -> Fill(diffTruHCalProtoHit);
+        hHCalTruClustHitPosYvsX  -> Fill(rTruHCalProtoHitX, rTruHCalProtoHitY);
+        hHCalTruClustHitEtaVsPhi -> Fill(fTruHCalProtoHit, hTruHCalProtoHit);
+        hHCalTruClustHitVsParEne -> Fill(eMcPar, eTruHCalProtoHit);
+      }
+      ++nTruHCalProto;
+    }  // end protocluster loop
 
     // grab cluster properties
     const auto rTruHCalClustX   = truthHCalClust -> getPosition().x;

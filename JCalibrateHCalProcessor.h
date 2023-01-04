@@ -91,6 +91,15 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH1D *hHCalDebugClustDiff10      = nullptr;
     TH1D *hHCalDebugClustDiff100     = nullptr;
     TH1D *hHCalDebugClustDiff1000    = nullptr;
+    // hcal truth cluster hit histograms
+    TH1D *hHCalTruClustHitEta        = nullptr;
+    TH1D *hHCalTruClustHitPhi        = nullptr;
+    TH1D *hHCalTruClustHitEne        = nullptr;
+    TH1D *hHCalTruClustHitPosZ       = nullptr;
+    TH1D *hHCalTruClustHitParDiff    = nullptr;
+    TH2D *hHCalTruClustHitPosYvsX    = nullptr;
+    TH2D *hHCalTruClustHitEtaVsPhi   = nullptr;
+    TH2D *hHCalTruClustHitVsParEne   = nullptr;
     // hcal truth cluster histograms
     TH1D *hHCalTruClustEta           = nullptr;
     TH1D *hHCalTruClustPhi           = nullptr;
