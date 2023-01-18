@@ -6,7 +6,14 @@
 # A simple script to run the
 # JCalibrateHCal JANA plugin
 
-input="../forHCalClusterCheck_p2d7080n5000pip_d12m11y2022.edm4hep.root"
-collections="HcalBarrelRecHits,EcalBarrelSciGlassRecHits,HcalBarrelClusters,EcalBarrelSciGlassClusters,HcalBarrelTruthClusters,EcalBarrelSciGlassTruthClusters,GeneratedParticles"
+# i/o files
+input="../forPodioReaderTest.e5th70n500pip.d18m1y2023.edm4hep.root"
+podio="forPodioReaderTest_fromEicRecon.e5th70n500pip.d18m1y2023.podio.root"
+output="forPodioReaderTest_fromEicRecon.e5th70n500pip.d18m1y2023.jcalibratehcal.root"
 
-eicrecon -Pplugins=JCalibrateHCal -Ppodio:output_include_collections=$collections $input
+# output collections from EICrecon
+collections="HcalBarrelRecHits,HcalBarrelClusters,HcalBarrelIslandProtoClusters,HcalBarrelTruthClusters,HcalBarrelTruthProtoClusters,GeneratedParticles"
+
+eicrecon -Pplugins=JCalibrateHCal -Ppodio:output_include_collections=$collections -Ppodio:output_file=$podio -Phistsfile=$output $input
+
+# end -------------------------------------------------------------------------
