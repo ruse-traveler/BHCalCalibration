@@ -123,7 +123,7 @@ collections="HcalBarrelRecHits,HcalBarrelClusters,HcalBarrelIslandProtoClusters,
 # loop over combinations
 (( nCombo=0 ))
 for combo in ${scale[@]}; do
-  eicrecon -PHCAL:HcalBarrelIslandProtoClusters:dimScaledLocalDistXY=$combo -PHCAL:HcalBarrelIslandProtoClusters:minClusterCenterEdep=${center[$nCombo]} -PHCAL:HcalBarrelIslandProtoClusters:minClusterHitEdep=${energy[$nCombo]} -Ppodio:output_include_collections=$collections -Ppodio:output_file=${podio[$nCombo]} -Phistsfile=${output[$nCombo]} $input
+  eicrecon -Pplugins=JCalibrateHCal -PHCAL:HcalBarrelIslandProtoClusters:dimScaledLocalDistXY=$combo -PHCAL:HcalBarrelIslandProtoClusters:minClusterCenterEdep=${center[$nCombo]} -PHCAL:HcalBarrelIslandProtoClusters:minClusterHitEdep=${energy[$nCombo]} -Ppodio:output_include_collections=$collections -Ppodio:output_file=${podio[$nCombo]} -Phistsfile=${output[$nCombo]} $input
   (( nCombo++ ))
 done
 
