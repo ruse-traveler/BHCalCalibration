@@ -21,6 +21,6 @@ sector="5"
 center="0.03"
 energy="0.003"
 
-eicrecon -Pplugins=JCalibrateHCal -PHCAL:HcalBarrelIslandProtoClusters:dimScaledLocalDistXY=$scale -PHCAL:HcalBarrelIslandProtoClsuters:localDistXY=$distXY -PHCAL:HcalBarrelIslandProtoClusters:sectorDist=$sector -PHCAL:HcalBarrelIslandProtoClusters:minClusterCenterEdep=$center -PHCAL:HcalBarrelIslandProtoClusters:minClusterHitEdep=$energy -Ppodio:output_include_collections=$collections -Ppodio:output_file=$podio -Phistsfile=$output $input
+eicrecon -Pplugins=JCalibrateHCal -PHCAL:HcalBarrelIslandProtoClusters:dimScaledLocalDistXY=$scale -PHCAL:HcalBarrelIslandProtoClusters:localDistXY=$distXY -PHCAL:HcalBarrelIslandProtoClusters:sectorDist=$sector -PHCAL:HcalBarrelIslandProtoClusters:minClusterCenterEdep=$center -PHCAL:HcalBarrelIslandProtoClusters:minClusterHitEdep=$energy -Ppodio:output_include_collections=$collections -Ppodio:output_file=$podio -Phistsfile=$output $input
 
 # end -------------------------------------------------------------------------
