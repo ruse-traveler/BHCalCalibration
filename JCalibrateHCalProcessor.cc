@@ -260,7 +260,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     // select MC particle
     const bool isRightCharge   = (cPar == CPar);
     const bool isRightMass     = ((mPar >= MParMin) && (mPar <= MParMax));
-    const bool isRightMomentum = ((pPar >= PParMin) && (pPar <= PParMax));
+    const bool isRightMomentum = ((ePar >= EParMin) && (ePar <= EParMax));
     const bool isMcParticle    = (isRightCharge && isRightMass && isRightMomentum);
     if (isMcParticle) {
       cMcPar    = cPar;

@@ -28,8 +28,8 @@ static const size_t NComp(3);
 static const float  CPar(1.);
 static const float  MParMin(0.135);
 static const float  MParMax(0.145);
-static const float  PParMin(9.9);
-static const float  PParMax(10.1);
+static const float  EParMin(9.9);
+static const float  EParMax(10.1);
 
 
 
