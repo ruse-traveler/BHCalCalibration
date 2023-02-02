@@ -227,7 +227,7 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     eHCalHitSum += bhCalHit -> getEnergy();
   }  // end 1st hcal hit loop
 
-  // if both hit sums are 0, skip event
+  // if hit sum is 0, skip event
   const bool isHCalHitSumNonzero = (eHCalHitSum > 0.);
   if (!isHCalHitSumNonzero) {
     return;
