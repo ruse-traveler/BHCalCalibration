@@ -40,12 +40,12 @@ static const size_t NComp        = 3;
 static const size_t NType        = 7;
 static const float  MParMinDef   = 0.135;
 static const float  MParMaxDef   = 0.145;
-static const float  EParMinDef   = 4.9;
-static const float  EParMaxDef   = 5.1;
+static const float  EParMinDef   = 9.9;
+static const float  EParMaxDef   = 10.1;
 static const float  CParUseDef   = +1.;
 static const bool   IsInBatchDef = false;
 static const string SOutputDef   = "test_out.root";
-static const string SInputDef    = "../forPodioReaderTest_fromEicRecon.e5th70n500pip.d18m1y2023.podio.root";
+static const string SInputDef    = "./test_d1s1.e10th70n10Kpip.d31m1y2023.podio.root";
 
 
 
@@ -376,7 +376,7 @@ void PCalibrateHCal(const string sOutput = SOutputDef, const string sInput = SIn
     double diffLeadTruHCalClust(0.);
 
     // get protoclusters
-    const auto &bhCalProtoClusters = store.get<edm4eic::ProtoCluster>("HcalBarrelIslandProtoClusters");
+    const auto &bhCalProtoClusters = store.get<edm4eic::ProtoClusterCollection>("HcalBarrelIslandProtoClusters");
 
     // reco. hcal cluster loop
     unsigned long iHCalClust(0);
@@ -461,7 +461,7 @@ void PCalibrateHCal(const string sOutput = SOutputDef, const string sInput = SIn
     }  // end reco. hcal cluster loop
 
     // get truth protoclusters
-    auto bhCalTruProtoClusters = store.get<edm4eic::ProtoCluster>("HcalBarrelTruthProtoClusters");
+    const auto &bhCalTruProtoClusters = store.get<edm4eic::ProtoClusterCollection>("HcalBarrelTruthProtoClusters");
 
     // true hcal cluster loop
     unsigned long iTruHCalClust(0);
