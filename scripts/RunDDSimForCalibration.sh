@@ -17,3 +17,5 @@ output="test.edm4hep.root"
 
 # run dd4hep
 ddsim --steeringFile $steerer --compactFile $compact -G -N $numEvt --outputFile $output
+
+# end -------------------------------------------------------------------------
