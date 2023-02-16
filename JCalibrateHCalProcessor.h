@@ -40,6 +40,7 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     // Data objects we will need from JANA
     PrefetchT<edm4eic::ReconstructedParticle> genParticles       = {this, "GeneratedParticles"};
     PrefetchT<edm4eic::CalorimeterHit>        bhcalRecHits       = {this, "HcalBarrelRecHits"};
+    PrefetchT<edm4eic::CalorimeterHit>        bhcalMergeHits     = {this, "HcalBarrelMergedHits"};
     PrefetchT<edm4eic::Cluster>               bhcalClusters      = {this, "HcalBarrelClusters"};
     PrefetchT<edm4eic::Cluster>               bhcalTruthClusters = {this, "HcalBarrelTruthClusters"};
 
@@ -63,6 +64,15 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH2D *hHCalRecHitPosYvsX         = nullptr;
     TH2D *hHCalRecHitEtaVsPhi        = nullptr;
     TH2D *hHCalRecHitVsParEne        = nullptr;
+    // hcal merged hit histograms
+    TH1D *hHCalMergeHitEta           = nullptr;
+    TH1D *hHCalMergeHitPhi           = nullptr;
+    TH1D *hHCalMergeHitEne           = nullptr;
+    TH1D *hHCalMergeHitPosZ          = nullptr;
+    TH1D *hHCalMergeHitParDiff       = nullptr;
+    TH2D *hHCalMergeHitPosYvsX       = nullptr;
+    TH2D *hHCalMergeHitEtaVsPhi      = nullptr;
+    TH2D *hHCalMergeHitVsParEne      = nullptr;
     // hcal cluster hit histograms
     TH1D *hHCalClustHitEta           = nullptr;
     TH1D *hHCalClustHitPhi           = nullptr;
@@ -104,21 +114,26 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     // hcal event-wise histograms
     TH1I *hEvtHCalNumPar             = nullptr;
     TH1I *hEvtHCalNumHit             = nullptr;
+    TH1I *hEvtHCalNumMerge           = nullptr;
     TH1I *hEvtHCalNumClust           = nullptr;
     TH1I *hEvtHCalNumTruClust        = nullptr;
     TH1D *hEvtHCalSumHitEne          = nullptr;
+    TH1D *hEvtHCalSumMergeEne        = nullptr;
     TH1D *hEvtHCalSumClustEne        = nullptr;
     TH1D *hEvtHCalSumTruClustEne     = nullptr;
     TH1D *hEvtHCalLeadClustEne       = nullptr;
     TH1D *hEvtHCalLeadTruClustEne    = nullptr;
     TH1D *hEvtHCalSumHitDiff         = nullptr;
+    TH1D *hEvtHCalSumMergeDiff       = nullptr;
     TH1D *hEvtHCalSumClustDiff       = nullptr;
     TH1D *hEvtHCalSumTruClustDiff    = nullptr;
     TH1D *hEvtHCalLeadClustDiff      = nullptr;
     TH1D *hEvtHCalLeadTruClustDiff   = nullptr;
+    TH2I *hEvtHCalNumMergeVsHit      = nullptr;
     TH2I *hEvtHCalNumClustVsHit      = nullptr;
     TH2I *hEvtHCalNumTruClustVsClust = nullptr;
     TH2D *hEvtHCalSumHitVsPar        = nullptr;
+    TH2D *hEvtHCalSumMergeVsPar      = nullptr;
     TH2D *hEvtHCalSumClustVsPar      = nullptr;
     TH2D *hEvtHCalSumTruClustVsPar   = nullptr;
     TH2D *hEvtHCalLeadClustVsPar     = nullptr;

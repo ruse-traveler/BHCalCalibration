@@ -12,7 +12,7 @@ podio="forPodioReaderTest_fromEicRecon.e5th70n500pip.d18m1y2023.podio.root"
 output="forPodioReaderTest_fromEicRecon.e5th70n500pip.d18m1y2023.jcalibratehcal.root"
 
 # output collections from EICrecon
-collections="HcalBarrelRecHits,HcalBarrelClusters,HcalBarrelIslandProtoClusters,HcalBarrelTruthClusters,HcalBarrelTruthProtoClusters,GeneratedParticles"
+collections="HcalBarrelRecHits,HcalBarrelMergedHits,HcalBarrelClusters,HcalBarrelIslandProtoClusters,HcalBarrelTruthClusters,HcalBarrelTruthProtoClusters,GeneratedParticles"
 
 # clustering parameters
 scale="5,5"

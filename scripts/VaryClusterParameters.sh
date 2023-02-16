@@ -560,7 +560,7 @@ output[74]="varyingClusterPars.varyDistScales_dim10loc300sec10cen30adj3.e10th70n
 input="../forVaryingClusterPars.e10th70n10Kpip.d19m1y2023.edm4hep.root"
 
 # output collections from EICrecon
-collections="HcalBarrelRecHits,HcalBarrelClusters,HcalBarrelIslandProtoClusters,HcalBarrelTruthClusters,HcalBarrelTruthProtoClusters,GeneratedParticles"
+collections="HcalBarrelRecHits,HcalBarrelMergedHits,HcalBarrelClusters,HcalBarrelIslandProtoClusters,HcalBarrelTruthClusters,HcalBarrelTruthProtoClusters,GeneratedParticles"
 
 # loop over combinations
 (( nCombo=0 ))
