@@ -23,5 +23,4 @@ root -b -q PCalibrateHCal.C
 ---
 
 ### TODO items:
-  - [Major] Import functionality into ROOT macro to work with simulation campaing output
   - [Minor] Refactor histogram creation/style setting
