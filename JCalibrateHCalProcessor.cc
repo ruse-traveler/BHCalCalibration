@@ -259,16 +259,16 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hECalClustEtaVsPhi      -> Sumw2();
   hECalClustVsParEne      -> Sumw2();
   // bemc cluster event-wise errors
-  hEvtHCalNumClust        -> Sumw2();
-  hEvtHCalSumClustEne     -> Sumw2();
-  hEvtHCalSumClustDiff    -> Sumw2();
-  hEvtHCalNumClustVsHit   -> Sumw2();
-  hEvtHCalSumClustVsPar   -> Sumw2();
+  hEvtECalNumClust        -> Sumw2();
+  hEvtECalSumClustEne     -> Sumw2();
+  hEvtECalSumClustDiff    -> Sumw2();
+  hEvtECalNumClustVsHit   -> Sumw2();
+  hEvtECalSumClustVsPar   -> Sumw2();
   // bemc lead cluster event-wise errors
-  hEvtHCalLeadClustNumHit -> Sumw2();
-  hEvtHCalLeadClustEne    -> Sumw2();
-  hEvtHCalLeadClustDiff   -> Sumw2();
-  hEvtHCalLeadClustVsPar  -> Sumw2();
+  hEvtECalLeadClustNumHit -> Sumw2();
+  hEvtECalLeadClustEne    -> Sumw2();
+  hEvtECalLeadClustDiff   -> Sumw2();
+  hEvtECalLeadClustVsPar  -> Sumw2();
 
   // ntuple for calibration
   ntForCalibration = new TNtuple("ntForCalibration", "For Calibration", "ePar:fracParVsLeadBHCal:fracParVsLeadBEMC:fracParVsSumBHCal:fracParVsSumBEMC:fracLeadBHCalVsBEMC:fracSumBHCalVsBEMC:eLeadBHCal:eLeadBEMC:eSumBHCal:eSumBEMC:diffLeadBHCal:diffLeadBEMC:diffSumBHCal:diffSumBEMC:nHitsLeadBHCal:nHitsLeadBEMC:nClustBHCal:nClustBEMC");
