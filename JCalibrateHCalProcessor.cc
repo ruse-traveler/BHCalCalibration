@@ -262,7 +262,6 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hEvtECalNumClust        -> Sumw2();
   hEvtECalSumClustEne     -> Sumw2();
   hEvtECalSumClustDiff    -> Sumw2();
-  hEvtECalNumClustVsHit   -> Sumw2();
   hEvtECalSumClustVsPar   -> Sumw2();
   // bemc lead cluster event-wise errors
   hEvtECalLeadClustNumHit -> Sumw2();
