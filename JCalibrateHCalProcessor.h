@@ -1,3 +1,4 @@
+// ----------------------------------------------------------------------------
 // 'JCalibrateHCalProcessor.h'
 // Derek Anderson
 // 11.02.2022
@@ -5,6 +6,7 @@
 // A simple JANA plugin to compare the
 // reconstructed hit and cluster energy
 // in the HCal to simulated particles.
+// ----------------------------------------------------------------------------
 
 // C includes
 #include <cmath>
@@ -13,6 +15,8 @@
 #include <TH2.h>
 #include <TFile.h>
 #include <TString.h>
+#include <TNtuple.h>
+#include <TProfile.h>
 // JANA includes
 #include <JANA/JEventProcessorSequentialRoot.h>
 #include <JANA/JEvent.h>
@@ -23,6 +27,7 @@
 #include <edm4eic/Cluster.h>
 
 // global constants
+static const size_t NCalibVars(19);
 static const size_t NRange(2);
 static const size_t NComp(3);
 static const float  CPar(1.);
@@ -40,7 +45,6 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     // Data objects we will need from JANA
     PrefetchT<edm4eic::ReconstructedParticle> genParticles       = {this, "GeneratedParticles"};
     PrefetchT<edm4eic::CalorimeterHit>        bhcalRecHits       = {this, "HcalBarrelRecHits"};
-    PrefetchT<edm4eic::CalorimeterHit>        bhcalMergeHits     = {this, "HcalBarrelMergedHits"};
     PrefetchT<edm4eic::Cluster>               bhcalClusters      = {this, "HcalBarrelClusters"};
     PrefetchT<edm4eic::Cluster>               bhcalTruthClusters = {this, "HcalBarrelTruthClusters"};
 
@@ -55,7 +59,7 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH1D *hParMomY                   = nullptr;
     TH1D *hParMomZ                   = nullptr;
     TH2D *hParEtaVsPhi               = nullptr;
-    // hcal reconstructed hit histograms
+    // bhcal reconstructed hit histograms
     TH1D *hHCalRecHitEta             = nullptr;
     TH1D *hHCalRecHitPhi             = nullptr;
     TH1D *hHCalRecHitEne             = nullptr;
@@ -64,16 +68,7 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH2D *hHCalRecHitPosYvsX         = nullptr;
     TH2D *hHCalRecHitEtaVsPhi        = nullptr;
     TH2D *hHCalRecHitVsParEne        = nullptr;
-    // hcal merged hit histograms
-    TH1D *hHCalMergeHitEta           = nullptr;
-    TH1D *hHCalMergeHitPhi           = nullptr;
-    TH1D *hHCalMergeHitEne           = nullptr;
-    TH1D *hHCalMergeHitPosZ          = nullptr;
-    TH1D *hHCalMergeHitParDiff       = nullptr;
-    TH2D *hHCalMergeHitPosYvsX       = nullptr;
-    TH2D *hHCalMergeHitEtaVsPhi      = nullptr;
-    TH2D *hHCalMergeHitVsParEne      = nullptr;
-    // hcal cluster hit histograms
+    // bhcal cluster hit histograms
     TH1D *hHCalClustHitEta           = nullptr;
     TH1D *hHCalClustHitPhi           = nullptr;
     TH1D *hHCalClustHitEne           = nullptr;
@@ -82,7 +77,7 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH2D *hHCalClustHitPosYvsX       = nullptr;
     TH2D *hHCalClustHitEtaVsPhi      = nullptr;
     TH2D *hHCalClustHitVsParEne      = nullptr;
-    // hcal reconstructed cluster histograms
+    // bhcal reconstructed cluster histograms
     TH1D *hHCalClustEta              = nullptr;
     TH1D *hHCalClustPhi              = nullptr;
     TH1D *hHCalClustEne              = nullptr;
@@ -92,7 +87,7 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH2D *hHCalClustPosYvsX          = nullptr;
     TH2D *hHCalClustEtaVsPhi         = nullptr;
     TH2D *hHCalClustVsParEne         = nullptr;
-    // hcal truth cluster hit histograms
+    // bhcal truth cluster hit histograms
     TH1D *hHCalTruClustHitEta        = nullptr;
     TH1D *hHCalTruClustHitPhi        = nullptr;
     TH1D *hHCalTruClustHitEne        = nullptr;
@@ -101,7 +96,7 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH2D *hHCalTruClustHitPosYvsX    = nullptr;
     TH2D *hHCalTruClustHitEtaVsPhi   = nullptr;
     TH2D *hHCalTruClustHitVsParEne   = nullptr;
-    // hcal truth cluster histograms
+    // bhcal truth cluster histograms
     TH1D *hHCalTruClustEta           = nullptr;
     TH1D *hHCalTruClustPhi           = nullptr;
     TH1D *hHCalTruClustEne           = nullptr;
@@ -111,33 +106,60 @@ class JCalibrateHCalProcessor : public JEventProcessorSequentialRoot {
     TH2D *hHCalTruClustPosYvsX       = nullptr;
     TH2D *hHCalTruClustEtaVsPhi      = nullptr;
     TH2D *hHCalTruClustVsParEne      = nullptr;
-    // hcal event-wise histograms
+    // bhcal general event-wise histograms
     TH1I *hEvtHCalNumPar             = nullptr;
+    // bhcal hit event-wise histograms
     TH1I *hEvtHCalNumHit             = nullptr;
-    TH1I *hEvtHCalNumMerge           = nullptr;
-    TH1I *hEvtHCalNumClust           = nullptr;
-    TH1I *hEvtHCalNumTruClust        = nullptr;
     TH1D *hEvtHCalSumHitEne          = nullptr;
-    TH1D *hEvtHCalSumMergeEne        = nullptr;
-    TH1D *hEvtHCalSumClustEne        = nullptr;
-    TH1D *hEvtHCalSumTruClustEne     = nullptr;
-    TH1D *hEvtHCalLeadClustEne       = nullptr;
-    TH1D *hEvtHCalLeadTruClustEne    = nullptr;
     TH1D *hEvtHCalSumHitDiff         = nullptr;
-    TH1D *hEvtHCalSumMergeDiff       = nullptr;
-    TH1D *hEvtHCalSumClustDiff       = nullptr;
-    TH1D *hEvtHCalSumTruClustDiff    = nullptr;
-    TH1D *hEvtHCalLeadClustDiff      = nullptr;
-    TH1D *hEvtHCalLeadTruClustDiff   = nullptr;
-    TH2I *hEvtHCalNumMergeVsHit      = nullptr;
-    TH2I *hEvtHCalNumClustVsHit      = nullptr;
-    TH2I *hEvtHCalNumTruClustVsClust = nullptr;
     TH2D *hEvtHCalSumHitVsPar        = nullptr;
-    TH2D *hEvtHCalSumMergeVsPar      = nullptr;
+    // bhcal cluster event-wise histograms
+    TH1I *hEvtHCalNumClust           = nullptr;
+    TH1D *hEvtHCalSumClustEne        = nullptr;
+    TH1D *hEvtHCalSumClustDiff       = nullptr;
+    TH2I *hEvtHCalNumClustVsHit      = nullptr;
     TH2D *hEvtHCalSumClustVsPar      = nullptr;
-    TH2D *hEvtHCalSumTruClustVsPar   = nullptr;
+    // bhcal lead cluster event-wise histograms
+    TH1I *hEvtHCalLeadClustNumHit    = nullptr;
+    TH1D *hEvtHCalLeadClustEne       = nullptr;
+    TH1D *hEvtHCalLeadClustDiff      = nullptr;
     TH2D *hEvtHCalLeadClustVsPar     = nullptr;
+    // bhcal truth cluster event-wise histograms
+    TH1I *hEvtHCalNumTruClust        = nullptr;
+    TH1D *hEvtHCalSumTruClustEne     = nullptr;
+    TH1D *hEvtHCalSumTruClustDiff    = nullptr;
+    TH2I *hEvtHCalNumTruClustVsClust = nullptr;
+    TH2D *hEvtHCalSumTruClustVsPar   = nullptr;
+    // bhcal truth lead cluster event-wise histograms
+    TH1I *hEvtHCalLeadTruClustNumHit = nullptr;
+    TH1D *hEvtHCalLeadTruClustEne    = nullptr;
+    TH1D *hEvtHCalLeadTruClustDiff   = nullptr;
     TH2D *hEvtHCalLeadTruClustVsPar  = nullptr;
+
+    // bemc reconstructed cluster histograms
+    TH1D *hECalClustEta           = nullptr;
+    TH1D *hECalClustPhi           = nullptr;
+    TH1D *hECalClustEne           = nullptr;
+    TH1D *hECalClustPosZ          = nullptr;
+    TH1I *hECalClustNumHit        = nullptr;
+    TH1D *hECalClustParDiff       = nullptr;
+    TH2D *hECalClustPosYvsX       = nullptr;
+    TH2D *hECalClustEtaVsPhi      = nullptr;
+    TH2D *hECalClustVsParEne      = nullptr;
+    // bemc cluster event-wise histograms
+    TH1I *hEvtECalNumClust        = nullptr;
+    TH1D *hEvtECalSumClustEne     = nullptr;
+    TH1D *hEvtECalSumClustDiff    = nullptr;
+    TH2D *hEvtECalSumClustVsPar   = nullptr;
+    // bemc lead cluster event-wise histograms
+    TH1I *hEvtECalLeadClustNumHit = nullptr;
+    TH1D *hEvtECalLeadClustEne    = nullptr;
+    TH1D *hEvtECalLeadClustDiff   = nullptr;
+    TH2D *hEvtECalLeadClustVsPar  = nullptr;
+
+    // ntuple for calibration
+    Float_t  varsForCalibration[NCalibVars];
+    TNtuple *ntForCalibration;
 
   public:
 
