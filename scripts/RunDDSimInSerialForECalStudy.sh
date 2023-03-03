@@ -64,13 +64,13 @@ for output in ${outima[@]}; do
   $shellScript -- $rundir/DoImagingDDSim.sh
   mv $rundir/$output $outdir
 
-  # create imaging driver script
+  # create SciGlass driver script
   touch $rundir/DoSciGlassDDSim.sh
   echo "#!/bin/bash" > $rundir/DoSciGlassDDSim.sh
   echo "source $rundir/RunSingleDDSimForECalStudy.sh $setupScript $rundir $steerer $sciglass $numevt ${outsci[$iRun]}" > $rundir/DoSciGlassDDSim.sh
   chmod u+x $rundir/DoSciGlassDDSim.sh
 
-  # run dd4hep for SciGlass
+  # run ddsim for SciGlass
   $shellScript -- $rundir/DoSciGlassDDSim.sh
   mv $rundir/${outsci[$iRun]} $outdir
 
