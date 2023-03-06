@@ -27,7 +27,7 @@
 #include <edm4eic/Cluster.h>
 
 // global constants
-static const size_t NCalibVars(19);
+static const size_t NCalibVars(27);
 static const size_t NRange(2);
 static const size_t NComp(3);
 static const float  CPar(1.);

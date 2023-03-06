@@ -1,11 +1,13 @@
 #!/bin/bash
+# -----------------------------------------------------------------------------
 # 'RunDDSimForCalibration.sh'
 # Derek Anderson
 # 12.01.2022
 #
 # A simple script to run dd4hep to generate
 # an edm4hep file for JCalibrateHCal to
-# work with
+# work with.
+# -----------------------------------------------------------------------------
 
 # input parameters
 steerer="../steering.forHCalClusterCheck_p2th70pip.py"
