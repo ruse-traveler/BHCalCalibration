@@ -270,7 +270,7 @@ void JCalibrateHCalProcessor::InitWithGlobalRootLock(){
   hEvtECalLeadClustVsPar  -> Sumw2();
 
   // ntuple for calibration
-  ntForCalibration = new TNtuple("ntForCalibration", "For Calibration", "ePar:fracParVsLeadBHCal:fracParVsLeadBEMC:fracParVsSumBHCal:fracParVsSumBEMC:fracLeadBHCalVsBEMC:fracSumBHCalVsBEMC:eLeadBHCal:eLeadBEMC:eSumBHCal:eSumBEMC:diffLeadBHCal:diffLeadBEMC:diffSumBHCal:diffSumBEMC:nHitsLeadBHCal:nHitsLeadBEMC:nClustBHCal:nClustBEMC:hLeadBHCal:hLeadBEMC:fLeadBHCal:fLeadBEMC:eLeadImage:eSumImage:eLeadSciFi:eSumSciFi");
+  ntForCalibration = new TNtuple("ntForCalibration", "For Calibration", "ePar:fracParVsLeadBHCal:fracParVsLeadBEMC:fracParVsSumBHCal:fracParVsSumBEMC:fracLeadBHCalVsBEMC:fracSumBHCalVsBEMC:eLeadBHCal:eLeadBEMC:eSumBHCal:eSumBEMC:diffLeadBHCal:diffLeadBEMC:diffSumBHCal:diffSumBEMC:nHitsLeadBHCal:nHitsLeadBEMC:nClustBHCal:nClustBEMC:hLeadBHCal:hLeadBEMC:fLeadBHCal:fLeadBEMC:eLeadImage:eSumImage:eLeadSciFi:eSumSciFi:nClustImage:nClustSciFi:hLeadImage:hLeadSciFi:fLeadImage:fLeadSciFi");
   return;
 
 }  // end 'InitWithGlobalRootLock()'
@@ -417,10 +417,14 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
     const auto rHCalClustZ   = bhCalClust -> getPosition().z;
     const auto eHCalClust    = bhCalClust -> getEnergy();
     const auto nHitHCalClust = bhCalClust -> getNhits();
-    const auto fHCalClust    = bhCalClust -> getIntrinsicPhi();
     const auto tHCalClust    = bhCalClust -> getIntrinsicTheta();
-    const auto hHCalClust    = (1.) * std::log(std::atan(tHCalClust / 2.));
     const auto diffHCalClust = (eHCalClust - eMcPar) / eMcPar;
+
+    // calculate cluster eta, phi
+    // FIXME update to XYZvectors
+    const TVector3 vecPosition(rHCalClustX, rHCalClustY, rHCalClustZ);
+    const auto     hHCalClust = vecPosition.Eta();
+    const auto     fHCalClust = vecPosition.Phi();
     
     // loop over protoclusters
     unsigned long iHCalProto(0);
@@ -580,7 +584,11 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   int    iLeadECalClust(-1);
   int    nHitLeadECalClust(-1);
   double hLeadECalClust(-999.);
+  double hLeadImageClust(-999.);
+  double hLeadSciFiClust(-999.);
   double fLeadECalClust(-999.);
+  double fLeadImageClust(-999.);
+  double fLeadSciFiClust(-999.);
   double eLeadECalClust(-999.);
   double eLeadImageClust(-999.);
   double eLeadSciFiClust(-999.);
@@ -589,6 +597,8 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   // reco. bemc cluster loop
   unsigned long iECalClust(0);
   unsigned long nECalClust(0);
+  unsigned long nImageClust(0);
+  unsigned long nSciFiClust(0);
   /* bemc loop will go here */
 
   // do event-wise calculations
@@ -672,6 +682,12 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   varsForCalibration[24] = (Float_t) eImageClustSum;
   varsForCalibration[25] = (Float_t) eLeadSciFiClust;
   varsForCalibration[26] = (Float_t) eSciFiClustSum;
+  varsForCalibration[28] = (Float_t) nImageClust;
+  varsForCalibration[27] = (Float_t) nSciFiClust;
+  varsForCalibration[29] = (Float_t) hLeadImageClust;
+  varsForCalibration[30] = (Float_t) hLeadSciFiClust;
+  varsForCalibration[31] = (Float_t) fLeadImageClust;
+  varsForCalibration[32] = (Float_t) fLeadSciFiClust;
 
   // fill tuple
   ntForCalibration -> Fill(varsForCalibration);
