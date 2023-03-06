@@ -14,8 +14,10 @@
 #include <TH1.h>
 #include <TH2.h>
 #include <TFile.h>
+#include <TMath.h>
 #include <TString.h>
 #include <TNtuple.h>
+#include <TVector3.h>  // FIXME update to XYZvectors
 #include <TProfile.h>
 // JANA includes
 #include <JANA/JEventProcessorSequentialRoot.h>
@@ -27,7 +29,7 @@
 #include <edm4eic/Cluster.h>
 
 // global constants
-static const size_t NCalibVars(19);
+static const size_t NCalibVars(33);
 static const size_t NRange(2);
 static const size_t NComp(3);
 static const float  CPar(-1.);
