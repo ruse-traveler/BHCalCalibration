@@ -688,6 +688,22 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   varsForCalibration[30] = (Float_t) hLeadSciFiClust;
   varsForCalibration[31] = (Float_t) fLeadImageClust;
   varsForCalibration[32] = (Float_t) fLeadSciFiClust;
+  varsForCalibration[17] = (Float_t) nHCalClust;
+  varsForCalibration[18] = (Float_t) nECalClust;
+  varsForCalibration[19] = (Float_t) hLeadHCalClust;
+  varsForCalibration[20] = (Float_t) hLeadECalClust;
+  varsForCalibration[21] = (Float_t) fLeadHCalClust;
+  varsForCalibration[22] = (Float_t) fLeadECalClust;
+  varsForCalibration[23] = (Float_t) eLeadImageClust;
+  varsForCalibration[24] = (Float_t) eImageClustSum;
+  varsForCalibration[25] = (Float_t) eLeadSciFiClust;
+  varsForCalibration[26] = (Float_t) eSciFiClustSum;
+  varsForCalibration[27] = (Float_t) nSciFiClust;
+  varsForCalibration[28] = (Float_t) nImageClust;
+  varsForCalibration[29] = (Float_t) hLeadImageClust;
+  varsForCalibration[30] = (Float_t) hLeadSciFiClust;
+  varsForCalibration[31] = (Float_t) fLeadImageClust;
+  varsForCalibration[32] = (Float_t) fLeadSciFiClust;
 
   // fill tuple
   ntForCalibration -> Fill(varsForCalibration);
