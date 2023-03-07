@@ -582,7 +582,11 @@ void JCalibrateHCalWithSciGlassProcessor::ProcessSequential(const std::shared_pt
 
   // for highest energy bemc clusters
   int    iLeadECalClust(-1);
+  int    iLeadSciFiClust(-1);
+  int    iLeadImageClust(-1);
   int    nHitLeadECalClust(-1);
+  int    nHitLeadImageClust(-1);
+  int    nHitLeadSciFiClust(-1);
   double hLeadECalClust(-999.);
   double hLeadImageClust(-999.);
   double hLeadSciFiClust(-999.);
@@ -590,12 +594,16 @@ void JCalibrateHCalWithSciGlassProcessor::ProcessSequential(const std::shared_pt
   double fLeadImageClust(-999.);
   double fLeadSciFiClust(-999.);
   double eLeadECalClust(-999.);
-  double eLeadImageClust(-999.);
-  double eLeadSciFiClust(-999.);
+  double eLeadImageClust(0.);
+  double eLeadSciFiClust(0.);
   double diffLeadECalClust(-999.);
+  double diffLeadImageClust(-999.);
+  double diffLeadSciFiClust(-999.);
 
   // reco. bemc cluster loop
   unsigned long iECalClust(0);
+  unsigned long iImageClust(0);
+  unsigned long iSciFiClust(0);
   unsigned long nECalClust(0);
   unsigned long nImageClust(0);
   unsigned long nSciFiClust(0);
