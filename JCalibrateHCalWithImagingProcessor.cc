@@ -270,7 +270,7 @@ void JCalibrateHCalWithImagingProcessor::InitWithGlobalRootLock(){
   hEvtECalLeadClustVsPar  -> Sumw2();
 
   // ntuple for calibration
-  ntForCalibration = new TNtuple("ntForCalibration", "For Calibration", "ePar:fracParVsLeadBHCal:fracParVsLeadBEMC:fracParVsSumBHCal:fracParVsSumBEMC:fracLeadBHCalVsBEMC:fracSumBHCalVsBEMC:eLeadBHCal:eLeadBEMC:eSumBHCal:eSumBEMC:diffLeadBHCal:diffLeadBEMC:diffSumBHCal:diffSumBEMC:nHitsLeadBHCal:nHitsLeadBEMC:nClustBHCal:nClustBEMC");
+  ntForCalibration = new TNtuple("ntForCalibration", "For Calibration", "ePar:fracParVsLeadBHCal:fracParVsLeadBEMC:fracParVsSumBHCal:fracParVsSumBEMC:fracLeadBHCalVsBEMC:fracSumBHCalVsBEMC:eLeadBHCal:eLeadBEMC:eSumBHCal:eSumBEMC:diffLeadBHCal:diffLeadBEMC:diffSumBHCal:diffSumBEMC:nHitsLeadBHCal:nHitsLeadBEMC:nClustBHCal:nClustBEMC:hLeadBHCal:hLeadBEMC:fLeadBHCal:fLeadBEMC:eLeadImage:eSumImage:eLeadSciFi:eSumSciFi:nClustImage:nClustSciFi:hLeadImage:hLeadSciFi:fLeadImage:fLeadSciFi");
   return;
 
 }  // end 'InitWithGlobalRootLock()'
@@ -292,6 +292,8 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   double eHCalHitSum(0.);
   double eHCalClustSum(0.);
   double eECalClustSum(0.);
+  double eImageClustSum(0.);
+  double eSciFiClustSum(0.);
   double eTruHCalClustSum(0.);
 
   // sum bhcal hit energy
@@ -393,10 +395,12 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   int    iLeadTruHCalClust(-1);
   int    nHitLeadHCalClust(-1);
   int    nHitLeadTruHCalClust(-1);
-  double eLeadHCalClust(0.);
-  double eLeadTruHCalClust(0.);
-  double diffLeadHCalClust(0.);
-  double diffLeadTruHCalClust(0.);
+  double hLeadHCalClust(-999.);
+  double fLeadHCalClust(-999.);
+  double eLeadHCalClust(-999.);
+  double eLeadTruHCalClust(-999.);
+  double diffLeadHCalClust(-999.);
+  double diffLeadTruHCalClust(-999.);
 
   // get protoclusters
   auto bhCalProtoClusters = event -> Get<edm4eic::ProtoCluster>("HcalBarrelIslandProtoClusters");
@@ -413,10 +417,14 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
     const auto rHCalClustZ   = bhCalClust -> getPosition().z;
     const auto eHCalClust    = bhCalClust -> getEnergy();
     const auto nHitHCalClust = bhCalClust -> getNhits();
-    const auto fHCalClust    = bhCalClust -> getIntrinsicPhi();
     const auto tHCalClust    = bhCalClust -> getIntrinsicTheta();
-    const auto hHCalClust    = (1.) * std::log(std::atan(tHCalClust / 2.));
     const auto diffHCalClust = (eHCalClust - eMcPar) / eMcPar;
+
+    // calculate cluster eta, phi
+    // FIXME update to XYZvectors
+    const TVector3 vecPosition(rHCalClustX, rHCalClustY, rHCalClustZ);
+    const auto     hHCalClust = vecPosition.Eta();
+    const auto     fHCalClust = vecPosition.Phi();
     
     // loop over protoclusters
     unsigned long iHCalProto(0);
@@ -479,6 +487,8 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
     if (isBiggerEne) {
       iLeadHCalClust    = iHCalClust;
       nHitLeadHCalClust = nHitHCalClust;
+      hLeadHCalClust    = hHCalClust;
+      fLeadHCalClust    = fHCalClust;
       eLeadHCalClust    = eHCalClust;
       diffLeadHCalClust = diffHCalClust;
     }
@@ -572,13 +582,31 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
 
   // for highest energy bemc clusters
   int    iLeadECalClust(-1);
+  int    iLeadSciFiClust(-1);
+  int    iLeadImageClust(-1);
   int    nHitLeadECalClust(-1);
-  double eLeadECalClust(0.);
-  double diffLeadECalClust(0.);
+  int    nHitLeadImageClust(-1);
+  int    nHitLeadSciFiClust(-1);
+  double hLeadECalClust(-999.);
+  double hLeadImageClust(-999.);
+  double hLeadSciFiClust(-999.);
+  double fLeadECalClust(-999.);
+  double fLeadImageClust(-999.);
+  double fLeadSciFiClust(-999.);
+  double eLeadECalClust(-999.);
+  double eLeadImageClust(0.);
+  double eLeadSciFiClust(0.);
+  double diffLeadECalClust(-999.);
+  double diffLeadImageClust(-999.);
+  double diffLeadSciFiClust(-999.);
 
   // reco. bemc cluster loop
   unsigned long iECalClust(0);
+  unsigned long iImageClust(0);
+  unsigned long iSciFiClust(0);
   unsigned long nECalClust(0);
+  unsigned long nImageClust(0);
+  unsigned long nSciFiClust(0);
   for (auto bemcClust : bemcClusters()) {
 
     // grab cluster properties
@@ -587,10 +615,14 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
     const auto rECalClustZ   = bemcClust -> getPosition().z;
     const auto eECalClust    = bemcClust -> getEnergy();
     const auto nHitECalClust = bemcClust -> getNhits();
-    const auto fECalClust    = bemcClust -> getIntrinsicPhi();
     const auto tECalClust    = bemcClust -> getIntrinsicTheta();
-    const auto hECalClust    = (1.) * std::log(std::atan(tECalClust / 2.));
     const auto diffECalClust = (eECalClust - eMcPar) / eMcPar;
+
+    // calculate cluster eta, phi
+    // FIXME update to XYZvectors
+    const TVector3 vecPosition(rECalClustX, rECalClustY, rECalClustZ);
+    const auto     hECalClust = vecPosition.Eta();
+    const auto     fECalClust = vecPosition.Phi();
 
     // fill cluster histograms and increment counters
     hECalClustPhi      -> Fill(fECalClust);
@@ -611,10 +643,82 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
     if (isBiggerEne) {
       iLeadECalClust    = iECalClust;
       nHitLeadECalClust = nHitECalClust;
+      hLeadECalClust    = hECalClust;
+      fLeadECalClust    = fECalClust;
       eLeadECalClust    = eECalClust;
       diffLeadECalClust = diffECalClust;
     }
   }  // end reco. bemc cluster loop
+
+  // loop over scifi clusters
+  for (auto scifiClust : scifiClusters()) {
+
+    // grab cluster properties
+    const auto rSciFiClustX   = scifiClust -> getPosition().x;
+    const auto rSciFiClustY   = scifiClust -> getPosition().y;
+    const auto rSciFiClustZ   = scifiClust -> getPosition().z;
+    const auto eSciFiClust    = scifiClust -> getEnergy();
+    const auto nHitSciFiClust = scifiClust -> getNhits();
+    const auto tSciFiClust    = scifiClust -> getIntrinsicTheta();
+    const auto diffSciFiClust = (eSciFiClust - eMcPar) / eMcPar;
+
+    // calculate cluster eta, phi
+    // FIXME update to XYZvectors
+    const TVector3 vecPosition(rSciFiClustX, rSciFiClustY, rSciFiClustZ);
+    const auto     hSciFiClust = vecPosition.Eta();
+    const auto     fSciFiClust = vecPosition.Phi();
+
+    // increment counters
+    eSciFiClustSum += eSciFiClust;
+    ++nSciFiClust;
+    ++iSciFiClust;
+
+    // select leading cluster
+    const bool isBiggerEne = (eSciFiClust > eLeadSciFiClust);
+    if (isBiggerEne) {
+      iLeadSciFiClust    = iSciFiClust;
+      nHitLeadSciFiClust = nHitSciFiClust;
+      hLeadSciFiClust    = hSciFiClust;
+      fLeadSciFiClust    = fSciFiClust;
+      eLeadSciFiClust    = eSciFiClust;
+      diffLeadSciFiClust = diffSciFiClust;
+    }
+  }  // end scifi cluster loop
+
+  // loop over imaging clusters
+  for (auto imageClust : imageClusters()) {
+
+    // grab cluster properties
+    const auto rImageClustX   = imageClust -> getPosition().x;
+    const auto rImageClustY   = imageClust -> getPosition().y;
+    const auto rImageClustZ   = imageClust -> getPosition().z;
+    const auto eImageClust    = imageClust -> getEnergy();
+    const auto nHitImageClust = imageClust -> getNhits();
+    const auto tImageClust    = imageClust -> getIntrinsicTheta();
+    const auto diffImageClust = (eImageClust - eMcPar) / eMcPar;
+
+    // calculate cluster eta, phi
+    // FIXME update to XYZvectors
+    const TVector3 vecPosition(rImageClustX, rImageClustY, rImageClustZ);
+    const auto     hImageClust = vecPosition.Eta();
+    const auto     fImageClust = vecPosition.Phi();
+
+    // increment counters
+    eImageClustSum += eImageClust;
+    ++nImageClust;
+    ++iImageClust;
+
+    // select leading cluster
+    const bool isBiggerEne = (eImageClust > eLeadImageClust);
+    if (isBiggerEne) {
+      iLeadImageClust    = iImageClust;
+      nHitLeadImageClust = nHitImageClust;
+      hLeadImageClust    = hImageClust;
+      fLeadImageClust    = fImageClust;
+      eLeadImageClust    = eImageClust;
+      diffLeadImageClust = diffImageClust;
+    }
+  }  // end imaging cluster loop
 
   // do event-wise calculations
   const auto fracParVsLeadHCal   = eLeadHCalClust / eMcPar;
@@ -689,6 +793,20 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   varsForCalibration[16] = (Float_t) nHitLeadECalClust;
   varsForCalibration[17] = (Float_t) nHCalClust;
   varsForCalibration[18] = (Float_t) nECalClust;
+  varsForCalibration[19] = (Float_t) hLeadHCalClust;
+  varsForCalibration[20] = (Float_t) hLeadECalClust;
+  varsForCalibration[21] = (Float_t) fLeadHCalClust;
+  varsForCalibration[22] = (Float_t) fLeadECalClust;
+  varsForCalibration[23] = (Float_t) eLeadImageClust;
+  varsForCalibration[24] = (Float_t) eImageClustSum;
+  varsForCalibration[25] = (Float_t) eLeadSciFiClust;
+  varsForCalibration[26] = (Float_t) eSciFiClustSum;
+  varsForCalibration[27] = (Float_t) nSciFiClust;
+  varsForCalibration[28] = (Float_t) nImageClust;
+  varsForCalibration[29] = (Float_t) hLeadImageClust;
+  varsForCalibration[30] = (Float_t) hLeadSciFiClust;
+  varsForCalibration[31] = (Float_t) fLeadImageClust;
+  varsForCalibration[32] = (Float_t) fLeadSciFiClust;
 
   // fill tuple
   ntForCalibration -> Fill(varsForCalibration);
