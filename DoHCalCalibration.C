@@ -11,6 +11,7 @@
 // is being used.
 //   fConfig = 0: SciGlass BEMC
 //   fConfig = 1: Imaging BEMC
+//   fConfig = 2: Default (see "parse configuration" block)
 // ----------------------------------------------------------------------------
 
 // standard c includes
@@ -36,6 +37,7 @@
 #include <TPaveText.h>
 #include <TDirectory.h>
 #include <TObjString.h>
+#include <TGraphErrors.h>
 // tmva includes
 #include <TMVA/Tools.h>
 #include <TMVA/Factory.h>
@@ -47,29 +49,78 @@ using namespace std;
 // global constants
 static const UInt_t  NHist(4);
 static const UInt_t  NRange(2);
-static const UInt_t  NVariable(3);
-static const UInt_t  NSpectator(3);
-static const UInt_t  FConfigDef(1);
-static const TString SInDef("eicrecon_output/forResoFirstLook_imaging_run0.e5th35145n25Kpim.d2m3y2023.hists.root");
-static const TString SOutDef("resoFirstLook.imaging_run0.e5n25Kpim.d2m3y2023.root");
+static const UInt_t  NEneBins(11);
+static const UInt_t  NVarSci(3);
+static const UInt_t  NVarIma(3);
+static const UInt_t  NSpecSci(1);
+static const UInt_t  NSpecIma(1);
+
+// default arguments
+static const UInt_t  FConfigDef(2);
+static const Bool_t  DoTmvaDef(false);
+static const TString SInDef("eicrecon_output/merged/forECalStudy.bhcalTestBeamConfig.e1t20th35145n5KeaPim.d7m3y2023.plugin.root");
+static const TString SOutDef("test.root");
 static const TString STupleDef("ntForCalibration");
 
 
-void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput = SInDef, const TString sOutput = SOutDef, const TString sTuple = STupleDef) {
+
+void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = DoTmvaDef, const TString sInput = SInDef, const TString sOutput = SOutDef, const TString sTuple = STupleDef) {
 
   // lower verbosity
   gErrorIgnoreLevel = kError;
   cout << "\n  Beginning BHCal calibration script..." << endl;
 
-  // histogram parameters
-  const Bool_t isCalibrated[NHist] = {false, false, true, true};
-
   // tmva parameters
-  const TCut    trainCut("");
   const Float_t treeWeight(1.0);
   const TString sTarget("ePar");
-  const TString sVars[NVariable]    = {"eLeadBHCal", "eLeadBEMC", "eLeadBHCal+eLeadBEMC"};
-  const TString sSpecs[NSpectator]  = {"eLeadBHCal/ePar", "eLeadBEMC/ePar", "eLeadBEMC/(eLeadBHCal+eLeadBEMC)"};
+  const Bool_t  addSpectators(false);
+  const TString sVarSci[NVarSci]   = {"eLeadBHCal", "eLeadBEMC", "eLeadBHCal+eLeadBEMC"};
+  const TString sVarIma[NVarIma]   = {"eLeadBHCal", "eLeadBEMC", "eLeadBHCal+eLeadBEMC"};
+  const TString sSpecSci[NSpecSci] = {"eLeadBHCal/ePar"};
+  const TString sSpecIma[NSpecIma] = {"eLeadBHCal/ePar"};
+  const TCut    trainCutSci("");
+  const TCut    trainCutIma("");
+
+  // histogram parameters
+  const Bool_t  isCalibrated[NHist]  = {false, false, true, true};
+  const UInt_t  fColEneBin[NEneBins] = {799, 809, 634, 899, 909, 618, 879, 889, 602, 859, 869};
+  const UInt_t  fMarEneBin[NEneBins] = {24,  26,  32,  25,  27,  28,  30,  24,  26,  32,  25};
+  const TString sHCalEne[NEneBins]   = {"hHCalEne_ene1",  "hHCalEne_ene2",   "hHCalEne_ene3",   "hHCalEne_ene4",   "hHCalEne_ene5",  "hHCalEne_ene6",
+                                        "hHCalEne_ene8",  "hHCalEne_ene10",  "hHCalEne_ene12",  "hHCalEne_ene16",  "hHCalEne_ene20"};
+  const TString sHCalDiff[NEneBins]  = {"hHCalDiff_ene1", "hHCalDiff_ene2",  "hHCalDiff_ene3",  "hHCalDiff_ene4",  "hHCalDiff_ene5", "hHCalDiff_ene6",
+                                        "hHCalDiff_ene8", "hHCalDiff_ene10", "hHCalDiff_ene12", "hHCalDiff_ene16", "hHCalDiff_ene20"};
+  const TString sEneTitleX("E_{lead}^{BHCal} [GeV]");
+  const TString sDiffTitleX("#DeltaE / E_{par}");
+
+  // generic resolution parameters
+  const Double_t enePar[NEneBins]       = {1.,  2.,  3.,  4.,  5.,  6.,  8.,  10.,  12.,  16.,  20.};
+  const Double_t eneParMin[NEneBins]    = {0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 9.5,  10.5, 13.5, 18.5};
+  const Double_t eneParMax[NEneBins]    = {1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 9.5, 10.5, 13.5, 18.5, 21.5};
+
+  // reco vs. par ene resolution parameters
+  const Double_t xFitEneMin[NEneBins]   = {0.,  0.,  0.,  1.,  2.,  3.,  3.,  4.,   6.,   7.,   11.};
+  const Double_t xFitEneMax[NEneBins]   = {2.,  2.,  4.,  5.,  6.,  7.,  9.,  12.,  14.,  17.,  21.};
+  const Double_t ampEneGuess[NEneBins]  = {1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,   1.,   1.,   1.};
+  const Double_t muEneGuess[NEneBins]   = {0.5, 1.5, 2.,  3.,  4.,  5.,  6.,  8.,   10.,  12.,  15.};
+  const Double_t sigEneGuess[NEneBins]  = {1.,  1.,  2.,  2.,  2.,  2.,  3.,  4.,   4.,   5.,   6.};
+  const TString  sFitEne[NEneBins]       = {"fFitEne_ene1",  "fFitEne_ene2",   "fFitEne_ene3",   "fFitEne_ene4",   "fFitEne_ene5",  "fFitEne_ene6",
+                                            "fFitEne_ene8",  "fFitEne_ene10",  "fFitEne_ene12",  "fFitEne_ene16",  "fFitEne_ene20"};
+
+  // diff vs. par ene resolution parameters
+  const Double_t xFitDiffMin[NEneBins]  = {-1, -1.,  -1., -1., -1., -1., -1., -1.,  -1.,  -1.,  -1.};
+  const Double_t xFitDiffMax[NEneBins]  = {1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,   1.,   1.,   1.};
+  const Double_t ampDiffGuess[NEneBins] = {1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,   1.,   1.,   1.};
+  const Double_t muDiffGuess[NEneBins]  = {1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,   1.,   1.,   1.};
+  const Double_t sigDiffGuess[NEneBins] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,  0.1,  0.1,  0.1};
+  const TString  sFitDiff[NEneBins]     = {"fFitDiff_ene1", "fFitDiff_ene2",  "fFitDiff_ene3",  "fFitDiff_ene4",  "fFitDiff_ene5", "fFitDiff_ene6",
+                                           "fFitDiff_ene8", "fFitDiff_ene10", "fFitDiff_ene12", "fFitDiff_ene16", "fFitDiff_ene20"};
+
+  // style parameters
+  const UInt_t  fTxt(42);
+  const UInt_t  fAln(12);
+  const UInt_t  fCenter(1);
+  const Float_t fOffX(1.1);
+  const Float_t fOffY(1.2);
 
   // parse configuration
   Bool_t  inSciGlassConfig;
@@ -85,7 +136,7 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
       break;
     default:
       inSciGlassConfig = true;
-      sTupleDir        = "JCalibrateHCalWithSciGlass/";
+      sTupleDir        = "JCalibrateHCal/";
       break;
   }
 
@@ -145,6 +196,20 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   Float_t nHitsLeadBEMC;
   Float_t nClustBHCal;
   Float_t nClustBEMC;
+  Float_t hLeadBHCal;
+  Float_t hLeadBEMC;
+  Float_t fLeadBHCal;
+  Float_t fLeadBEMC;
+  Float_t eLeadImage;
+  Float_t eSumImage;
+  Float_t eLeadSciFi;
+  Float_t eSumSciFi;
+  Float_t nClustImage;
+  Float_t nClustSciFi;
+  Float_t hLeadImage;
+  Float_t hLeadSciFi;
+  Float_t fLeadImage;
+  Float_t fLeadSciFi;
 
   // set tuple branches
   ntToCalibrate -> SetBranchAddress("ePar",                &ePar);
@@ -166,13 +231,29 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   ntToCalibrate -> SetBranchAddress("nHitsLeadBEMC",       &nHitsLeadBEMC);
   ntToCalibrate -> SetBranchAddress("nClustBHCal",         &nClustBHCal);
   ntToCalibrate -> SetBranchAddress("nClustBEMC",          &nClustBEMC);
+  ntToCalibrate -> SetBranchAddress("hLeadBHCal",          &hLeadBHCal);
+  ntToCalibrate -> SetBranchAddress("hLeadBEMC",           &hLeadBEMC);
+  ntToCalibrate -> SetBranchAddress("fLeadBHCal",          &fLeadBHCal);
+  ntToCalibrate -> SetBranchAddress("fLeadBEMC",           &fLeadBEMC);
+  ntToCalibrate -> SetBranchAddress("eLeadImage",          &eLeadImage);
+  ntToCalibrate -> SetBranchAddress("eSumImage",           &eSumImage);
+  ntToCalibrate -> SetBranchAddress("eLeadSciFi",          &eLeadSciFi);
+  ntToCalibrate -> SetBranchAddress("eSumSciFi",           &eSumSciFi);
+  ntToCalibrate -> SetBranchAddress("nClustImage",         &nClustImage);
+  ntToCalibrate -> SetBranchAddress("nClustSciFi",         &nClustSciFi);
+  ntToCalibrate -> SetBranchAddress("hLeadImage",          &hLeadImage);
+  ntToCalibrate -> SetBranchAddress("hLeadSciFi",          &hLeadSciFi);
+  ntToCalibrate -> SetBranchAddress("fLeadImage",          &fLeadImage);
+  ntToCalibrate -> SetBranchAddress("fLeadSciFi",          &fLeadSciFi);
   cout << "    Set tuple branches." << endl;
 
-  // output histograms & profiles
+  // general histograms & profiles
   TH1D     *hHCalFrac[NHist];
   TH1D     *hHCalDiff[NHist];
   TH1D     *hECalFrac[NHist];
   TH1D     *hECalDiff[NHist];
+  TH2D     *hHCalEneVsPar[NHist];
+  TH2D     *hECalEneVsPar[NHist];
   TH2D     *hHCalFracVsPar[NHist];
   TH2D     *hHCalDiffVsPar[NHist];
   TH2D     *hECalFracVsPar[NHist];
@@ -183,6 +264,8 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   TH2D     *hHCalDiffVsTotalFrac[NHist];
   TH2D     *hECalFracVsTotalFrac[NHist];
   TH2D     *hECalDiffVsTotalFrac[NHist];
+  TProfile *pHCalEneVsPar[NHist];
+  TProfile *pECalEneVsPar[NHist];
   TProfile *pHCalFracVsPar[NHist];
   TProfile *pHCalDiffVsPar[NHist];
   TProfile *pECalFracVsPar[NHist];
@@ -194,12 +277,16 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   TProfile *pECalFracVsTotalFrac[NHist];
   TProfile *pECalDiffVsTotalFrac[NHist];
 
+  // resolution histograms
+  TH1D *hHCalEneBin[NEneBins];
+  TH1D *hHCalDiffBin[NEneBins];
+
   // histogram binning
-  const Ssiz_t  nEneBins(21);
-  const Ssiz_t  nDiffBins(400);
+  const Ssiz_t  nEneBins(41);
+  const Ssiz_t  nDiffBins(700);
   const Ssiz_t  nFracBins(305);
-  const Float_t rEneBins[NRange]  = {-1.,   20.};
-  const Float_t rDiffBins[NRange] = {-3.,   1.};
+  const Float_t rEneBins[NRange]  = {-1.,   40.};
+  const Float_t rDiffBins[NRange] = {-1.5,  5.5};
   const Float_t rFracBins[NRange] = {-0.05, 3.};
 
   // declare uncalibrated histograms
@@ -211,6 +298,10 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   hECalFrac[1]            = new TH1D("hSumECalFrac_uncal",             "", nFracBins, rFracBins[0], rFracBins[1]);
   hECalDiff[0]            = new TH1D("hLeadECalDiff_uncal",            "", nDiffBins, rDiffBins[0], rDiffBins[1]);
   hECalDiff[1]            = new TH1D("hSumECalDiff_uncal",             "", nDiffBins, rDiffBins[0], rDiffBins[1]);
+  hHCalEneVsPar[0]        = new TH2D("hLeadHCalVsParEne_uncal",        "", nEneBins,  rEneBins[0],  rEneBins[1],  nEneBins,  rEneBins[0],  rEneBins[1]);
+  hHCalEneVsPar[1]        = new TH2D("hSumHCalVsParEne_uncal",         "", nEneBins,  rEneBins[0],  rEneBins[1],  nEneBins,  rEneBins[0],  rEneBins[1]);     
+  hECalEneVsPar[0]        = new TH2D("hLeadECalVsParEne_uncal",        "", nEneBins,  rEneBins[0],  rEneBins[1],  nEneBins,  rEneBins[0],  rEneBins[1]);
+  hECalEneVsPar[1]        = new TH2D("hSumECalVsParEne_uncal",         "", nEneBins,  rEneBins[0],  rEneBins[1],  nEneBins,  rEneBins[0],  rEneBins[1]);     
   hHCalFracVsPar[0]       = new TH2D("hLeadHCalFracVsPar_uncal",       "", nEneBins,  rEneBins[0],  rEneBins[1],  nFracBins, rFracBins[0], rFracBins[1]);
   hHCalFracVsPar[1]       = new TH2D("hSumHCalFracVsPar_uncal",        "", nEneBins,  rEneBins[0],  rEneBins[1],  nFracBins, rFracBins[0], rFracBins[1]);
   hHCalDiffVsPar[0]       = new TH2D("hLeadHCalDiffVsPar_uncal",       "", nEneBins,  rEneBins[0],  rEneBins[1],  nDiffBins, rDiffBins[0], rDiffBins[1]);
@@ -240,6 +331,10 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   hECalFrac[3]            = new TH1D("hSumECalFrac_calib",             "", nFracBins, rFracBins[0], rFracBins[1]);
   hECalDiff[2]            = new TH1D("hLeadECalDiff_calib",            "", nDiffBins, rDiffBins[0], rDiffBins[1]);
   hECalDiff[3]            = new TH1D("hSumECalDiff_calib",             "", nDiffBins, rDiffBins[0], rDiffBins[1]);
+  hHCalEneVsPar[2]        = new TH2D("hLeadHCalVsParEne_calib",        "", nEneBins,  rEneBins[0],  rEneBins[1],  nEneBins,  rEneBins[0],  rEneBins[1]);
+  hHCalEneVsPar[3]        = new TH2D("hSumHCalVsParEne_calib",         "", nEneBins,  rEneBins[0],  rEneBins[1],  nEneBins,  rEneBins[0],  rEneBins[1]);     
+  hECalEneVsPar[2]        = new TH2D("hLeadECalVsParEne_calib",        "", nEneBins,  rEneBins[0],  rEneBins[1],  nEneBins,  rEneBins[0],  rEneBins[1]);
+  hECalEneVsPar[3]        = new TH2D("hSumECalVsParEne_calib",         "", nEneBins,  rEneBins[0],  rEneBins[1],  nEneBins,  rEneBins[0],  rEneBins[1]);     
   hHCalFracVsPar[2]       = new TH2D("hLeadHCalFracVsPar_calib",       "", nEneBins,  rEneBins[0],  rEneBins[1],  nFracBins, rFracBins[0], rFracBins[1]);
   hHCalFracVsPar[3]       = new TH2D("hSumHCalFracVsPar_calib",        "", nEneBins,  rEneBins[0],  rEneBins[1],  nFracBins, rFracBins[0], rFracBins[1]);
   hHCalDiffVsPar[2]       = new TH2D("hLeadHCalDiffVsPar_calib",       "", nEneBins,  rEneBins[0],  rEneBins[1],  nDiffBins, rDiffBins[0], rDiffBins[1]);
@@ -265,6 +360,8 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
     hHCalDiff[iHist]            -> Sumw2();
     hECalFrac[iHist]            -> Sumw2();
     hECalDiff[iHist]            -> Sumw2();
+    hHCalEneVsPar[iHist]        -> Sumw2();
+    hECalEneVsPar[iHist]        -> Sumw2();
     hHCalFracVsPar[iHist]       -> Sumw2();
     hHCalDiffVsPar[iHist]       -> Sumw2();
     hECalFracVsPar[iHist]       -> Sumw2();
@@ -278,6 +375,10 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   }
 
   // declare uncalibrated profiles
+  pHCalEneVsPar[0]        = new TProfile("pLeadHCalVsParEne_uncal",        "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
+  pHCalEneVsPar[1]        = new TProfile("pSumHCalVsParEne_uncal",         "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");     
+  pECalEneVsPar[0]        = new TProfile("pLeadECalVsParEne_uncal",        "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
+  pECalEneVsPar[1]        = new TProfile("pSumECalVsParEne_uncal",         "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");     
   pHCalFracVsPar[0]       = new TProfile("pLeadHCalFracVsPar_uncal",       "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
   pHCalFracVsPar[1]       = new TProfile("pSumHCalFracVsPar_uncal",        "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
   pHCalDiffVsPar[0]       = new TProfile("pLeadHCalDiffVsPar_uncal",       "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
@@ -299,6 +400,10 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   pECalDiffVsTotalFrac[0] = new TProfile("pLeadECalDiffVsTotalFrac_uncal", "", nFracBins, rFracBins[0], rFracBins[1], "S"); 
   pECalDiffVsTotalFrac[1] = new TProfile("pSumECalDiffVsTotalFrac_uncal",  "", nDiffBins, rDiffBins[0], rDiffBins[1], "S");
   // declare calibrated profiles
+  pHCalEneVsPar[2]        = new TProfile("pLeadHCalVsParEne_calib",        "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
+  pHCalEneVsPar[3]        = new TProfile("pSumHCalVsParEne_calib",         "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");     
+  pECalEneVsPar[2]        = new TProfile("pLeadECalVsParEne_calib",        "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
+  pECalEneVsPar[3]        = new TProfile("pSumECalVsParEne_calib",         "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");     
   pHCalFracVsPar[2]       = new TProfile("pLeadHCalFracVsPar_calib",       "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
   pHCalFracVsPar[3]       = new TProfile("pSumHCalFracVsPar_calib",        "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
   pHCalDiffVsPar[2]       = new TProfile("pLeadHCalDiffVsPar_calib",       "", nEneBins,  rEneBins[0],  rEneBins[1],  "S");
@@ -319,6 +424,14 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   pECalFracVsTotalFrac[3] = new TProfile("pSumECalFracVsTotalFrac_calib",  "", nFracBins, rFracBins[0], rFracBins[1], "S");
   pECalDiffVsTotalFrac[2] = new TProfile("pLeadECalDiffVsTotalFrac_calib", "", nFracBins, rFracBins[0], rFracBins[1], "S"); 
   pECalDiffVsTotalFrac[3] = new TProfile("pSumECalDiffVsTotalFrac_calib",  "", nDiffBins, rDiffBins[0], rDiffBins[1], "S");
+
+  // declare resolution histograms
+  for (UInt_t iEneBin = 0; iEneBin < NEneBins; iEneBin++) {
+    hHCalEneBin[iEneBin]  = new TH1D(sHCalEne[iEneBin].Data(),  "", nEneBins,  rEneBins[0],  rEneBins[1]);
+    hHCalDiffBin[iEneBin] = new TH1D(sHCalDiff[iEneBin].Data(), "", nDiffBins, rDiffBins[0], rDiffBins[1]);
+    hHCalEneBin[iEneBin]  -> Sumw2();
+    hHCalDiffBin[iEneBin] -> Sumw2();
+  }
   cout << "    declared output histograms." << endl;
 
   // prepare for uncalibrated tuple loop
@@ -343,7 +456,7 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
       cout << "      Proceesing event " << iProg << "/" << nEvts << "...\r" << flush;
     }
 
-    // fill histograms & profiles
+    // fill uncalibrated histograms & profiles
     hHCalFrac[0]            -> Fill(fracParVsLeadBHCal);
     hHCalFrac[1]            -> Fill(fracParVsSumBHCal);
     hECalFrac[0]            -> Fill(fracParVsLeadBEMC);
@@ -352,6 +465,14 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
     hHCalDiff[1]            -> Fill(diffSumBHCal);
     hECalDiff[0]            -> Fill(diffLeadBEMC);
     hECalDiff[1]            -> Fill(diffSumBEMC);
+    hHCalEneVsPar[0]        -> Fill(ePar,               eLeadBHCal);
+    pHCalEneVsPar[0]        -> Fill(ePar,               eLeadBHCal);
+    hECalEneVsPar[0]        -> Fill(ePar,               eLeadBEMC);
+    pECalEneVsPar[0]        -> Fill(ePar,               eLeadBEMC);
+    hHCalEneVsPar[1]        -> Fill(ePar,               eSumBHCal);
+    pHCalEneVsPar[1]        -> Fill(ePar,               eSumBHCal);
+    hECalEneVsPar[1]        -> Fill(ePar,               eSumBEMC);
+    pECalEneVsPar[1]        -> Fill(ePar,               eSumBEMC);
     hHCalFracVsPar[0]       -> Fill(ePar,               fracParVsLeadBHCal);
     pHCalFracVsPar[0]       -> Fill(ePar,               fracParVsLeadBHCal);
     hHCalFracVsPar[1]       -> Fill(ePar,               fracParVsSumBHCal);
@@ -392,64 +513,174 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
     pECalDiffVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC, diffLeadBEMC);
     hECalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, diffSumBEMC);
     pECalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, diffSumBEMC);
+
+    // fill resolution histograms
+    for (UInt_t iEneBin = 0; iEneBin < NEneBins; iEneBin++) {
+      const Bool_t isInEneParBin = ((ePar > eneParMin[iEneBin]) && (ePar < eneParMax[iEneBin]));
+      if (isInEneParBin) {
+        hHCalEneBin[iEneBin]  -> Fill(eLeadBHCal);
+        hHCalDiffBin[iEneBin] -> Fill(diffLeadBHCal);
+      }
+    }
   }  // end uncalibrated event loop
   cout << "    Finished uncalibrated event loop." << endl;
 
-  // instantiate tmva library
-  TMVA::Tools::Instance();
-  cout << "    Beginning calibration:" << endl;
+  // resolution calculation
+  TF1      *fFitEneBin[NEneBins];
+  TF1      *fFitDiffBin[NEneBins];
+  Double_t  binSigmaEne[NEneBins];
+  Double_t  valSigmaEne[NEneBins];
+  Double_t  valSigmaDiff[NEneBins];
+  Double_t  errSigmaEne[NEneBins];
+  Double_t  errSigmaDiff[NEneBins];
+  for (UInt_t iEneBin = 0; iEneBin < NEneBins; iEneBin++) {
 
-  // create tmva factory & load data
-  TMVA::Factory    *factory = new TMVA::Factory("TMVARegression", fOutput, "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
-  TMVA::DataLoader *loader  = new TMVA::DataLoader("RegressionData");
-  cout << "      Created factory and loaded data..." << endl;
+    // normalize hisotgrams
+    const Double_t intEneBin  = hHCalEneBin[iEneBin]  -> Integral();
+    const Double_t intDiffBin = hHCalDiffBin[iEneBin] -> Integral();
+    if (intEneBin > 0.)  hHCalEneBin[iEneBin] -> Scale(1. / intEneBin);
+    if (intDiffBin > 0.) hHCalDiffBin[iEneBin] -> Scale(1. / intDiffBin);
 
-  // set variables and target
-  for (UInt_t iSpectator = 0; iSpectator < NSpectator; iSpectator++) {
-    loader -> AddSpectator(sSpecs[iSpectator]);
+    // initialize functions
+    fFitEneBin[iEneBin]  = new TF1(sFitEne[iEneBin].Data(),  "gaus(0)", xFitEneMin[iEneBin],  xFitEneMax[iEneBin]);
+    fFitDiffBin[iEneBin] = new TF1(sFitDiff[iEneBin].Data(), "gaus(0)", xFitDiffMin[iEneBin], xFitDiffMax[iEneBin]);
+    fFitEneBin[iEneBin]  -> SetParameter(0, ampEneGuess[iEneBin]);
+    fFitEneBin[iEneBin]  -> SetParameter(1, muEneGuess[iEneBin]);
+    fFitEneBin[iEneBin]  -> SetParameter(2, sigEneGuess[iEneBin]);
+    fFitDiffBin[iEneBin] -> SetParameter(0, ampDiffGuess[iEneBin]);
+    fFitDiffBin[iEneBin] -> SetParameter(1, muDiffGuess[iEneBin]);
+    fFitDiffBin[iEneBin] -> SetParameter(2, sigDiffGuess[iEneBin]);
+    fFitEneBin[iEneBin]  -> SetLineColor(fColEneBin[iEneBin]);
+    fFitDiffBin[iEneBin] -> SetLineColor(fColEneBin[iEneBin]);
+
+    // fit histograms
+    hHCalEneBin[iEneBin]  -> Fit(sFitEne[iEneBin].Data(), "r");
+    hHCalDiffBin[iEneBin] -> Fit(sFitDiff[iEneBin].Data(), "r");
+
+    // grab resolutions and uncertainties
+    const Double_t sigmaEne   = fFitEneBin[iEneBin]  -> GetParameter(2);
+    const Double_t sigmaDiff  = fFitDiffBin[iEneBin] -> GetParameter(2);
+    const Double_t errSigEne  = fFitEneBin[iEneBin]  -> GetParError(2);
+    const Double_t errSigDiff = fFitDiffBin[iEneBin] -> GetParError(2);
+
+    binSigmaEne[iEneBin]  = (eneParMin[iEneBin] - eneParMax[iEneBin]) / 2.;
+    valSigmaEne[iEneBin]  = sigmaEne / enePar[iEneBin];
+    valSigmaDiff[iEneBin] = sigmaDiff / enePar[iEneBin];
+    errSigmaEne[iEneBin]  = errSigEne / enePar[iEneBin];
+    errSigmaDiff[iEneBin] = errSigDiff / enePar[iEneBin];
+
+    // set histogram styles
+    hHCalEneBin[iEneBin]  -> SetMarkerColor(fColEneBin[iEneBin]);
+    hHCalEneBin[iEneBin]  -> SetMarkerStyle(fMarEneBin[iEneBin]);
+    hHCalEneBin[iEneBin]  -> SetLineColor(fColEneBin[iEneBin]);
+    hHCalEneBin[iEneBin]  -> SetFillColor(fColEneBin[iEneBin]);
+    hHCalEneBin[iEneBin]  -> GetXaxis() -> SetTitle(sEneTitleX.Data());
+    hHCalDiffBin[iEneBin] -> SetMarkerColor(fColEneBin[iEneBin]);
+    hHCalDiffBin[iEneBin] -> SetMarkerStyle(fMarEneBin[iEneBin]);
+    hHCalDiffBin[iEneBin] -> SetLineColor(fColEneBin[iEneBin]);
+    hHCalDiffBin[iEneBin] -> SetFillColor(fColEneBin[iEneBin]);
+    hHCalDiffBin[iEneBin] -> GetXaxis() -> SetTitle(sDiffTitleX.Data());
   }
-  for (UInt_t iVariable = 0; iVariable < NVariable; iVariable++) {
-    loader -> AddVariable(sVars[iVariable]);
+  cout << "    Normalized, fit, and set styles of resolution histograms." << endl;
+
+  // create resolution graphs
+  TGraphErrors *grResoEne  = new TGraphErrors(NEneBins, enePar, valSigmaEne,  binSigmaEne, errSigmaEne);
+  TGraphErrors *grResoDiff = new TGraphErrors(NEneBins, enePar, valSigmaDiff, binSigmaEne, errSigmaDiff);
+  grResoEne  -> SetName("grResoEne");
+  grResoDiff -> SetName("grResoDiff");
+  cout << "    Made resolution graphs." << endl;
+
+  // plot fit distributions
+  const UInt_t width(750);
+  const UInt_t height(750);
+
+  TCanvas *cResoEne = new TCanvas("cResoEne", "", width, height);
+  cResoEne       -> cd();
+  hHCalEneBin[0] -> Draw();
+  for (UInt_t iEneBin = 1; iEneBin < NEneBins; iEneBin++) {
+    hHCalEneBin[iEneBin] -> Draw("same");
   }
-  loader -> AddTarget(sTarget);
-  cout << "      Set spectators, variables, and target..." << endl;
+  fOutput  -> cd();
+  cResoEne -> Write();
+  cResoEne -> Close();
 
-  // add tree & prepare for training
-  loader -> AddRegressionTree(ntToCalibrate, treeWeight);
-  loader -> PrepareTrainingAndTestTree(trainCut, "nTrain_Regression=1000:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V");
-  cout << "      Added tree and prepared for training..." << endl;
+  TCanvas *cResoDiff = new TCanvas("cResoDiff", "", width, height);
+  cResoDiff       -> cd();
+  hHCalDiffBin[0] -> Draw();
+  for (UInt_t iEneBin = 1; iEneBin < NEneBins; iEneBin++) {
+    hHCalDiffBin[iEneBin] -> Draw("same");
+  }
+  fOutput   -> cd();
+  cResoDiff -> Write();
+  cResoDiff -> Close();
+  cout << "    Made resolution plots." << endl;
 
-  // book methods
-  factory -> BookMethod(loader, TMVA::Types::kPDEFoam, "PDEFoam");
-  factory -> BookMethod(loader, TMVA::Types::kKNN,     "KNN");
-  factory -> BookMethod(loader, TMVA::Types::kLD,      "LD");
-  factory -> BookMethod(loader, TMVA::Types::kMLP,     "MLP");
-  cout << "      Booked methods..." << endl;
+  // do tmva training (if needed)
+  TMVA::Factory    *factory;
+  TMVA::DataLoader *loader;
+  if (doTMVA) {
 
-  // train, test, & evaluate
-  factory -> TrainAllMethods();
-  factory -> TestAllMethods();
-  factory -> EvaluateAllMethods();
-  cout << "      Trained TMVA.\n"
-       << "    Finished calibration!"
-       << endl;
+    // instantiate tmva library
+    TMVA::Tools::Instance();
+    cout << "    Beginning calibration:" << endl;
 
-  // grab output tree
-  TTree *tCalibrated = (TTree*) fOutput -> Get("RegressionData/TestTree");
-  if (!tCalibrated) {
-    cerr << "PANIC: couldn't grab output tree!\n"
-         << "       tCalibrated = " << tCalibrated << "\n"
+    // create tmva factory & load data
+    factory = new TMVA::Factory("TMVARegression", fOutput, "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
+    loader  = new TMVA::DataLoader("RegressionData");
+    cout << "      Created factory and loaded data..." << endl;
+
+    // set variables and target
+    if (inSciGlassConfig) {
+      if (addSpectators) {
+        for (UInt_t iSpectator = 0; iSpectator < NSpecSci; iSpectator++) {
+          loader -> AddSpectator(sSpecSci[iSpectator]);
+        }
+      }
+      for (UInt_t iVariable = 0; iVariable < NVarSci; iVariable++) {
+        loader -> AddVariable(sVarSci[iVariable]);
+      }
+    } else {
+      if (addSpectators) {
+        for (UInt_t iSpectator = 0; iSpectator < NSpecIma; iSpectator++) {
+          loader -> AddSpectator(sSpecIma[iSpectator]);
+        }
+      }
+      for (UInt_t iVariable = 0; iVariable < NVarIma; iVariable++) {
+        loader -> AddVariable(sVarIma[iVariable]);
+      }
+    }
+    loader -> AddTarget(sTarget);
+    cout << "      Set spectators, variables, and target..." << endl;
+
+    // add tree & prepare for training
+    loader -> AddRegressionTree(ntToCalibrate, treeWeight);
+    if (inSciGlassConfig) {
+      loader -> PrepareTrainingAndTestTree(trainCutSci, "nTrain_Regression=1000:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V");
+    } else {
+      loader -> PrepareTrainingAndTestTree(trainCutIma, "nTrain_Regression=1000:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V");
+    }
+    cout << "      Added tree and prepared for training..." << endl;
+
+    // book methods
+    factory -> BookMethod(loader, TMVA::Types::kKNN, "KNN");
+    factory -> BookMethod(loader, TMVA::Types::kLD,  "LD");
+    factory -> BookMethod(loader, TMVA::Types::kMLP, "MLP");
+    factory -> BookMethod(loader, TMVA::Types::kBDT, "BDTG");
+    cout << "      Booked methods..." << endl;
+
+    // train, test, & evaluate
+    factory -> TrainAllMethods();
+    factory -> TestAllMethods();
+    factory -> EvaluateAllMethods();
+    cout << "      Trained TMVA.\n"
+         << "    Finished calibration!"
          << endl;
-    return;
-  }
-
-  // draw regression output to histograms
-  tCalibrated -> Draw("eLeadBHCal_D_ePar:eLeadBEMC_D_ePar>>hLeadHCalVsLeadECalFrac_calib", "", "goff");
-  cout << "    Drew output histograms." << endl;
+  }  // end if (doTmva)
 
   // save histograms
   TDirectory *dUncal = (TDirectory*) fOutput -> mkdir("Uncalibrated");
   TDirectory *dCalib = (TDirectory*) fOutput -> mkdir("Calibrated");
+  TDirectory *dReso  = (TDirectory*) fOutput -> mkdir("Resolution");
   for (UInt_t iHist = 0; iHist < NHist; iHist++) {
     if (isCalibrated[iHist]) {
       dCalib -> cd();
@@ -460,6 +691,10 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
     hHCalDiff[iHist]            -> Write();
     hECalFrac[iHist]            -> Write();
     hECalDiff[iHist]            -> Write();
+    hHCalEneVsPar[iHist]        -> Write();
+    pHCalEneVsPar[iHist]        -> Write();
+    hECalEneVsPar[iHist]        -> Write();
+    pECalEneVsPar[iHist]        -> Write();
     hHCalFracVsPar[iHist]       -> Write();
     pHCalFracVsPar[iHist]       -> Write();
     hHCalDiffVsPar[iHist]       -> Write();
@@ -481,6 +716,16 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
     hECalDiffVsTotalFrac[iHist] -> Write();
     pECalDiffVsTotalFrac[iHist] -> Write();
   }
+
+  dReso      -> cd();
+  grResoEne  -> Write();
+  grResoDiff -> Write();
+  for (UInt_t iEneBin = 0; iEneBin < NEneBins; iEneBin++) {
+    hHCalEneBin[iEneBin]  -> Write();
+    hHCalDiffBin[iEneBin] -> Write();
+    fFitEneBin[iEneBin]   -> Write();
+    fFitDiffBin[iEneBin]  -> Write();
+  }
   cout << "    Saved histograms." << endl;
 
   // close files
@@ -491,8 +736,10 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const TString sInput =
   cout << "  Finished BHCal calibration script!\n" << endl;
 
   // delete tmva objects and exit
-  delete factory;
-  delete loader;
+  if (doTMVA) {
+    delete factory;
+    delete loader;
+  }
   return;
 
 }
