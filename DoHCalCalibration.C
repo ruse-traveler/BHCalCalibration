@@ -27,6 +27,7 @@
 #include <TCut.h>
 #include <TFile.h>
 #include <TTree.h>
+#include <TMath.h>
 #include <TError.h>
 #include <TString.h>
 #include <TNtuple.h>
@@ -47,19 +48,21 @@
 using namespace std;
 
 // global constants
-static const UInt_t  NHist(4);
-static const UInt_t  NRange(2);
-static const UInt_t  NEneBins(11);
-static const UInt_t  NVarSci(3);
-static const UInt_t  NVarIma(3);
-static const UInt_t  NSpecSci(1);
-static const UInt_t  NSpecIma(1);
+static const UInt_t NTxt(2);
+static const UInt_t NVtx(4);
+static const UInt_t NHist(4);
+static const UInt_t NRange(2);
+static const UInt_t NEneBins(4);
+static const UInt_t NVarSci(8);
+static const UInt_t NVarIma(12);
+static const UInt_t NSpecSci(1);
+static const UInt_t NSpecIma(1);
 
 // default arguments
-static const UInt_t  FConfigDef(2);
+static const UInt_t  FConfigDef(1);
 static const Bool_t  DoTmvaDef(false);
-static const TString SInDef("eicrecon_output/merged/forECalStudy.bhcalTestBeamConfig.e1t20th35145n5KeaPim.d7m3y2023.plugin.root");
-static const TString SOutDef("test.root");
+static const TString SInDef("eicrecon_output/merged/forECalStudy.imaging.e2t20th35145n5KeaPim.d8m3y2023.plugin.root");
+static const TString SOutDef("forImagingReso.training.e2t20th35145n5KeaPim.d8m3y2023.root");
 static const TString STupleDef("ntForCalibration");
 
 
@@ -71,11 +74,13 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
   cout << "\n  Beginning BHCal calibration script..." << endl;
 
   // tmva parameters
+  const Bool_t  addSpectators(false);
   const Float_t treeWeight(1.0);
   const TString sTarget("ePar");
-  const Bool_t  addSpectators(false);
-  const TString sVarSci[NVarSci]   = {"eLeadBHCal", "eLeadBEMC", "eLeadBHCal+eLeadBEMC"};
-  const TString sVarIma[NVarIma]   = {"eLeadBHCal", "eLeadBEMC", "eLeadBHCal+eLeadBEMC"};
+  const TString sLoadSci("SciGlassRegressionData_NoNClust");
+  const TString sLoadIma("ImagingRegressionData_NoNClust");
+  const TString sVarSci[NVarSci]   = {"eLeadBHCal", "eLeadBEMC", "hLeadBHCal", "hLeadBEMC", "fLeadBHCal", "fLeadBEMC", "nClustBHCal", "nClustBEMC"};
+  const TString sVarIma[NVarIma]   = {"eLeadBHCal", "eLeadBEMC", "hLeadBHCal", "hLeadBEMC", "fLeadBHCal", "fLeadBEMC", "nClustBHCal", "nClustBEMC", "eSumImage", "eSumSciFi", "nClustImage", "nClustSciFi"};
   const TString sSpecSci[NSpecSci] = {"eLeadBHCal/ePar"};
   const TString sSpecIma[NSpecIma] = {"eLeadBHCal/ePar"};
   const TCut    trainCutSci("");
@@ -83,60 +88,69 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
 
   // histogram parameters
   const Bool_t  isCalibrated[NHist]  = {false, false, true, true};
-  const UInt_t  fColEneBin[NEneBins] = {799, 809, 634, 899, 909, 618, 879, 889, 602, 859, 869};
-  const UInt_t  fMarEneBin[NEneBins] = {24,  26,  32,  25,  27,  28,  30,  24,  26,  32,  25};
-  const TString sHCalEne[NEneBins]   = {"hHCalEne_ene1",  "hHCalEne_ene2",   "hHCalEne_ene3",   "hHCalEne_ene4",   "hHCalEne_ene5",  "hHCalEne_ene6",
-                                        "hHCalEne_ene8",  "hHCalEne_ene10",  "hHCalEne_ene12",  "hHCalEne_ene16",  "hHCalEne_ene20"};
-  const TString sHCalDiff[NEneBins]  = {"hHCalDiff_ene1", "hHCalDiff_ene2",  "hHCalDiff_ene3",  "hHCalDiff_ene4",  "hHCalDiff_ene5", "hHCalDiff_ene6",
-                                        "hHCalDiff_ene8", "hHCalDiff_ene10", "hHCalDiff_ene12", "hHCalDiff_ene16", "hHCalDiff_ene20"};
+  const UInt_t  fColEneBin[NEneBins] = {809, 909, 889, 869};
+  const UInt_t  fMarEneBin[NEneBins] = {26,  27,  24,  25};
+  const TString sHCalEne[NEneBins]   = {"hHCalEne_ene2",  "hHCalEne_ene5",  "hHCalEne_ene10",  "hHCalEne_ene20"};
+  const TString sHCalDiff[NEneBins]  = {"hHCalDiff_ene2", "hHCalDiff_ene5", "hHCalDiff_ene10", "hHCalDiff_ene20"};
   const TString sEneTitleX("E_{lead}^{BHCal} [GeV]");
   const TString sDiffTitleX("#DeltaE / E_{par}");
+  const TString sTitleY("arbitrary units");
 
   // generic resolution parameters
-  const Double_t enePar[NEneBins]       = {1.,  2.,  3.,  4.,  5.,  6.,  8.,  10.,  12.,  16.,  20.};
-  const Double_t eneParMin[NEneBins]    = {0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 9.5,  10.5, 13.5, 18.5};
-  const Double_t eneParMax[NEneBins]    = {1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 9.5, 10.5, 13.5, 18.5, 21.5};
+  const Double_t enePar[NEneBins]       = {2., 5., 10., 20.};
+  const Double_t eneParMin[NEneBins]    = {1., 3., 7.,  13.};
+  const Double_t eneParMax[NEneBins]    = {3., 7., 13., 27.};
 
   // reco vs. par ene resolution parameters
-  const Double_t xFitEneMin[NEneBins]   = {0.,  0.,  0.,  1.,  2.,  3.,  3.,  4.,   6.,   7.,   11.};
-  const Double_t xFitEneMax[NEneBins]   = {2.,  2.,  4.,  5.,  6.,  7.,  9.,  12.,  14.,  17.,  21.};
-  const Double_t ampEneGuess[NEneBins]  = {1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,   1.,   1.,   1.};
-  const Double_t muEneGuess[NEneBins]   = {0.5, 1.5, 2.,  3.,  4.,  5.,  6.,  8.,   10.,  12.,  15.};
-  const Double_t sigEneGuess[NEneBins]  = {1.,  1.,  2.,  2.,  2.,  2.,  3.,  4.,   4.,   5.,   6.};
-  const TString  sFitEne[NEneBins]       = {"fFitEne_ene1",  "fFitEne_ene2",   "fFitEne_ene3",   "fFitEne_ene4",   "fFitEne_ene5",  "fFitEne_ene6",
-                                            "fFitEne_ene8",  "fFitEne_ene10",  "fFitEne_ene12",  "fFitEne_ene16",  "fFitEne_ene20"};
+  const Double_t xFitEneMin[NEneBins]   = {1.,  3.,  7.,  13.};
+  const Double_t xFitEneMax[NEneBins]   = {3.,  7.,  13., 27.};
+  const Double_t ampEneGuess[NEneBins]  = {1.,  1.,  1.,  1.};
+  const Double_t muEneGuess[NEneBins]   = {2.,  4.,  9.,  15.};
+  const Double_t sigEneGuess[NEneBins]  = {1.,  2.,  3.,  7.};
+  const TString  sFitEne[NEneBins]      = {"fFitEne_ene2", "fFitEne_ene5", "fFitEne_ene10", "fFitEne_ene20"};
 
   // diff vs. par ene resolution parameters
-  const Double_t xFitDiffMin[NEneBins]  = {-1, -1.,  -1., -1., -1., -1., -1., -1.,  -1.,  -1.,  -1.};
-  const Double_t xFitDiffMax[NEneBins]  = {1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,   1.,   1.,   1.};
-  const Double_t ampDiffGuess[NEneBins] = {1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,   1.,   1.,   1.};
-  const Double_t muDiffGuess[NEneBins]  = {1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,   1.,   1.,   1.};
-  const Double_t sigDiffGuess[NEneBins] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,  0.1,  0.1,  0.1};
-  const TString  sFitDiff[NEneBins]     = {"fFitDiff_ene1", "fFitDiff_ene2",  "fFitDiff_ene3",  "fFitDiff_ene4",  "fFitDiff_ene5", "fFitDiff_ene6",
-                                           "fFitDiff_ene8", "fFitDiff_ene10", "fFitDiff_ene12", "fFitDiff_ene16", "fFitDiff_ene20"};
+  const Double_t xFitDiffMin[NEneBins]  = {-1.,  -1.,  -1.,  -1.};
+  const Double_t xFitDiffMax[NEneBins]  = {1.,   1.,   1.,   1.};
+  const Double_t ampDiffGuess[NEneBins] = {1.,   1.,   1.,   1.};
+  const Double_t muDiffGuess[NEneBins]  = {1.,   1.,   1.,   1.};
+  const Double_t sigDiffGuess[NEneBins] = {0.1,  0.1,  0.1,  0.1};
+  const TString  sFitDiff[NEneBins]     = {"fFitDiff_ene2", "fFitDiff_ene5", "fFitDiff_ene10", "fFitDiff_ene20"};
 
   // style parameters
+  const UInt_t  fFil(0);
+  const UInt_t  fLin(1);
   const UInt_t  fTxt(42);
   const UInt_t  fAln(12);
   const UInt_t  fCenter(1);
-  const Float_t fOffX(1.1);
-  const Float_t fOffY(1.2);
+  const Float_t fOffX(1.2);
+  const Float_t fOffY(1.3);
+  const TString sTitle("");
+
+  // text parameters
+  const TString sHeader("");
+  const TString sTxt[NTxt]       = {"ePIC simulation [23.01.0]", "single #pi^{-}"};
+  const TString sLabel[NEneBins] = {"E_{par} = 2 GeV", "E_{par} = 5 GeV", "E_{par} = 10 GeV", "E_{par} = 20 GeV"};
 
   // parse configuration
   Bool_t  inSciGlassConfig;
   TString sTupleDir;
+  TString sLoadUse;
   switch (fConfig) {
     case 0:
       inSciGlassConfig = true;
       sTupleDir        = "JCalibrateHCalWithSciGlass/";
+      sLoadUse         = sLoadSci;
       break;
     case 1:
       inSciGlassConfig = false;
       sTupleDir        = "JCalibrateHCalWithImaging/";
+      sLoadUse         = sLoadIma;
       break;
     default:
       inSciGlassConfig = true;
       sTupleDir        = "JCalibrateHCal/";
+      sLoadUse         = sLoadSci;
       break;
   }
 
@@ -530,9 +544,13 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
   TF1      *fFitDiffBin[NEneBins];
   Double_t  binSigmaEne[NEneBins];
   Double_t  valSigmaEne[NEneBins];
+  Double_t  valSigmaEneHist[NEneBins];
   Double_t  valSigmaDiff[NEneBins];
+  Double_t  valSigmaDiffHist[NEneBins];
   Double_t  errSigmaEne[NEneBins];
+  Double_t  errSigmaEneHist[NEneBins];
   Double_t  errSigmaDiff[NEneBins];
+  Double_t  errSigmaDiffHist[NEneBins];
   for (UInt_t iEneBin = 0; iEneBin < NEneBins; iEneBin++) {
 
     // normalize hisotgrams
@@ -558,58 +576,188 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
     hHCalDiffBin[iEneBin] -> Fit(sFitDiff[iEneBin].Data(), "r");
 
     // grab resolutions and uncertainties
+    const Double_t muEne      = fFitEneBin[iEneBin]  -> GetParameter(1);
+    const Double_t muDiff     = fFitDiffBin[iEneBin] -> GetParameter(1);
     const Double_t sigmaEne   = fFitEneBin[iEneBin]  -> GetParameter(2);
     const Double_t sigmaDiff  = fFitDiffBin[iEneBin] -> GetParameter(2);
+    const Double_t errMuEne   = fFitEneBin[iEneBin]  -> GetParError(1);
+    const Double_t errMuDiff  = fFitDiffBin[iEneBin] -> GetParError(1);
     const Double_t errSigEne  = fFitEneBin[iEneBin]  -> GetParError(2);
     const Double_t errSigDiff = fFitDiffBin[iEneBin] -> GetParError(2);
+    const Double_t perMuEne   = errMuEne / muEne;
+    const Double_t perMuDiff  = errMuDiff / muDiff;
+    const Double_t perSigEne  = errSigEne / sigmaEne;
+    const Double_t perSigDiff = errSigDiff / sigmaDiff;
+
+    const Double_t muHistEne      = hHCalEneBin[iEneBin]  -> GetMean();
+    const Double_t muHistDiff     = hHCalDiffBin[iEneBin] -> GetMean();
+    const Double_t sigmaHistEne   = hHCalEneBin[iEneBin]  -> GetRMS();
+    const Double_t sigmaHistDiff  = hHCalDiffBin[iEneBin] -> GetRMS();
+    const Double_t errMuHistEne   = hHCalEneBin[iEneBin]  -> GetMeanError();
+    const Double_t errMuHistDiff  = hHCalDiffBin[iEneBin] -> GetMeanError();
+    const Double_t errSigHistEne  = hHCalEneBin[iEneBin]  -> GetRMSError();
+    const Double_t errSigHistDiff = hHCalDiffBin[iEneBin] -> GetRMSError();
+    const Double_t perMuHistEne   = errMuHistEne / muHistEne;
+    const Double_t perMuHistDiff  = errMuHistDiff / muHistDiff;
+    const Double_t perSigHistEne  = errSigHistEne / sigmaHistEne;
+    const Double_t perSigHistDiff = errSigHistDiff / sigmaHistDiff;
 
     binSigmaEne[iEneBin]  = (eneParMin[iEneBin] - eneParMax[iEneBin]) / 2.;
-    valSigmaEne[iEneBin]  = sigmaEne / enePar[iEneBin];
-    valSigmaDiff[iEneBin] = sigmaDiff / enePar[iEneBin];
-    errSigmaEne[iEneBin]  = errSigEne / enePar[iEneBin];
-    errSigmaDiff[iEneBin] = errSigDiff / enePar[iEneBin];
+    valSigmaEne[iEneBin]  = sigmaEne / muEne;
+    valSigmaDiff[iEneBin] = sigmaDiff / muDiff;
+    errSigmaEne[iEneBin]  = valSigmaEne[iEneBin] * TMath::Sqrt((perMuEne * perMuEne) + (perSigEne * perSigEne));
+    errSigmaDiff[iEneBin] = valSigmaDiff[iEneBin] * TMath::Sqrt((perMuDiff * perMuDiff) + (perSigDiff * perSigDiff));
+
+    valSigmaEneHist[iEneBin]  = sigmaHistEne / muHistEne;
+    valSigmaDiffHist[iEneBin] = sigmaHistDiff / muHistDiff;
+    errSigmaEneHist[iEneBin]  = valSigmaEneHist[iEneBin] * TMath::Sqrt((perMuHistEne * perMuHistEne) + (perSigHistEne * perSigHistEne));
+    errSigmaDiffHist[iEneBin] = valSigmaDiffHist[iEneBin] * TMath::Sqrt((perMuHistDiff * perMuHistDiff) + (perSigHistDiff * perSigHistDiff));
 
     // set histogram styles
     hHCalEneBin[iEneBin]  -> SetMarkerColor(fColEneBin[iEneBin]);
     hHCalEneBin[iEneBin]  -> SetMarkerStyle(fMarEneBin[iEneBin]);
     hHCalEneBin[iEneBin]  -> SetLineColor(fColEneBin[iEneBin]);
+    hHCalEneBin[iEneBin]  -> SetLineStyle(fLin);
     hHCalEneBin[iEneBin]  -> SetFillColor(fColEneBin[iEneBin]);
+    hHCalEneBin[iEneBin]  -> SetFillStyle(fFil);
+    hHCalEneBin[iEneBin]  -> SetTitle(sTitle.Data());
+    hHCalEneBin[iEneBin]  -> SetTitleFont(fTxt);
     hHCalEneBin[iEneBin]  -> GetXaxis() -> SetTitle(sEneTitleX.Data());
+    hHCalEneBin[iEneBin]  -> GetXaxis() -> SetTitleFont(fTxt);
+    hHCalEneBin[iEneBin]  -> GetXaxis() -> SetTitleOffset(fOffX);
+    hHCalEneBin[iEneBin]  -> GetXaxis() -> CenterTitle(fCenter);
+    hHCalEneBin[iEneBin]  -> GetYaxis() -> SetTitle(sTitleY.Data());
+    hHCalEneBin[iEneBin]  -> GetYaxis() -> SetTitleFont(fTxt);
+    hHCalEneBin[iEneBin]  -> GetYaxis() -> SetTitleOffset(fOffY);
+    hHCalEneBin[iEneBin]  -> GetYaxis() -> CenterTitle(fCenter);
     hHCalDiffBin[iEneBin] -> SetMarkerColor(fColEneBin[iEneBin]);
     hHCalDiffBin[iEneBin] -> SetMarkerStyle(fMarEneBin[iEneBin]);
     hHCalDiffBin[iEneBin] -> SetLineColor(fColEneBin[iEneBin]);
+    hHCalDiffBin[iEneBin] -> SetLineStyle(fLin);
     hHCalDiffBin[iEneBin] -> SetFillColor(fColEneBin[iEneBin]);
+    hHCalDiffBin[iEneBin] -> SetFillStyle(fFil);
+    hHCalDiffBin[iEneBin] -> SetTitle(sTitle.Data());
+    hHCalDiffBin[iEneBin] -> SetTitleFont(fTxt);
     hHCalDiffBin[iEneBin] -> GetXaxis() -> SetTitle(sDiffTitleX.Data());
+    hHCalDiffBin[iEneBin] -> GetXaxis() -> SetTitleFont(fTxt);
+    hHCalDiffBin[iEneBin] -> GetXaxis() -> SetTitleOffset(fOffX);
+    hHCalDiffBin[iEneBin] -> GetXaxis() -> CenterTitle(fCenter);
+    hHCalDiffBin[iEneBin] -> GetYaxis() -> SetTitle(sTitleY.Data());
+    hHCalDiffBin[iEneBin] -> GetYaxis() -> SetTitleFont(fTxt);
+    hHCalDiffBin[iEneBin] -> GetYaxis() -> SetTitleOffset(fOffY);
+    hHCalDiffBin[iEneBin] -> GetYaxis() -> CenterTitle(fCenter);
   }
   cout << "    Normalized, fit, and set styles of resolution histograms." << endl;
 
   // create resolution graphs
-  TGraphErrors *grResoEne  = new TGraphErrors(NEneBins, enePar, valSigmaEne,  binSigmaEne, errSigmaEne);
-  TGraphErrors *grResoDiff = new TGraphErrors(NEneBins, enePar, valSigmaDiff, binSigmaEne, errSigmaDiff);
-  grResoEne  -> SetName("grResoEne");
-  grResoDiff -> SetName("grResoDiff");
+  TGraphErrors *grResoEne      = new TGraphErrors(NEneBins, enePar, valSigmaEne,      binSigmaEne, errSigmaEne);
+  TGraphErrors *grResoDiff     = new TGraphErrors(NEneBins, enePar, valSigmaDiff,     binSigmaEne, errSigmaDiff);
+  TGraphErrors *grResoEneHist  = new TGraphErrors(NEneBins, enePar, valSigmaEneHist,  binSigmaEne, errSigmaEneHist);
+  TGraphErrors *grResoDiffHist = new TGraphErrors(NEneBins, enePar, valSigmaDiffHist, binSigmaEne, errSigmaDiffHist);
+  grResoEne      -> SetName("grResoEne");
+  grResoDiff     -> SetName("grResoDiff");
+  grResoEneHist  -> SetName("grResoEneHist");
+  grResoDiffHist -> SetName("grResoDiffHist");
   cout << "    Made resolution graphs." << endl;
 
+  // make legend
+  const UInt_t  fColLeg      = 0;
+  const UInt_t  fFilLeg      = 0;
+  const UInt_t  fLinLeg      = 0;
+  const Float_t hObjLeg      = NEneBins * 0.05;
+  const Float_t yObjLeg      = 0.1 + hObjLeg;
+  const Float_t fLegXY[NVtx] = {0.1, 0.1, 0.3, yObjLeg};
+
+  TLegend *leg = new TLegend(fLegXY[0], fLegXY[1], fLegXY[2], fLegXY[3], sHeader.Data());
+  leg -> SetFillColor(fColLeg);
+  leg -> SetFillStyle(fFilLeg);
+  leg -> SetLineColor(fColLeg);
+  leg -> SetLineStyle(fLinLeg);
+  leg -> SetTextFont(fTxt);
+  leg -> SetTextAlign(fAln);
+  for (UInt_t iEneBin = 0; iEneBin < NEneBins; iEneBin++) {
+    leg -> AddEntry(hHCalEneBin[iEneBin], sLabel[iEneBin].Data(), "pf");
+  }
+  cout << "    Made legend." << endl;
+
+  // make text
+  const UInt_t  fColTxt      = 0;
+  const UInt_t  fFilTxt      = 0;
+  const UInt_t  fLinTxt      = 0;
+  const Float_t hObjTxt      = NTxt * 0.05;
+  const Float_t yObjTxt      = 0.1 + hObjTxt;
+  const Float_t fTxtXY[NVtx] = {0.3, 0.1, 0.5, yObjTxt};
+
+  TPaveText *txt = new TPaveText(fTxtXY[0], fTxtXY[1], fTxtXY[2], fTxtXY[3], "NDC NB");
+  txt -> SetFillColor(fColTxt);
+  txt -> SetFillStyle(fFilTxt);
+  txt -> SetLineColor(fColTxt);
+  txt -> SetLineStyle(fLinTxt);
+  txt -> SetTextFont(fTxt);
+  txt -> SetTextAlign(fAln);
+  for (UInt_t iTxt = 0; iTxt < NTxt; iTxt++) {
+    txt -> AddText(sTxt[iTxt].Data());
+  }
+  cout << "    Made text." << endl;
+
   // plot fit distributions
-  const UInt_t width(750);
-  const UInt_t height(750);
+  const UInt_t  width(750);
+  const UInt_t  height(750);
+  const UInt_t  fMode(0);
+  const UInt_t  fBord(2);
+  const UInt_t  fGrid(0);
+  const UInt_t  fTick(1);
+  const UInt_t  fLogX(0);
+  const UInt_t  fLogY(1);
+  const UInt_t  fFrame(0);
+  const Float_t fMarginL(0.15);
+  const Float_t fMarginR(0.02);
+  const Float_t fMarginT(0.02);
+  const Float_t fMarginB(0.15);
 
   TCanvas *cResoEne = new TCanvas("cResoEne", "", width, height);
+  cResoEne       -> SetGrid(fGrid, fGrid);
+  cResoEne       -> SetTicks(fTick, fTick);
+  cResoEne       -> SetBorderMode(fMode);
+  cResoEne       -> SetBorderSize(fBord);
+  cResoEne       -> SetFrameBorderMode(fFrame);
+  cResoEne       -> SetLeftMargin(fMarginL);
+  cResoEne       -> SetRightMargin(fMarginR);
+  cResoEne       -> SetTopMargin(fMarginT);
+  cResoEne       -> SetBottomMargin(fMarginB);
+  cResoEne       -> SetLogx(fLogX);
+  cResoEne       -> SetLogy(fLogY);
   cResoEne       -> cd();
   hHCalEneBin[0] -> Draw();
   for (UInt_t iEneBin = 1; iEneBin < NEneBins; iEneBin++) {
     hHCalEneBin[iEneBin] -> Draw("same");
   }
+  leg      -> Draw();
+  txt      -> Draw();
   fOutput  -> cd();
   cResoEne -> Write();
   cResoEne -> Close();
 
   TCanvas *cResoDiff = new TCanvas("cResoDiff", "", width, height);
+  cResoDiff       -> SetGrid(fGrid, fGrid);
+  cResoDiff       -> SetTicks(fTick, fTick);
+  cResoDiff       -> SetBorderMode(fMode);
+  cResoDiff       -> SetBorderSize(fBord);
+  cResoDiff       -> SetFrameBorderMode(fFrame);
+  cResoDiff       -> SetLeftMargin(fMarginL);
+  cResoDiff       -> SetRightMargin(fMarginR);
+  cResoDiff       -> SetTopMargin(fMarginT);
+  cResoDiff       -> SetBottomMargin(fMarginB);
+  cResoDiff       -> SetLogx(fLogX);
+  cResoDiff       -> SetLogy(fLogY);
+  cResoDiff       -> cd();
   cResoDiff       -> cd();
   hHCalDiffBin[0] -> Draw();
   for (UInt_t iEneBin = 1; iEneBin < NEneBins; iEneBin++) {
     hHCalDiffBin[iEneBin] -> Draw("same");
   }
+  leg       -> Draw();
+  leg       -> Draw();
   fOutput   -> cd();
   cResoDiff -> Write();
   cResoDiff -> Close();
@@ -626,7 +774,7 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
 
     // create tmva factory & load data
     factory = new TMVA::Factory("TMVARegression", fOutput, "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
-    loader  = new TMVA::DataLoader("RegressionData");
+    loader  = new TMVA::DataLoader(sLoadUse.Data());
     cout << "      Created factory and loaded data..." << endl;
 
     // set variables and target
@@ -662,7 +810,7 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
     cout << "      Added tree and prepared for training..." << endl;
 
     // book methods
-    factory -> BookMethod(loader, TMVA::Types::kKNN, "KNN");
+    //factory -> BookMethod(loader, TMVA::Types::kKNN, "KNN");
     factory -> BookMethod(loader, TMVA::Types::kLD,  "LD");
     factory -> BookMethod(loader, TMVA::Types::kMLP, "MLP");
     factory -> BookMethod(loader, TMVA::Types::kBDT, "BDTG");
@@ -717,9 +865,11 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
     pECalDiffVsTotalFrac[iHist] -> Write();
   }
 
-  dReso      -> cd();
-  grResoEne  -> Write();
-  grResoDiff -> Write();
+  dReso          -> cd();
+  grResoEne      -> Write();
+  grResoDiff     -> Write();
+  grResoEneHist  -> Write();
+  grResoDiffHist -> Write();
   for (UInt_t iEneBin = 0; iEneBin < NEneBins; iEneBin++) {
     hHCalEneBin[iEneBin]  -> Write();
     hHCalDiffBin[iEneBin] -> Write();
