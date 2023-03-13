@@ -1,11 +1,10 @@
 // ----------------------------------------------------------------------------
-// 'MakeResolutionComparison.C'
+// 'MakeLinearityComparison.C'
 // Derek Anderson
-// 03.08.2021
+// 03.12.2023
 //
 // Use this quickly plot the calculated
-// resolutions from 'DoHCalCalibration.C'
-// and 'TMVARegressionApplication.C'.
+// linearities from 'DoHCalCalibration.C'.
 // ----------------------------------------------------------------------------
 
 #include <iostream>
@@ -22,7 +21,7 @@
 using namespace std;
 
 // global constants
-static const UInt_t NReso(3);
+static const UInt_t NLine(2);
 static const UInt_t NPlot(2);
 static const UInt_t NPad(2);
 static const UInt_t NVtx(4);
@@ -30,43 +29,39 @@ static const UInt_t NTxt(2);
 
 
 
-void MakeResolutionComparison() {
+void MakeLinearityComparison() {
 
   // lower verbosity
   gErrorIgnoreLevel = kError;
-  cout << "\n  Beginning resolution comparison plot-maker..." << endl;
+  cout << "\n  Beginning linearity comparison plot-maker..." << endl;
 
   // output and denominator parameters
-  const TString sOutput("resoComparison.testBeamVsSciGlassVsImage_fromHist_noNClustAndWithNHits_withGraphicUpdate.d9m3y2023.root");
-  const TString sReso[NReso]      = {"calibration_output/forTestBeamReso.training_withGraphicUpdate.e1t20th35145n5KeaPim.d8m3y2023.root",
-                                     "calibration_output/forSciGlassReso.application_noNClustAndWithNHits_withGraphicUpdate.e2t20th35145n5KeaPim.d9m3y2023.root",
-                                     "calibration_output/forImagingReso.application_noNClustAndWithNHits_withGraphicUpdate.e2t20th35145n5KeaPim.d9m3y2023.root"};
-  const TString sHistReso[NReso]  = {"Resolution/grResoEneHist",
-                                     "grResoEneHist_LD",
-                                     "grResoEneHist_LD"};
-  const TString sNameReso[NReso]  = {"grTestBeamReso",
-                                     "grSciGlassReso",
-                                     "grImagingReso"};
+  const TString sOutput("lineComparison.sciGlassVsImaging.d12m3y2023.root");
+  const TString sLine[NLine]      = {"forSciGlassReso.application_forLinearityAnd2dPlots.e2t20th35145n5KeaPim.d12m3y2023.root",
+                                     "forImagingReso.application_forLinearityAnd2dPlots.e2t20th35145n5KeaPim.d12m3y2023.root"};
+  const TString sHistLine[NLine]  = {"grLineEne_LD",
+                                     "grLineEne_LD"};
+  const TString sNameLine[NLine]  = {"grSciGlassLine",
+                                     "grImagingLine"};
 
   // plot parameters
   const UInt_t  nFrameX(51);
   const UInt_t  nFrameY(102);
-  const TString sOptReso[NReso]    = {"LP", "LP", "LP"};
+  const TString sOptLine[NLine]    = {"LP", "LP"};
   const Float_t xyFrameRange[NVtx] = {-1., -1., 50., 50.};
-  const Float_t xyPlotRange[NVtx]  = {0.,  0.,  35., 1.2};
+  const Float_t xyPlotRange[NVtx]  = {0.,  0.,  35., 25.};
 
   // style parameters
   const TString sTitle("");
   const TString sTitleX("E_{par} [GeV]");
-  const TString sTitleY("Resolution (#sigma_{E} / <E_{reco}>)");
-  const UInt_t  fColRes[NReso] = {923, 634, 602};
-  const UInt_t  fMarRes[NReso] = {20,  22,  23};
+  const TString sTitleY("Linearity");
+  const UInt_t  fColRes[NLine] = {634, 602};
+  const UInt_t  fMarRes[NLine] = {22,  23};
 
   // text parameters
   const TString sHeader("");
   const TString sTxt[NTxt] = {"ePIC simulation [23.01.0]", "single #pi^{-}"};
-  const TString sLabelReso[NReso] = {"Only BHCal",
-                                     "Full detector (SciGlass)",
+  const TString sLabelLine[NLine] = {"Full detector (SciGlass)",
                                      "Full detector (Imaging)"};
 
   // open output file
@@ -76,26 +71,26 @@ void MakeResolutionComparison() {
     return;
   }
 
-  // open resolution file
-  TFile *fReso[NReso];
-  for (UInt_t iReso = 0; iReso < NReso; iReso++) {
-    fReso[iReso] = new TFile(sReso[iReso].Data(), "read");
-    if (!fReso[iReso]) {
-      cerr << "PANIC: couldn't open resolution file #" << iReso << "!" << endl;
+  // open linearity file
+  TFile *fLine[NLine];
+  for (UInt_t iLine = 0; iLine < NLine; iLine++) {
+    fLine[iLine] = new TFile(sLine[iLine].Data(), "read");
+    if (!fLine[iLine]) {
+      cerr << "PANIC: couldn't open linearity file #" << iLine << "!" << endl;
       return;
     }
   }
   cout << "    Opened files." << endl;
 
   // grab input graphs
-  TGraphErrors *grReso[NReso];
-  for (UInt_t iReso = 0; iReso < NReso; iReso++) {
-    grReso[iReso] = (TGraphErrors*) fReso[iReso] -> Get(sHistReso[iReso]);
-    if (!grReso[iReso]) {
-      cerr << "PANIC: couldn't grab resolution graph #" << iReso << "!" << endl;
+  TGraphErrors *grLine[NLine];
+  for (UInt_t iLine = 0; iLine < NLine; iLine++) {
+    grLine[iLine] = (TGraphErrors*) fLine[iLine] -> Get(sHistLine[iLine]);
+    if (!grLine[iLine]) {
+      cerr << "PANIC: couldn't grab linearity graph #" << iLine << "!" << endl;
       return;
     }
-    grReso[iReso] -> SetName(sNameReso[iReso].Data());
+    grLine[iLine] -> SetName(sNameLine[iLine].Data());
   }
   cout << "    Grabbed graphs." << endl;
 
@@ -110,31 +105,31 @@ void MakeResolutionComparison() {
   const Float_t fTit(0.04);
   const Float_t fOffX(1.1);
   const Float_t fOffY(1.3);
-  for (UInt_t iReso = 0; iReso < NReso; iReso++) {
-    grReso[iReso] -> SetMarkerColor(fColRes[iReso]);
-    grReso[iReso] -> SetMarkerStyle(fMarRes[iReso]);
-    grReso[iReso] -> SetFillColor(fColRes[iReso]);
-    grReso[iReso] -> SetFillStyle(fFil);
-    grReso[iReso] -> SetLineColor(fColRes[iReso]);
-    grReso[iReso] -> SetLineStyle(fLin);
-    grReso[iReso] -> SetLineWidth(fWid);
-    grReso[iReso] -> SetTitle(sTitle.Data());
-    grReso[iReso] -> GetXaxis() -> SetRangeUser(xyPlotRange[0], xyPlotRange[2]);
-    grReso[iReso] -> GetXaxis() -> SetTitle(sTitleX.Data());
-    grReso[iReso] -> GetXaxis() -> SetTitleFont(fTxt);
-    grReso[iReso] -> GetXaxis() -> SetTitleSize(fTit);
-    grReso[iReso] -> GetXaxis() -> SetTitleOffset(fOffX);
-    grReso[iReso] -> GetXaxis() -> SetLabelFont(fTxt);
-    grReso[iReso] -> GetXaxis() -> SetLabelSize(fLab);
-    grReso[iReso] -> GetXaxis() -> CenterTitle(fCnt);
-    grReso[iReso] -> GetYaxis() -> SetRangeUser(xyPlotRange[1], xyPlotRange[3]);
-    grReso[iReso] -> GetYaxis() -> SetTitle(sTitleY.Data());
-    grReso[iReso] -> GetYaxis() -> SetTitleFont(fTxt);
-    grReso[iReso] -> GetYaxis() -> SetTitleSize(fTit);
-    grReso[iReso] -> GetYaxis() -> SetTitleOffset(fOffY);
-    grReso[iReso] -> GetYaxis() -> SetLabelFont(fTxt);
-    grReso[iReso] -> GetYaxis() -> SetLabelSize(fLab);
-    grReso[iReso] -> GetYaxis() -> CenterTitle(fCnt);
+  for (UInt_t iLine = 0; iLine < NLine; iLine++) {
+    grLine[iLine] -> SetMarkerColor(fColRes[iLine]);
+    grLine[iLine] -> SetMarkerStyle(fMarRes[iLine]);
+    grLine[iLine] -> SetFillColor(fColRes[iLine]);
+    grLine[iLine] -> SetFillStyle(fFil);
+    grLine[iLine] -> SetLineColor(fColRes[iLine]);
+    grLine[iLine] -> SetLineStyle(fLin);
+    grLine[iLine] -> SetLineWidth(fWid);
+    grLine[iLine] -> SetTitle(sTitle.Data());
+    grLine[iLine] -> GetXaxis() -> SetRangeUser(xyPlotRange[0], xyPlotRange[2]);
+    grLine[iLine] -> GetXaxis() -> SetTitle(sTitleX.Data());
+    grLine[iLine] -> GetXaxis() -> SetTitleFont(fTxt);
+    grLine[iLine] -> GetXaxis() -> SetTitleSize(fTit);
+    grLine[iLine] -> GetXaxis() -> SetTitleOffset(fOffX);
+    grLine[iLine] -> GetXaxis() -> SetLabelFont(fTxt);
+    grLine[iLine] -> GetXaxis() -> SetLabelSize(fLab);
+    grLine[iLine] -> GetXaxis() -> CenterTitle(fCnt);
+    grLine[iLine] -> GetYaxis() -> SetRangeUser(xyPlotRange[1], xyPlotRange[3]);
+    grLine[iLine] -> GetYaxis() -> SetTitle(sTitleY.Data());
+    grLine[iLine] -> GetYaxis() -> SetTitleFont(fTxt);
+    grLine[iLine] -> GetYaxis() -> SetTitleSize(fTit);
+    grLine[iLine] -> GetYaxis() -> SetTitleOffset(fOffY);
+    grLine[iLine] -> GetYaxis() -> SetLabelFont(fTxt);
+    grLine[iLine] -> GetYaxis() -> SetLabelSize(fLab);
+    grLine[iLine] -> GetYaxis() -> CenterTitle(fCnt);
   }
 
   // make frame histogram
@@ -163,7 +158,7 @@ void MakeResolutionComparison() {
   const UInt_t  fColLeg      = 0;
   const UInt_t  fFilLeg      = 0;
   const UInt_t  fLinLeg      = 0;
-  const Float_t hObjLeg      = NReso * 0.05;
+  const Float_t hObjLeg      = NLine * 0.05;
   const Float_t yObjLeg      = 0.1 + hObjLeg;
   const Float_t fLegXY[NVtx] = {0.1, 0.1, 0.3, yObjLeg};
 
@@ -174,8 +169,8 @@ void MakeResolutionComparison() {
   leg -> SetLineStyle(fLinLeg);
   leg -> SetTextFont(fTxt);
   leg -> SetTextAlign(fAln);
-  for (UInt_t iReso = 0; iReso < NReso; iReso++) {
-    leg -> AddEntry(grReso[iReso], sLabelReso[iReso], "p");
+  for (UInt_t iLine = 0; iLine < NLine; iLine++) {
+    leg -> AddEntry(grLine[iLine], sLabelLine[iLine], "p");
   }
   cout << "    Made legend." << endl;
 
@@ -228,8 +223,8 @@ void MakeResolutionComparison() {
   cPlot  -> SetLogy(fLogY);
   cPlot  -> cd();
   hFrame -> Draw();
-  for(UInt_t iReso = 0; iReso < NReso; iReso++) {
-    grReso[iReso] -> Draw(sOptReso[iReso].Data());
+  for(UInt_t iLine = 0; iLine < NLine; iLine++) {
+    grLine[iLine] -> Draw(sOptLine[iLine].Data());
   }
   leg     -> Draw();
   txt     -> Draw();
@@ -241,17 +236,17 @@ void MakeResolutionComparison() {
   // save histograms
   fOutput -> cd();
   hFrame  -> Write();
-  for (UInt_t iReso = 0; iReso < NReso; iReso++) {
-    grReso[iReso] -> Write();
+  for (UInt_t iLine = 0; iLine < NLine; iLine++) {
+    grLine[iLine] -> Write();
   }
   cout << "    Saved histograms." << endl;
 
   // close files
   fOutput -> cd();
   fOutput -> Close();
-  for (UInt_t iReso = 0; iReso < NReso; iReso++) {
-    fReso[iReso] -> cd();
-    fReso[iReso] -> Close();
+  for (UInt_t iLine = 0; iLine < NLine; iLine++) {
+    fLine[iLine] -> cd();
+    fLine[iLine] -> Close();
   }
   cout << "  Finished plot!\n" << endl;
 
