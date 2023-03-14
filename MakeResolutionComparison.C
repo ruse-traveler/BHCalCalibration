@@ -13,6 +13,7 @@
 #include "TPad.h"
 #include "TFile.h"
 #include "TError.h"
+#include "TGraph.h"
 #include "TString.h"
 #include "TLegend.h"
 #include "TCanvas.h"
@@ -24,6 +25,7 @@ using namespace std;
 // global constants
 static const UInt_t NReso(3);
 static const UInt_t NPlot(2);
+static const UInt_t NTest(7);
 static const UInt_t NPad(2);
 static const UInt_t NVtx(4);
 static const UInt_t NTxt(2);
@@ -37,13 +39,13 @@ void MakeResolutionComparison() {
   cout << "\n  Beginning resolution comparison plot-maker..." << endl;
 
   // output and denominator parameters
-  const TString sOutput("resoComparison.testBeamVsSciGlassVsImage_fromHist_noNClustAndWithNHits_withGraphicUpdate.d9m3y2023.root");
-  const TString sReso[NReso]      = {"calibration_output/forTestBeamReso.training_withGraphicUpdate.e1t20th35145n5KeaPim.d8m3y2023.root",
-                                     "calibration_output/forSciGlassReso.application_noNClustAndWithNHits_withGraphicUpdate.e2t20th35145n5KeaPim.d9m3y2023.root",
-                                     "calibration_output/forImagingReso.application_noNClustAndWithNHits_withGraphicUpdate.e2t20th35145n5KeaPim.d9m3y2023.root"};
-  const TString sHistReso[NReso]  = {"Resolution/grResoEneHist",
-                                     "grResoEneHist_LD",
-                                     "grResoEneHist_LD"};
+  const TString sOutput("resoComparison.testBeamConfigVsSciGlassVsImage_fromFit_withTestBeamData.d13m3y2023.root");
+  const TString sReso[NReso]      = {"calibration_output/forTestBeamReso.training_withMoreStats.e1t20th35145n10KeaPim.d13m3y2023.root",
+                                     "calibration_output/forSciGlassReso.application_forLinearityAnd2dPlots.e2t20th35145n5KeaPim.d12m3y2023.root",
+                                     "calibration_output/forImagingReso.application_forLinearityAnd2dPlots.e2t20th35145n5KeaPim.d12m3y2023.root"};
+  const TString sHistReso[NReso]  = {"Resolution/grResoEne",
+                                     "grResoEne_LD",
+                                     "grResoEne_LD"};
   const TString sNameReso[NReso]  = {"grTestBeamReso",
                                      "grSciGlassReso",
                                      "grImagingReso"};
@@ -68,6 +70,16 @@ void MakeResolutionComparison() {
   const TString sLabelReso[NReso] = {"Only BHCal",
                                      "Full detector (SciGlass)",
                                      "Full detector (Imaging)"};
+
+  // test beam points & parameters
+  const Bool_t   addTestBeam(true);
+  const UInt_t   fColTest(618);
+  const UInt_t   fMarTest(29);
+  const TString  sOptTest("LP");
+  const TString  sLabelTest("sPHENIX test beam data");
+  const TString  sTestRef("[IEEE Transactions on Nuc. Sci., Vol. 65, Iss. 12, pp. 2901-2919, Dec. 2018]");
+  const Double_t xValsTestBeam[NTest] = {4.14959877108356, 6.14450880383323, 8.1692122326946,  12.15563223082159, 16.20408511280676, 24.14495469139409, 32.17897143943406};
+  const Double_t yValsTestBeam[NTest] = {0.47719893154717, 0.34697739951106, 0.30316859721537, 0.26110700323024,  0.23476189744027,  0.20405296417384,  0.19063440434873};
 
   // open output file
   TFile *fOutput = new TFile(sOutput.Data(), "recreate");
@@ -98,6 +110,11 @@ void MakeResolutionComparison() {
     grReso[iReso] -> SetName(sNameReso[iReso].Data());
   }
   cout << "    Grabbed graphs." << endl;
+
+  // create test beam curve
+  TGraph *grTest = new TGraph(NTest, xValsTestBeam, yValsTestBeam);
+  grTest -> SetName("grFromTestBeamPaper");
+  if (addTestBeam) cout << "    Made test beam graph." << endl;
 
   // set styles
   const UInt_t  fFil(0);
@@ -136,6 +153,30 @@ void MakeResolutionComparison() {
     grReso[iReso] -> GetYaxis() -> SetLabelSize(fLab);
     grReso[iReso] -> GetYaxis() -> CenterTitle(fCnt);
   }
+  grTest -> SetMarkerColor(fColTest);
+  grTest -> SetMarkerStyle(fMarTest);
+  grTest -> SetFillColor(fColTest);
+  grTest -> SetFillStyle(fFil);
+  grTest -> SetLineColor(fColTest);
+  grTest -> SetLineStyle(fLin);
+  grTest -> SetLineWidth(fWid);
+  grTest -> SetTitle(sTitle.Data());
+  grTest -> GetXaxis() -> SetRangeUser(xyPlotRange[0], xyPlotRange[2]);
+  grTest -> GetXaxis() -> SetTitle(sTitleX.Data());
+  grTest -> GetXaxis() -> SetTitleFont(fTxt);
+  grTest -> GetXaxis() -> SetTitleSize(fTit);
+  grTest -> GetXaxis() -> SetTitleOffset(fOffX);
+  grTest -> GetXaxis() -> SetLabelFont(fTxt);
+  grTest -> GetXaxis() -> SetLabelSize(fLab);
+  grTest -> GetXaxis() -> CenterTitle(fCnt);
+  grTest -> GetYaxis() -> SetRangeUser(xyPlotRange[1], xyPlotRange[3]);
+  grTest -> GetYaxis() -> SetTitle(sTitleY.Data());
+  grTest -> GetYaxis() -> SetTitleFont(fTxt);
+  grTest -> GetYaxis() -> SetTitleSize(fTit);
+  grTest -> GetYaxis() -> SetTitleOffset(fOffY);
+  grTest -> GetYaxis() -> SetLabelFont(fTxt);
+  grTest -> GetYaxis() -> SetLabelSize(fLab);
+  grTest -> GetYaxis() -> CenterTitle(fCnt);
 
   // make frame histogram
   TH2D *hFrame = new TH2D("hFrame", "", nFrameX, xyFrameRange[0], xyFrameRange[2], nFrameY, xyFrameRange[1], xyFrameRange[3]);
@@ -160,10 +201,13 @@ void MakeResolutionComparison() {
   cout << "    Set styles." << endl;
 
   // make legend
+  UInt_t nObjLeg(NReso);
+  if (addTestBeam) nObjLeg += 2;
+
   const UInt_t  fColLeg      = 0;
   const UInt_t  fFilLeg      = 0;
   const UInt_t  fLinLeg      = 0;
-  const Float_t hObjLeg      = NReso * 0.05;
+  const Float_t hObjLeg      = nObjLeg * 0.05;
   const Float_t yObjLeg      = 0.1 + hObjLeg;
   const Float_t fLegXY[NVtx] = {0.1, 0.1, 0.3, yObjLeg};
 
@@ -175,7 +219,11 @@ void MakeResolutionComparison() {
   leg -> SetTextFont(fTxt);
   leg -> SetTextAlign(fAln);
   for (UInt_t iReso = 0; iReso < NReso; iReso++) {
-    leg -> AddEntry(grReso[iReso], sLabelReso[iReso], "p");
+    leg -> AddEntry(grReso[iReso], sLabelReso[iReso].Data(), "p");
+  }
+  if (addTestBeam) {
+    leg -> AddEntry(grTest,      sLabelTest.Data(), "p");
+    leg -> AddEntry((TObject*)0, sTestRef.Data(),   "");
   }
   cout << "    Made legend." << endl;
 
@@ -231,6 +279,7 @@ void MakeResolutionComparison() {
   for(UInt_t iReso = 0; iReso < NReso; iReso++) {
     grReso[iReso] -> Draw(sOptReso[iReso].Data());
   }
+  grTest  -> Draw(sOptTest.Data());
   leg     -> Draw();
   txt     -> Draw();
   fOutput -> cd();
@@ -244,6 +293,7 @@ void MakeResolutionComparison() {
   for (UInt_t iReso = 0; iReso < NReso; iReso++) {
     grReso[iReso] -> Write();
   }
+  if (addTestBeam) grTest -> Write();
   cout << "    Saved histograms." << endl;
 
   // close files
