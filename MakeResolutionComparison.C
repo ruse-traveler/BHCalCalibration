@@ -23,7 +23,7 @@
 using namespace std;
 
 // global constants
-static const UInt_t NReso(3);
+static const UInt_t NReso(2);
 static const UInt_t NPlot(2);
 static const UInt_t NTest(7);
 static const UInt_t NPad(2);
@@ -39,21 +39,18 @@ void MakeResolutionComparison() {
   cout << "\n  Beginning resolution comparison plot-maker..." << endl;
 
   // output and denominator parameters
-  const TString sOutput("resoComparison.testBeamConfigVsSciGlassVsImage_fromFit_withTestBeamData.d13m3y2023.root");
-  const TString sReso[NReso]      = {"calibration_output/forTestBeamReso.training_withMoreStats.e1t20th35145n10KeaPim.d13m3y2023.root",
-                                     "calibration_output/forSciGlassReso.application_forLinearityAnd2dPlots.e2t20th35145n5KeaPim.d12m3y2023.root",
+  const TString sOutput("resoComparison.forImagingVsSciGlass_fromHist_noOnlyHCalOrTestBeam.d14m3y2023.root");
+  const TString sReso[NReso]      = {"calibration_output/forSciGlassReso.application_forLinearityAnd2dPlots.e2t20th35145n5KeaPim.d12m3y2023.root",
                                      "calibration_output/forImagingReso.application_forLinearityAnd2dPlots.e2t20th35145n5KeaPim.d12m3y2023.root"};
-  const TString sHistReso[NReso]  = {"Resolution/grResoEne",
-                                     "grResoEne_LD",
-                                     "grResoEne_LD"};
-  const TString sNameReso[NReso]  = {"grTestBeamReso",
-                                     "grSciGlassReso",
+  const TString sHistReso[NReso]  = {"grResoEneHist_LD",
+                                     "grResoEneHist_LD"};
+  const TString sNameReso[NReso]  = {"grSciGlassReso",
                                      "grImagingReso"};
 
   // plot parameters
   const UInt_t  nFrameX(51);
   const UInt_t  nFrameY(102);
-  const TString sOptReso[NReso]    = {"LP", "LP", "LP"};
+  const TString sOptReso[NReso]    = {"LP", "LP"};
   const Float_t xyFrameRange[NVtx] = {-1., -1., 50., 50.};
   const Float_t xyPlotRange[NVtx]  = {0.,  0.,  35., 1.2};
 
@@ -61,18 +58,17 @@ void MakeResolutionComparison() {
   const TString sTitle("");
   const TString sTitleX("E_{par} [GeV]");
   const TString sTitleY("Resolution (#sigma_{E} / <E_{reco}>)");
-  const UInt_t  fColRes[NReso] = {923, 634, 602};
-  const UInt_t  fMarRes[NReso] = {20,  22,  23};
+  const UInt_t  fColRes[NReso] = {634, 602};
+  const UInt_t  fMarRes[NReso] = {22,  23};
 
   // text parameters
   const TString sHeader("");
   const TString sTxt[NTxt] = {"ePIC simulation [23.01.0]", "single #pi^{-}"};
-  const TString sLabelReso[NReso] = {"Only BHCal",
-                                     "Full detector (SciGlass)",
+  const TString sLabelReso[NReso] = {"Full detector (SciGlass)",
                                      "Full detector (Imaging)"};
 
   // test beam points & parameters
-  const Bool_t   addTestBeam(true);
+  const Bool_t   addTestBeam(false);
   const UInt_t   fColTest(618);
   const UInt_t   fMarTest(29);
   const TString  sOptTest("LP");
@@ -279,7 +275,7 @@ void MakeResolutionComparison() {
   for(UInt_t iReso = 0; iReso < NReso; iReso++) {
     grReso[iReso] -> Draw(sOptReso[iReso].Data());
   }
-  grTest  -> Draw(sOptTest.Data());
+  if (addTestBeam) grTest -> Draw(sOptTest.Data());
   leg     -> Draw();
   txt     -> Draw();
   fOutput -> cd();
