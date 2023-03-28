@@ -20,32 +20,33 @@
 #include <cstdlib>
 #include <iostream>
 // root includes
-#include <TF1.h>
-#include <TH1.h>
-#include <TH2.h>
-#include <TPad.h>
-#include <TCut.h>
-#include <TFile.h>
-#include <TTree.h>
-#include <TMath.h>
-#include <TError.h>
-#include <TString.h>
-#include <TNtuple.h>
-#include <TSystem.h>
-#include <TCanvas.h>
-#include <TLegend.h>
-#include <TProfile.h>
-#include <TPaveText.h>
-#include <TDirectory.h>
-#include <TObjString.h>
-#include <TGraphErrors.h>
+#include "TF1.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TPad.h"
+#include "TCut.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TMath.h"
+#include "TError.h"
+#include "TString.h"
+#include "TNtuple.h"
+#include "TSystem.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+#include "TProfile.h"
+#include "TPaveText.h"
+#include "TDirectory.h"
+#include "TObjString.h"
+#include "TGraphErrors.h"
 // tmva includes
-#include <TMVA/Tools.h>
-#include <TMVA/Factory.h>
-#include <TMVA/DataLoader.h>
-#include <TMVA/TMVARegGui.h>
+#include "TMVA/Tools.h"
+#include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
+#include "TMVA/TMVARegGui.h"
 
 using namespace std;
+using namespace TMVA;
 
 // global constants
 static const UInt_t NTxt(2);
@@ -54,15 +55,15 @@ static const UInt_t NHist(4);
 static const UInt_t NRange(2);
 static const UInt_t NEneBins(4);
 static const UInt_t NVarSci(8);
-static const UInt_t NVarIma(12);
+static const UInt_t NVarIma(10);
 static const UInt_t NSpecSci(1);
 static const UInt_t NSpecIma(1);
 
 // default arguments
 static const UInt_t  FConfigDef(1);
-static const Bool_t  DoTmvaDef(false);
+static const Bool_t  DoTmvaDef(true);
 static const TString SInDef("eicrecon_output/merged/forECalStudy.imaging.e2t20th35145n5KeaPim.d8m3y2023.plugin.root");
-static const TString SOutDef("forImagingReso.training.e2t20th35145n5KeaPim.d8m3y2023.root");
+static const TString SOutDef("forImagingReso.training_noNClustAndWithNHits_withGraphicUpdate.e2t20th35145n5KeaPim.d9m3y2023.root");
 static const TString STupleDef("ntForCalibration");
 
 
@@ -71,16 +72,16 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
 
   // lower verbosity
   gErrorIgnoreLevel = kError;
-  cout << "\n  Beginning BHCal calibration script..." << endl;
+  cout << "\n  Beginning BHCal calibration training script..." << endl;
 
   // tmva parameters
   const Bool_t  addSpectators(false);
   const Float_t treeWeight(1.0);
   const TString sTarget("ePar");
-  const TString sLoadSci("SciGlassRegressionData_NoNClust");
-  const TString sLoadIma("ImagingRegressionData_NoNClust");
-  const TString sVarSci[NVarSci]   = {"eLeadBHCal", "eLeadBEMC", "hLeadBHCal", "hLeadBEMC", "fLeadBHCal", "fLeadBEMC", "nClustBHCal", "nClustBEMC"};
-  const TString sVarIma[NVarIma]   = {"eLeadBHCal", "eLeadBEMC", "hLeadBHCal", "hLeadBEMC", "fLeadBHCal", "fLeadBEMC", "nClustBHCal", "nClustBEMC", "eSumImage", "eSumSciFi", "nClustImage", "nClustSciFi"};
+  const TString sLoadSci("SciGlassRegressionData_NoNClustAndWithNHits");
+  const TString sLoadIma("ImagingRegressionData_NoNClustAndWithNHits");
+  const TString sVarSci[NVarSci]   = {"eLeadBHCal", "eLeadBEMC", "hLeadBHCal", "hLeadBEMC", "fLeadBHCal", "fLeadBEMC", "nHitsLeadBHCal", "nHitsLeadBEMC"};
+  const TString sVarIma[NVarIma]   = {"eLeadBHCal", "eLeadBEMC", "hLeadBHCal", "hLeadBEMC", "fLeadBHCal", "fLeadBEMC", "nHitsLeadBHCal", "nHitsLeadBEMC", "eSumImage", "eSumSciFi"};
   const TString sSpecSci[NSpecSci] = {"eLeadBHCal/ePar"};
   const TString sSpecIma[NSpecIma] = {"eLeadBHCal/ePar"};
   const TCut    trainCutSci("");
@@ -446,7 +447,7 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
     hHCalEneBin[iEneBin]  -> Sumw2();
     hHCalDiffBin[iEneBin] -> Sumw2();
   }
-  cout << "    declared output histograms." << endl;
+  cout << "    Declared output histograms." << endl;
 
   // prepare for uncalibrated tuple loop
   Long64_t nEvts = ntToCalibrate -> GetEntries();
@@ -764,17 +765,17 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
   cout << "    Made resolution plots." << endl;
 
   // do tmva training (if needed)
-  TMVA::Factory    *factory;
-  TMVA::DataLoader *loader;
+  Factory    *factory;
+  DataLoader *loader;
   if (doTMVA) {
 
     // instantiate tmva library
-    TMVA::Tools::Instance();
+    Tools::Instance();
     cout << "    Beginning calibration:" << endl;
 
     // create tmva factory & load data
-    factory = new TMVA::Factory("TMVARegression", fOutput, "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
-    loader  = new TMVA::DataLoader(sLoadUse.Data());
+    factory = new Factory("TMVARegression", fOutput, "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
+    loader  = new DataLoader(sLoadUse.Data());
     cout << "      Created factory and loaded data..." << endl;
 
     // set variables and target
@@ -810,10 +811,9 @@ void DoHCalCalibration(const UInt_t fConfig = FConfigDef, const Bool_t doTMVA = 
     cout << "      Added tree and prepared for training..." << endl;
 
     // book methods
-    //factory -> BookMethod(loader, TMVA::Types::kKNN, "KNN");
-    factory -> BookMethod(loader, TMVA::Types::kLD,  "LD");
-    factory -> BookMethod(loader, TMVA::Types::kMLP, "MLP");
-    factory -> BookMethod(loader, TMVA::Types::kBDT, "BDTG");
+    factory -> BookMethod(loader, Types::kLD,  "LD");
+    factory -> BookMethod(loader, Types::kMLP, "MLP");
+    factory -> BookMethod(loader, Types::kBDT, "BDTG");
     cout << "      Booked methods..." << endl;
 
     // train, test, & evaluate
