@@ -321,21 +321,19 @@ void JCalibrateHCalProcessor::ProcessSequential(const std::shared_ptr<const JEve
   for (auto par : genParticles()) {
 
     // grab particle properties
-    const auto cPar  = par -> getCharge();
-    const auto mPar  = par -> getMass();
-    const auto ePar  = par -> getEnergy();
-    const auto pParX = par -> getMomentum().x;
-    const auto pParY = par -> getMomentum().y;
-    const auto pParZ = par -> getMomentum().z;
-    const auto pPar  = std::sqrt((pParX * pParX) + (pParY * pParY) + (pParZ * pParZ));
-    const auto fPar  = std::atan(pParY / pParX);
-    const auto hPar  = std::atanh(pParZ / pPar);
+    const auto typePar = par -> getType();
+    const auto cPar    = par -> getCharge();
+    const auto mPar    = par -> getMass();
+    const auto ePar    = par -> getEnergy();
+    const auto pParX   = par -> getMomentum().x;
+    const auto pParY   = par -> getMomentum().y;
+    const auto pParZ   = par -> getMomentum().z;
+    const auto pPar    = std::sqrt((pParX * pParX) + (pParY * pParY) + (pParZ * pParZ));
+    const auto fPar    = std::atan(pParY / pParX);
+    const auto hPar    = std::atanh(pParZ / pPar);
 
     // select MC particle
-    const bool isRightCharge   = (cPar == CPar);
-    const bool isRightMass     = ((mPar >= MParMin) && (mPar <= MParMax));
-    const bool isRightMomentum = ((ePar >= EParMin) && (ePar <= EParMax));
-    const bool isMcParticle    = (isRightCharge && isRightMass && isRightMomentum);
+    const bool isMcParticle = (typePar == 1);
     if (isMcParticle) {
       cMcPar    = cPar;
       mMcPar    = mPar;
