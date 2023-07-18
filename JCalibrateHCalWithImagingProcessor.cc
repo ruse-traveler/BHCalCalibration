@@ -8,10 +8,14 @@
 // in the HCal to simulated particles.
 // ----------------------------------------------------------------------------
 
+// C includes
+#include <vector>
+#include <string>
+#include <boost/math/special_functions/sign.hpp>
+// eicrecon includes 
+#include <services/rootfile/RootFile_service.h>
 // user includes
 #include "JCalibrateHCalWithImagingProcessor.h"
-#include <services/rootfile/RootFile_service.h>
-#include <boost/math/special_functions/sign.hpp>
 
 // The following just makes this a JANA plugin
 extern "C" {
@@ -33,7 +37,7 @@ void JCalibrateHCalWithImagingProcessor::InitWithGlobalRootLock(){
   auto rootfile     = rootfile_svc     -> GetHistFile();
   rootfile -> mkdir("JCalibrateHCalWithImaging") -> cd();
 
-  // initialize histograms
+  // initialize bhcal histograms
   const unsigned long nNumBin(200);
   const unsigned long nChrgBin(6);
   const unsigned long nMassBin(1000);
@@ -44,27 +48,27 @@ void JCalibrateHCalWithImagingProcessor::InitWithGlobalRootLock(){
   const unsigned long nPosTrBin(800);
   const unsigned long nPosLoBin(30);
   const unsigned long nDiffBin(200);
-  const unsigned long rNumBin[NRange]   = {0,      200};
-  const double        rChrgBin[NRange]  = {-3.,    3.};
-  const double        rMassBin[NRange]  = {0.,     5.};
-  const double        rPhiBin[NRange]   = {-3.15,  3.15};
-  const double        rEtaBin[NRange]   = {-2.,    2.};
-  const double        rEneBin[NRange]   = {0.,     100.};
-  const double        rMomBin[NRange]   = {-50.,   50.};
-  const double        rPosTrBin[NRange] = {-4000., 4000.};
-  const double        rPosLoBin[NRange] = {-3000., 3000.};
-  const double        rDiffBin[NRange]  = {-5.,   5.};
+  const unsigned long rNumBin[CONSTANTS::NRange]   = {0,      200};
+  const double        rChrgBin[CONSTANTS::NRange]  = {-3.,    3.};
+  const double        rMassBin[CONSTANTS::NRange]  = {0.,     5.};
+  const double        rPhiBin[CONSTANTS::NRange]   = {-3.15,  3.15};
+  const double        rEtaBin[CONSTANTS::NRange]   = {-2.,    2.};
+  const double        rEneBin[CONSTANTS::NRange]   = {0.,     100.};
+  const double        rMomBin[CONSTANTS::NRange]   = {-50.,   50.};
+  const double        rPosTrBin[CONSTANTS::NRange] = {-4000., 4000.};
+  const double        rPosLoBin[CONSTANTS::NRange] = {-3000., 3000.};
+  const double        rDiffBin[CONSTANTS::NRange]  = {-5.,    5.};
   // particle histograms
-  hParChrg                   = new TH1D("hParChrg",     "Gen. Particles", nChrgBin,  rChrgBin[0], rChrgBin[1]);
-  hParMass                   = new TH1D("hParMass",     "Gen. Particles", nMassBin,  rMassBin[0], rMassBin[1]);
-  hParPhi                    = new TH1D("hParPhi",      "Gen. Particles", nPhiBin,   rPhiBin[0],  rPhiBin[1]);
-  hParEta                    = new TH1D("hParEta",      "Gen. Particles", nEtaBin,   rEtaBin[0],  rEtaBin[1]);
-  hParEne                    = new TH1D("hParEne",      "Gen. Particles", nEneBin,   rEneBin[0],  rEneBin[1]);
-  hParMom                    = new TH1D("hParMom",      "Gen. Particles", nEneBin,   rEneBin[0],  rEneBin[1]);
-  hParMomX                   = new TH1D("hParMomX",     "Gen. Particles", nMomBin,   rMomBin[0],  rMomBin[1]);
-  hParMomY                   = new TH1D("hParMomY",     "Gen. Particles", nMomBin,   rMomBin[0],  rMomBin[1]);
-  hParMomZ                   = new TH1D("hParMomZ",     "Gen. Particles", nMomBin,   rMomBin[0],  rMomBin[1]);
-  hParEtaVsPhi               = new TH2D("hParEtaVsPhi", "Gen. Particles", nPhiBin,   rPhiBin[0],  rPhiBin[1],   nEtaBin,  rEtaBin[0],   rEtaBin[1]);
+  hParChrg                   = new TH1D("hParChrg",     "Gen. Particles", nChrgBin, rChrgBin[0], rChrgBin[1]);
+  hParMass                   = new TH1D("hParMass",     "Gen. Particles", nMassBin, rMassBin[0], rMassBin[1]);
+  hParPhi                    = new TH1D("hParPhi",      "Gen. Particles", nPhiBin,  rPhiBin[0],  rPhiBin[1]);
+  hParEta                    = new TH1D("hParEta",      "Gen. Particles", nEtaBin,  rEtaBin[0],  rEtaBin[1]);
+  hParEne                    = new TH1D("hParEne",      "Gen. Particles", nEneBin,  rEneBin[0],  rEneBin[1]);
+  hParMom                    = new TH1D("hParMom",      "Gen. Particles", nEneBin,  rEneBin[0],  rEneBin[1]);
+  hParMomX                   = new TH1D("hParMomX",     "Gen. Particles", nMomBin,  rMomBin[0],  rMomBin[1]);
+  hParMomY                   = new TH1D("hParMomY",     "Gen. Particles", nMomBin,  rMomBin[0],  rMomBin[1]);
+  hParMomZ                   = new TH1D("hParMomZ",     "Gen. Particles", nMomBin,  rMomBin[0],  rMomBin[1]);
+  hParEtaVsPhi               = new TH2D("hParEtaVsPhi", "Gen. Particles", nPhiBin,  rPhiBin[0],  rPhiBin[1], nEtaBin, rEtaBin[0], rEtaBin[1]);
   // reco. bhcal hit histograms
   hHCalRecHitPhi             = new TH1D("hHCalRecHitPhi",      "Barrel HCal", nPhiBin,   rPhiBin[0],   rPhiBin[1]);
   hHCalRecHitEta             = new TH1D("hHCalRecHitEta",      "Barrel HCal", nEtaBin,   rEtaBin[0],   rEtaBin[1]);
@@ -113,34 +117,34 @@ void JCalibrateHCalWithImagingProcessor::InitWithGlobalRootLock(){
   hHCalTruClustEtaVsPhi      = new TH2D("hHCalTruClustEtaVsPhi", "Barrel HCal", nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
   hHCalTruClustVsParEne      = new TH2D("hHCalTruClustVsParEne", "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
   // bhcal general event-wise histograms
-  hEvtHCalNumPar             = new TH1I("hEvtHCalNumPar",             "Barrel HCal", nNumBin,   rNumBin[0],   rNumBin[1]);
+  hEvtHCalNumPar             = new TH1I("hEvtHCalNumPar", "Barrel HCal", nNumBin, rNumBin[0], rNumBin[1]);
   // bhcal hit event-wise histograms
-  hEvtHCalNumHit             = new TH1I("hEvtHCalNumHit",             "Barrel HCal", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtHCalSumHitEne          = new TH1D("hEvtHCalSumHitEne",          "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtHCalSumHitDiff         = new TH1D("hEvtHCalSumHitDiff",         "Barrel HCal", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtHCalSumHitVsPar        = new TH2D("hEvtHCalSumHitVsPar",        "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalNumHit             = new TH1I("hEvtHCalNumHit",      "Barrel HCal", nNumBin,  rNumBin[0],  rNumBin[1]);
+  hEvtHCalSumHitEne          = new TH1D("hEvtHCalSumHitEne",   "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1]);
+  hEvtHCalSumHitDiff         = new TH1D("hEvtHCalSumHitDiff",  "Barrel HCal", nDiffBin, rDiffBin[0], rDiffBin[1]);
+  hEvtHCalSumHitVsPar        = new TH2D("hEvtHCalSumHitVsPar", "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1], nEneBin, rEneBin[0], rEneBin[1]);
   // bhcal cluster event-wise histograms
-  hEvtHCalNumClust           = new TH1I("hEvtHCalNumClust",           "Barrel HCal", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtHCalSumClustEne        = new TH1D("hEvtHCalSumClustEne",        "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtHCalSumClustDiff       = new TH1D("hEvtHCalSumClustDiff",       "Barrel HCal", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtHCalNumClustVsHit      = new TH2I("hEvtHCalNumClustVsHit",      "Barrel HCal", nNumBin,   rNumBin[0],   rNumBin[1],   nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtHCalSumClustVsPar      = new TH2D("hEvtHCalSumClustVsPar",      "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalNumClust           = new TH1I("hEvtHCalNumClust",      "Barrel HCal", nNumBin,  rNumBin[0],  rNumBin[1]);
+  hEvtHCalSumClustEne        = new TH1D("hEvtHCalSumClustEne",   "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1]);
+  hEvtHCalSumClustDiff       = new TH1D("hEvtHCalSumClustDiff",  "Barrel HCal", nDiffBin, rDiffBin[0], rDiffBin[1]);
+  hEvtHCalNumClustVsHit      = new TH2I("hEvtHCalNumClustVsHit", "Barrel HCal", nNumBin,  rNumBin[0],  rNumBin[1], nNumBin, rNumBin[0], rNumBin[1]);
+  hEvtHCalSumClustVsPar      = new TH2D("hEvtHCalSumClustVsPar", "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1], nEneBin, rEneBin[0], rEneBin[1]);
   // bhcal lead cluster event-wise histograms
-  hEvtHCalLeadClustNumHit    = new TH1I("hEvtHCalLeadClustNumHit",    "Barrel HCal", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtHCalLeadClustEne       = new TH1D("hEvtHCalLeadClustEne",       "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtHCalLeadClustDiff      = new TH1D("hEvtHCalLeadClustDiff",      "Barrel HCal", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtHCalLeadClustVsPar     = new TH2D("hEvtHCalLeadClustVsPar",     "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalLeadClustNumHit    = new TH1I("hEvtHCalLeadClustNumHit", "Barrel HCal", nNumBin,  rNumBin[0],  rNumBin[1]);
+  hEvtHCalLeadClustEne       = new TH1D("hEvtHCalLeadClustEne",    "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1]);
+  hEvtHCalLeadClustDiff      = new TH1D("hEvtHCalLeadClustDiff",   "Barrel HCal", nDiffBin, rDiffBin[0], rDiffBin[1]);
+  hEvtHCalLeadClustVsPar     = new TH2D("hEvtHCalLeadClustVsPar",  "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1], nEneBin, rEneBin[0], rEneBin[1]);
   // bhcal truth cluster event-wise histograms
-  hEvtHCalNumTruClust        = new TH1I("hEvtHCalNumTruClust",        "Barrel HCal", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtHCalSumTruClustEne     = new TH1D("hEvtHCalSumTruClustEne",     "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtHCalSumTruClustDiff    = new TH1D("hEvtHCalSumTruClustDiff",    "Barrel HCal", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtHCalNumTruClustVsClust = new TH2I("hEvtHCalNumTruClustVsClust", "Barrel HCal", nNumBin,   rNumBin[0],   rNumBin[1],   nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtHCalSumTruClustVsPar   = new TH2D("hEvtHCalSumTruClustVsPar",   "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalNumTruClust        = new TH1I("hEvtHCalNumTruClust",        "Barrel HCal", nNumBin,  rNumBin[0],  rNumBin[1]);
+  hEvtHCalSumTruClustEne     = new TH1D("hEvtHCalSumTruClustEne",     "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1]);
+  hEvtHCalSumTruClustDiff    = new TH1D("hEvtHCalSumTruClustDiff",    "Barrel HCal", nDiffBin, rDiffBin[0], rDiffBin[1]);
+  hEvtHCalNumTruClustVsClust = new TH2I("hEvtHCalNumTruClustVsClust", "Barrel HCal", nNumBin,  rNumBin[0],  rNumBin[1], nNumBin, rNumBin[0], rNumBin[1]);
+  hEvtHCalSumTruClustVsPar   = new TH2D("hEvtHCalSumTruClustVsPar",   "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1], nEneBin, rEneBin[0], rEneBin[1]);
   // bhcal truth lead cluster event-wise histograms
-  hEvtHCalLeadTruClustNumHit = new TH1I("hEvtHCalLeadTruClustNumHit", "Barrel HCal", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtHCalLeadTruClustEne    = new TH1D("hEvtHCalLeadTruClustEne",    "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtHCalLeadTruClustDiff   = new TH1D("hEvtHCalLeadTruClustDiff",   "Barrel HCal", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtHCalLeadTruClustVsPar  = new TH2D("hEvtHCalLeadTruClustVsPar",  "Barrel HCal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtHCalLeadTruClustNumHit = new TH1I("hEvtHCalLeadTruClustNumHit", "Barrel HCal", nNumBin,  rNumBin[0],  rNumBin[1]);
+  hEvtHCalLeadTruClustEne    = new TH1D("hEvtHCalLeadTruClustEne",    "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1]);
+  hEvtHCalLeadTruClustDiff   = new TH1D("hEvtHCalLeadTruClustDiff",   "Barrel HCal", nDiffBin, rDiffBin[0], rDiffBin[1]);
+  hEvtHCalLeadTruClustVsPar  = new TH2D("hEvtHCalLeadTruClustVsPar",  "Barrel HCal", nEneBin,  rEneBin[0],  rEneBin[1], nEneBin, rEneBin[0], rEneBin[1]);
   // bhcal particle errors
   hParChrg                   -> Sumw2();
   hParMass                   -> Sumw2();
@@ -228,49 +232,180 @@ void JCalibrateHCalWithImagingProcessor::InitWithGlobalRootLock(){
   hEvtHCalLeadTruClustDiff   -> Sumw2();
   hEvtHCalLeadTruClustVsPar  -> Sumw2();
 
+  // initialize becal histograms
+  const unsigned long nLayerBin(50);
+  const unsigned long rLayerBin[CONSTANTS::NRange] = {0, 50};
+  // scifi reconstructed hit histograms
+  hSciFiRecHitNLayer         = new TH1I("hSciFiRecHitNLayer",      "Barrel SciFi", nLayerBin, rLayerBin[0], rLayerBin[1]);
+  hSciFiRecHitPhi            = new TH1D("hSciFiRecHitPhi",         "Barrel SciFi", nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hSciFiRecHitEta            = new TH1D("hSciFiRecHitEta",         "Barrel SciFi", nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hSciFiRecHitEne            = new TH1D("hSciFiRecHitEne",         "Barrel SciFi", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hSciFiRecHitPosZ           = new TH1D("hSciFiRecHitPosZ",        "Barrel SciFi", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
+  hSciFiRecHitParDiff        = new TH1D("hSciFiRecHitParDiff",     "Barrel SciFi", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hSciFiRecHitPosYvsX        = new TH2D("hSciFiRecHitPosYvsX",     "Barrel SciFi", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hSciFiRecHitEtaVsPhi       = new TH2D("hSciFiRecHitEtaVsPhi",    "Barrel SciFi", nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hSciFiRecHitVsParEne       = new TH2D("hSciFiRecHitVsParEne",    "Barrel SciFi", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hSciFiRecHitEneVsNLayer    = new TH2D("hSciFiRecHitEneVsNLayer", "Barrel SciFi", nLayerBin, rLayerBin[0], rLayerBin[1], nEneBin,   rEneBin[0],   rEneBin[1]);
+  // imaging reconstructed hit histograms
+  hImageRecHitNLayer         = new TH1I("hImageRecHitNLayer",      "Barrel Image", nLayerBin, rLayerBin[0], rLayerBin[1]);
+  hImageRecHitPhi            = new TH1D("hImageRecHitPhi",         "Barrel Image", nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hImageRecHitEta            = new TH1D("hImageRecHitEta",         "Barrel Image", nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hImageRecHitEne            = new TH1D("hImageRecHitEne",         "Barrel Image", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hImageRecHitPosZ           = new TH1D("hImageRecHitPosZ",        "Barrel Image", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
+  hImageRecHitParDiff        = new TH1D("hImageRecHitParDiff",     "Barrel Image", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hImageRecHitPosYvsX        = new TH2D("hImageRecHitPosYvsX",     "Barrel Image", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hImageRecHitEtaVsPhi       = new TH2D("hImageRecHitEtaVsPhi",    "Barrel Image", nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hImageRecHitVsParEne       = new TH2D("hImageRecHitVsParEne",    "Barrel Image", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hImageRecHitEneVsNLayer    = new TH2D("hImageRecHitEneVsNLayer", "Barrel Image", nLayerBin, rLayerBin[0], rLayerBin[1], nEneBin,   rEneBin[0],   rEneBin[1]);
   // reco. bemc cluster histograms
-  hECalClustPhi           = new TH1D("hECalClustPhi",           "Barrel ECal", nPhiBin,   rPhiBin[0],   rPhiBin[1]);
-  hECalClustEta           = new TH1D("hECalClustEta",           "Barrel ECal", nEtaBin,   rEtaBin[0],   rEtaBin[1]);
-  hECalClustEne           = new TH1D("hECalClustEne",           "Barrel ECal", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hECalClustPosZ          = new TH1D("hECalClustPosZ",          "Barrel ECal", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
-  hECalClustNumHit        = new TH1I("hECalClustNumHit",        "Barrel ECal", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hECalClustParDiff       = new TH1D("hECalClustParDiff",       "Barrel ECal", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hECalClustPosYvsX       = new TH2D("hECalClustPosYvsX",       "Barrel ECal", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
-  hECalClustEtaVsPhi      = new TH2D("hECalClustEtaVsPhi",      "Barrel ECal", nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
-  hECalClustVsParEne      = new TH2D("hECalClustVsParEne",      "Barrel ECal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hECalClustPhi              = new TH1D("hECalClustPhi",      "Barrel ECal", nPhiBin,   rPhiBin[0],   rPhiBin[1]);
+  hECalClustEta              = new TH1D("hECalClustEta",      "Barrel ECal", nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hECalClustEne              = new TH1D("hECalClustEne",      "Barrel ECal", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hECalClustPosZ             = new TH1D("hECalClustPosZ",     "Barrel ECal", nPosLoBin, rPosLoBin[0], rPosLoBin[1]);
+  hECalClustNumHit           = new TH1I("hECalClustNumHit",   "Barrel ECal", nNumBin,   rNumBin[0],   rNumBin[1]);
+  hECalClustParDiff          = new TH1D("hECalClustParDiff",  "Barrel ECal", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
+  hECalClustPosYvsX          = new TH2D("hECalClustPosYvsX",  "Barrel ECal", nPosTrBin, rPosTrBin[0], rPosTrBin[1], nPosTrBin, rPosTrBin[0], rPosTrBin[1]);
+  hECalClustEtaVsPhi         = new TH2D("hECalClustEtaVsPhi", "Barrel ECal", nPhiBin,   rPhiBin[0],   rPhiBin[1],   nEtaBin,   rEtaBin[0],   rEtaBin[1]);
+  hECalClustVsParEne         = new TH2D("hECalClustVsParEne", "Barrel ECal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  // scifi hit event-wise histogram
+  hEvtSciFiSumEne            = new TH1D("hEvtSciFiSumEne",          "Barrel SciFi", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtSciFiSumEneVsNLayer    = new TH2D("hEvtSciFiSumEneVsNLayer",  "Barrel SciFi", nLayerBin, rLayerBin[0], rLayerBin[1], nEneBin, rEneBin[0], rEneBin[1]);
+  hEvtSciFiVsHCalHitSumEne   = new TH2D("hEvtSciFiVsHCalHitSumEne", "Barrel SciFi", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin, rEneBin[0], rEneBin[1]);
+  // imaging hit event-wise histogram
+  hEvtImageSumEne            = new TH1D("hEvtImageSumEne",          "Barrel Image", nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtImageSumEneVsNLayer    = new TH2D("hEvtImageSumEneVsNLayer",  "Barrel Image", nLayerBin, rLayerBin[0], rLayerBin[1], nEneBin, rEneBin[0], rEneBin[1]);
+  hEvtImageVsHCalHitSumEne   = new TH2D("hEvtImageVsHCalHitSumEne", "Barrel Image", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin, rEneBin[0], rEneBin[1]);
   // bemc cluster event-wise histograms
-  hEvtECalNumClust        = new TH1I("hEvtECalNumClust",        "Barrel ECal", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtECalSumClustEne     = new TH1D("hEvtECalSumClustEne",     "Barrel ECal", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtECalSumClustDiff    = new TH1D("hEvtECalSumClustDiff",    "Barrel ECal", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtECalSumClustVsPar   = new TH2D("hEvtECalSumClustVsPar",   "Barrel ECal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtECalNumClust           = new TH1I("hEvtECalNumClust",          "Barrel ECal", nNumBin,  rNumBin[0],  rNumBin[1]);
+  hEvtECalSumClustEne        = new TH1D("hEvtECalSumClustEne",       "Barrel ECal", nEneBin,  rEneBin[0],  rEneBin[1]);
+  hEvtECalSumClustDiff       = new TH1D("hEvtECalSumClustDiff",      "Barrel ECal", nDiffBin, rDiffBin[0], rDiffBin[1]);
+  hEvtECalSumClustVsPar      = new TH2D("hEvtECalSumClustVsPar",     "Barrel ECal", nEneBin,  rEneBin[0],  rEneBin[1], nEneBin, rEneBin[0], rEneBin[1]);
+  hEvtECalVsHCalSumClustEne  = new TH2D("hEvtECalVsHCalSumClustEne", "Barrel ECal", nEneBin,  rEneBin[0],  rEneBin[1], nEneBin, rEneBin[0], rEneBin[1]);
   // bemc lead cluster event-wise histograms
-  hEvtECalLeadClustNumHit = new TH1I("hEvtECalLeadClustNumHit", "Barrel ECal", nNumBin,   rNumBin[0],   rNumBin[1]);
-  hEvtECalLeadClustEne    = new TH1D("hEvtECalLeadClustEne",    "Barrel ECal", nEneBin,   rEneBin[0],   rEneBin[1]);
-  hEvtECalLeadClustDiff   = new TH1D("hEvtECalLeadClustDiff",   "Barrel ECal", nDiffBin,  rDiffBin[0],  rDiffBin[1]);
-  hEvtECalLeadClustVsPar  = new TH2D("hEvtECalLeadClustVsPar",  "Barrel ECal", nEneBin,   rEneBin[0],   rEneBin[1],   nEneBin,   rEneBin[0],   rEneBin[1]);
+  hEvtECalLeadClustNumHit    = new TH1I("hEvtECalLeadClustNumHit",    "Barrel ECal", nNumBin,  rNumBin[0],  rNumBin[1]);
+  hEvtECalLeadClustEne       = new TH1D("hEvtECalLeadClustEne",       "Barrel ECal", nEneBin,  rEneBin[0],  rEneBin[1]);
+  hEvtECalLeadClustDiff      = new TH1D("hEvtECalLeadClustDiff",      "Barrel ECal", nDiffBin, rDiffBin[0], rDiffBin[1]);
+  hEvtECalLeadClustVsPar     = new TH2D("hEvtECalLeadClustVsPar",     "Barrel ECal", nEneBin,  rEneBin[0],  rEneBin[1], nEneBin, rEneBin[0], rEneBin[1]);
+  hEvtECalVsHCalLeadClustEne = new TH2D("hEvtECalVsHCalLeadClustEne", "Barrel ECal", nEneBin,  rEneBin[0],  rEneBin[1], nEneBin, rEneBin[0], rEneBin[1]);
+  // scifi reconstructed hit errors
+  hSciFiRecHitNLayer         -> Sumw2();
+  hSciFiRecHitPhi            -> Sumw2();
+  hSciFiRecHitEta            -> Sumw2();
+  hSciFiRecHitEne            -> Sumw2();
+  hSciFiRecHitPosZ           -> Sumw2();
+  hSciFiRecHitParDiff        -> Sumw2();
+  hSciFiRecHitPosYvsX        -> Sumw2();
+  hSciFiRecHitEtaVsPhi       -> Sumw2();
+  hSciFiRecHitVsParEne       -> Sumw2();
+  hSciFiRecHitEneVsNLayer    -> Sumw2();
+  // imaging reconstructed hit errors
+  hImageRecHitNLayer         -> Sumw2();
+  hImageRecHitPhi            -> Sumw2();
+  hImageRecHitEta            -> Sumw2();
+  hImageRecHitEne            -> Sumw2();
+  hImageRecHitPosZ           -> Sumw2();
+  hImageRecHitParDiff        -> Sumw2();
+  hImageRecHitPosYvsX        -> Sumw2();
+  hImageRecHitEtaVsPhi       -> Sumw2();
+  hImageRecHitVsParEne       -> Sumw2();
+  hImageRecHitEneVsNLayer    -> Sumw2();
   // bemc reconstructed cluster errors
-  hECalClustEta           -> Sumw2();
-  hECalClustPhi           -> Sumw2();
-  hECalClustEne           -> Sumw2();
-  hECalClustPosZ          -> Sumw2();
-  hECalClustNumHit        -> Sumw2();
-  hECalClustParDiff       -> Sumw2();
-  hECalClustPosYvsX       -> Sumw2();
-  hECalClustEtaVsPhi      -> Sumw2();
-  hECalClustVsParEne      -> Sumw2();
+  hECalClustEta              -> Sumw2();
+  hECalClustPhi              -> Sumw2();
+  hECalClustEne              -> Sumw2();
+  hECalClustPosZ             -> Sumw2();
+  hECalClustNumHit           -> Sumw2();
+  hECalClustParDiff          -> Sumw2();
+  hECalClustPosYvsX          -> Sumw2();
+  hECalClustEtaVsPhi         -> Sumw2();
+  hECalClustVsParEne         -> Sumw2();
+  // scifi hit event-wise histogram
+  hEvtSciFiSumEne            -> Sumw2();
+  hEvtSciFiSumEneVsNLayer    -> Sumw2();
+  hEvtSciFiVsHCalHitSumEne   -> Sumw2();
+  // imaging hit event-wise histogram
+  hEvtImageSumEne            -> Sumw2();
+  hEvtImageSumEneVsNLayer    -> Sumw2();
+  hEvtImageVsHCalHitSumEne   -> Sumw2();
   // bemc cluster event-wise errors
-  hEvtECalNumClust        -> Sumw2();
-  hEvtECalSumClustEne     -> Sumw2();
-  hEvtECalSumClustDiff    -> Sumw2();
-  hEvtECalSumClustVsPar   -> Sumw2();
+  hEvtECalNumClust           -> Sumw2();
+  hEvtECalSumClustEne        -> Sumw2();
+  hEvtECalSumClustDiff       -> Sumw2();
+  hEvtECalSumClustVsPar      -> Sumw2();
+  hEvtECalVsHCalLeadClustEne -> Sumw2();
   // bemc lead cluster event-wise errors
-  hEvtECalLeadClustNumHit -> Sumw2();
-  hEvtECalLeadClustEne    -> Sumw2();
-  hEvtECalLeadClustDiff   -> Sumw2();
-  hEvtECalLeadClustVsPar  -> Sumw2();
+  hEvtECalLeadClustNumHit    -> Sumw2();
+  hEvtECalLeadClustEne       -> Sumw2();
+  hEvtECalLeadClustDiff      -> Sumw2();
+  hEvtECalLeadClustVsPar     -> Sumw2();
+  hEvtECalVsHCalLeadClustEne -> Sumw2();
+
+  // calibration variables
+  const std::vector<std::string> vecCalibVars = {
+    "ePar",
+    "fracParVsLeadBHCal",
+    "fracParVsLeadBEMC",
+    "fracParVsSumBHCal",
+    "fracParVsSumBEMC",
+    "fracLeadBHCalVsBEMC",
+    "fracSumBHCalVsBEMC",
+    "eLeadBHCal",
+    "eLeadBEMC",
+    "eSumBHCal",
+    "eSumBEMC",
+    "diffLeadBHCal",
+    "diffLeadBEMC",
+    "diffSumBHCal",
+    "diffSumBEMC",
+    "nHitsLeadBHCal",
+    "nHitsLeadBEMC",
+    "nClustBHCal",
+    "nClustBEMC",
+    "hLeadBHCal",
+    "hLeadBEMC",
+    "fLeadBHCal",
+    "fLeadBEMC",
+    "eLeadImage",
+    "eSumImage",
+    "eLeadSciFi",
+    "eSumSciFi",
+    "nClustImage",
+    "nClustSciFi",
+    "hLeadImage",
+    "hLeadSciFi",
+    "fLeadImage",
+    "fLeadSciFi",
+    "eSumSciFiLayer1",
+    "eSumSciFiLayer2",
+    "eSumSciFiLayer3",
+    "eSumSciFiLayer4",
+    "eSumSciFiLayer5",
+    "eSumSciFiLayer6",
+    "eSumSciFiLayer7",
+    "eSumSciFiLayer8",
+    "eSumSciFiLayer9",
+    "eSumSciFiLayer10",
+    "eSumSciFiLayer11",
+    "eSumSciFiLayer12",
+    "eSumImageLayer1",
+    "eSumImageLayer2",
+    "eSumImageLayer3",
+    "eSumImageLayer4",
+    "eSumImageLayer5",
+    "eSumImageLayer6"
+  };
+
+  // convert to ntuple argument
+  std::string argCalibVars("");
+  for (size_t iCalibVar = 0; iCalibVar < vecCalibVars.size(); iCalibVar++) {
+    argCalibVars.append(vecCalibVars[iCalibVar]);
+    if ((iCalibVar + 1) != vecCalibVars.size()) {
+      argCalibVars.append(":");
+    }
+  }
 
   // ntuple for calibration
-  ntForCalibration = new TNtuple("ntForCalibration", "For Calibration", "ePar:fracParVsLeadBHCal:fracParVsLeadBEMC:fracParVsSumBHCal:fracParVsSumBEMC:fracLeadBHCalVsBEMC:fracSumBHCalVsBEMC:eLeadBHCal:eLeadBEMC:eSumBHCal:eSumBEMC:diffLeadBHCal:diffLeadBEMC:diffSumBHCal:diffSumBEMC:nHitsLeadBHCal:nHitsLeadBEMC:nClustBHCal:nClustBEMC:hLeadBHCal:hLeadBEMC:fLeadBHCal:fLeadBEMC:eLeadImage:eSumImage:eLeadSciFi:eSumSciFi:nClustImage:nClustSciFi:hLeadImage:hLeadSciFi:fLeadImage:fLeadSciFi");
+  ntForCalibration = new TNtuple("ntForCalibration", "For Calibration", argCalibVars.c_str());
   return;
 
 }  // end 'InitWithGlobalRootLock()'
@@ -302,10 +437,12 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   }  // end 1st bhcal hit loop
 
   // if hit sum is 0, skip event
+/*  TEST [07.17.2023]
   const bool isHCalHitSumNonzero = (eHCalHitSum > 0.);
   if (!isHCalHitSumNonzero) {
     return;
   }
+*/
 
   // MC particle properties
   float  cMcPar(0.);
@@ -578,6 +715,91 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
     ++iTruHCalClust;
   }  // end true bhcal cluster loop
 
+  // for scifi/image hit sums
+  double eSciFiHitSum(0.);
+  double eImageHitSum(0.);
+
+  double eSciFiHitSumVsNLayer[CONSTANTS::NSciFiLayer];
+  double eImageHitSumVsNLayer[CONSTANTS::NImageLayer];
+  for (size_t iSciFi = 0; iSciFi < CONSTANTS::NSciFiLayer; iSciFi++) {
+    eSciFiHitSumVsNLayer[iSciFi] = 0.;
+  }
+  for (size_t iImage = 0; iImage < CONSTANTS::NImageLayer; iImage++) {
+    eImageHitSumVsNLayer[iImage] = 0.;
+  }
+
+  // reco. scifi hit loop
+  unsigned long nSciFiHit(0);
+  for (auto scifiHit : scifiRecHits()) {
+
+    // grab hit properties
+    const auto nLayerSciFi  = scifiHit -> getLayer();
+    const auto iLayerSciFi  = nLayerSciFi - 1;
+    const auto rSciFiHitX   = scifiHit -> getPosition().x;
+    const auto rSciFiHitY   = scifiHit -> getPosition().y;
+    const auto rSciFiHitZ   = scifiHit -> getPosition().z;
+    const auto eSciFiHit    = scifiHit -> getEnergy();
+    const auto rSciFiHitS   = std::sqrt((rSciFiHitX * rSciFiHitX) + (rSciFiHitY * rSciFiHitY));
+    const auto rSciFiHitR   = std::sqrt((rSciFiHitS * rSciFiHitS) + (rSciFiHitZ * rSciFiHitZ));
+    const auto fSciFiHit    = boost::math::sign(rSciFiHitY) * acos(rSciFiHitX / rSciFiHitS);
+    const auto tSciFiHit    = std::acos(rSciFiHitZ / rSciFiHitR);
+    const auto hSciFiHit    = (-1.) * std::log(std::atan(tSciFiHit / 2.));
+    const auto diffSciFiHit = (eSciFiHit - eMcPar) / eMcPar;
+
+    // fill hit histograms
+    hSciFiRecHitNLayer      -> Fill(nLayerSciFi);
+    hSciFiRecHitPhi         -> Fill(fSciFiHit);
+    hSciFiRecHitEta         -> Fill(hSciFiHit);
+    hSciFiRecHitEne         -> Fill(eSciFiHit);
+    hSciFiRecHitPosZ        -> Fill(rSciFiHitZ);
+    hSciFiRecHitParDiff     -> Fill(diffSciFiHit);
+    hSciFiRecHitPosYvsX     -> Fill(rSciFiHitX,  rSciFiHitY);
+    hSciFiRecHitEtaVsPhi    -> Fill(fSciFiHit,   hSciFiHit);
+    hSciFiRecHitVsParEne    -> Fill(eMcPar,      eSciFiHit);
+    hSciFiRecHitEneVsNLayer -> Fill(nLayerSciFi, eSciFiHit);
+
+    // increment sums/counters
+    eSciFiHitSumVsNLayer[iLayerSciFi] += eSciFiHit;
+    eSciFiHitSum                      += eSciFiHit;
+    ++nSciFiHit;
+  }  // end scifi hit loop
+
+  // reco. image hit loop
+  unsigned long nImageHit(0);
+  for (auto imageHit : imageRecHits()) {
+
+    // grab hit properties
+    const auto nLayerImage  = imageHit -> getLayer();
+    const auto iLayerImage  = nLayerImage - 1;
+    const auto rImageHitX   = imageHit -> getPosition().x;
+    const auto rImageHitY   = imageHit -> getPosition().y;
+    const auto rImageHitZ   = imageHit -> getPosition().z;
+    const auto eImageHit    = imageHit -> getEnergy();
+    const auto rImageHitS   = std::sqrt((rImageHitX * rImageHitX) + (rImageHitY * rImageHitY));
+    const auto rImageHitR   = std::sqrt((rImageHitS * rImageHitS) + (rImageHitZ * rImageHitZ));
+    const auto fImageHit    = boost::math::sign(rImageHitY) * acos(rImageHitX / rImageHitS);
+    const auto tImageHit    = std::acos(rImageHitZ / rImageHitR);
+    const auto hImageHit    = (-1.) * std::log(std::atan(tImageHit / 2.));
+    const auto diffImageHit = (eImageHit - eMcPar) / eMcPar;
+
+    // fill hit histograms
+    hImageRecHitNLayer      -> Fill(nLayerImage);
+    hImageRecHitPhi         -> Fill(fImageHit);
+    hImageRecHitEta         -> Fill(hImageHit);
+    hImageRecHitEne         -> Fill(eImageHit);
+    hImageRecHitPosZ        -> Fill(rImageHitZ);
+    hImageRecHitParDiff     -> Fill(diffImageHit);
+    hImageRecHitPosYvsX     -> Fill(rImageHitX,  rImageHitY);
+    hImageRecHitEtaVsPhi    -> Fill(fImageHit,   hImageHit);
+    hImageRecHitVsParEne    -> Fill(eMcPar,      eImageHit);
+    hImageRecHitEneVsNLayer -> Fill(nLayerImage, eImageHit);
+
+    // increment sums/counters
+    eImageHitSumVsNLayer[iLayerImage] += eImageHit;
+    eImageHitSum                      += eImageHit;
+    ++nImageHit;
+  }  // end scifi hit loop
+
   // for highest energy bemc clusters
   int    iLeadECalClust(-1);
   int    iLeadSciFiClust(-1);
@@ -742,7 +964,7 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   hEvtHCalSumClustEne        -> Fill(eHCalClustSum);
   hEvtHCalSumClustDiff       -> Fill(diffHCalClustSum);
   hEvtHCalNumClustVsHit      -> Fill(nHCalHit, nHCalClust);
-  hEvtHCalSumClustVsPar      -> Fill(eMcPar, eHCalClustSum);
+  hEvtHCalSumClustVsPar      -> Fill(eMcPar,   eHCalClustSum);
   // fill lead cluster event-wise bhcal histograms
   hEvtHCalLeadClustNumHit    -> Fill(nHitLeadHCalClust);
   hEvtHCalLeadClustEne       -> Fill(eLeadHCalClust);
@@ -753,23 +975,39 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   hEvtHCalSumTruClustEne     -> Fill(eTruHCalClustSum);
   hEvtHCalSumTruClustDiff    -> Fill(diffTruHCalClustSum);
   hEvtHCalNumTruClustVsClust -> Fill(nHCalClust, nTruHCalClust);
-  hEvtHCalSumTruClustVsPar   -> Fill(eMcPar, eTruHCalClustSum);
+  hEvtHCalSumTruClustVsPar   -> Fill(eMcPar,     eTruHCalClustSum);
   // fill lead truth cluster event-wise bhcal histograms
   hEvtHCalLeadTruClustNumHit -> Fill(nHitLeadTruHCalClust);
   hEvtHCalLeadTruClustEne    -> Fill(eLeadTruHCalClust);
   hEvtHCalLeadTruClustDiff   -> Fill(diffLeadTruHCalClust);
   hEvtHCalLeadTruClustVsPar  -> Fill(eMcPar, eLeadTruHCalClust);
 
+  // fill hit event-wise scifi histograms
+  hEvtSciFiSumEne          -> Fill(eSciFiHitSum);
+  hEvtSciFiVsHCalHitSumEne -> Fill(eHCalHitSum, eSciFiHitSum);
+  for (size_t iSciFi = 0; iSciFi < CONSTANTS::NSciFiLayer; iSciFi++) {
+    hEvtSciFiSumEneVsNLayer -> Fill(iSciFi + 1, eSciFiHitSumVsNLayer[iSciFi]);
+  }
+
+  // fill hit event-wise image histograms
+  hEvtImageSumEne          -> Fill(eImageHitSum);
+  hEvtImageVsHCalHitSumEne -> Fill(eHCalHitSum, eImageHitSum);
+  for (size_t iImage = 0; iImage < CONSTANTS::NImageLayer; iImage++) {
+    hEvtImageSumEneVsNLayer -> Fill(iImage + 1, eImageHitSumVsNLayer[iImage]);
+  }
+
   // fill cluster event-wise bhcal histograms
-  hEvtECalNumClust        -> Fill(nECalClust);
-  hEvtECalSumClustEne     -> Fill(eECalClustSum);
-  hEvtECalSumClustDiff    -> Fill(diffECalClustSum);
-  hEvtECalSumClustVsPar   -> Fill(eMcPar, eECalClustSum);
+  hEvtECalNumClust          -> Fill(nECalClust);
+  hEvtECalSumClustEne       -> Fill(eECalClustSum);
+  hEvtECalSumClustDiff      -> Fill(diffECalClustSum);
+  hEvtECalSumClustVsPar     -> Fill(eMcPar,        eECalClustSum);
+  hEvtECalVsHCalSumClustEne -> Fill(eHCalClustSum, eECalClustSum);
   // fill lead cluster event-wise bhcal histograms
-  hEvtECalLeadClustNumHit -> Fill(nHitLeadECalClust);
-  hEvtECalLeadClustEne    -> Fill(eLeadECalClust);
-  hEvtECalLeadClustDiff   -> Fill(diffLeadECalClust);
-  hEvtECalLeadClustVsPar  -> Fill(eMcPar, eLeadECalClust);
+  hEvtECalLeadClustNumHit    -> Fill(nHitLeadECalClust);
+  hEvtECalLeadClustEne       -> Fill(eLeadECalClust);
+  hEvtECalLeadClustDiff      -> Fill(diffLeadECalClust);
+  hEvtECalLeadClustVsPar     -> Fill(eMcPar,         eLeadECalClust);
+  hEvtECalVsHCalLeadClustEne -> Fill(eLeadHCalClust, eLeadECalClust);
 
   // set variables for calibration tuple
   varsForCalibration[0]  = (Float_t) eMcPar;
@@ -805,6 +1043,24 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   varsForCalibration[30] = (Float_t) hLeadSciFiClust;
   varsForCalibration[31] = (Float_t) fLeadImageClust;
   varsForCalibration[32] = (Float_t) fLeadSciFiClust;
+  varsForCalibration[33] = (Float_t) eSciFiHitSumVsNLayer[0];
+  varsForCalibration[34] = (Float_t) eSciFiHitSumVsNLayer[1];
+  varsForCalibration[35] = (Float_t) eSciFiHitSumVsNLayer[2];
+  varsForCalibration[36] = (Float_t) eSciFiHitSumVsNLayer[3];
+  varsForCalibration[37] = (Float_t) eSciFiHitSumVsNLayer[4];
+  varsForCalibration[38] = (Float_t) eSciFiHitSumVsNLayer[5];
+  varsForCalibration[39] = (Float_t) eSciFiHitSumVsNLayer[6];
+  varsForCalibration[40] = (Float_t) eSciFiHitSumVsNLayer[7];
+  varsForCalibration[41] = (Float_t) eSciFiHitSumVsNLayer[8];
+  varsForCalibration[42] = (Float_t) eSciFiHitSumVsNLayer[9];
+  varsForCalibration[43] = (Float_t) eSciFiHitSumVsNLayer[10];
+  varsForCalibration[44] = (Float_t) eSciFiHitSumVsNLayer[11];
+  varsForCalibration[45] = (Float_t) eImageHitSumVsNLayer[0];
+  varsForCalibration[46] = (Float_t) eImageHitSumVsNLayer[1];
+  varsForCalibration[47] = (Float_t) eImageHitSumVsNLayer[2];
+  varsForCalibration[48] = (Float_t) eImageHitSumVsNLayer[3];
+  varsForCalibration[49] = (Float_t) eImageHitSumVsNLayer[4];
+  varsForCalibration[50] = (Float_t) eImageHitSumVsNLayer[5];
 
   // fill tuple
   ntForCalibration -> Fill(varsForCalibration);
@@ -1042,6 +1298,7 @@ void JCalibrateHCalWithImagingProcessor::FinishWithGlobalRootLock() {
   hEvtHCalLeadTruClustVsPar  -> GetYaxis() -> SetTitle(sEneTruClustLead.Data());
   hEvtHCalLeadTruClustVsPar  -> GetZaxis() -> SetTitle(sCount.Data());
 
+  // TODO add hit histogram axis titles
   // set reco. cluster bemc axis titles
   hECalClustPhi           -> GetXaxis() -> SetTitle(sPhiClust.Data());
   hECalClustPhi           -> GetYaxis() -> SetTitle(sCount.Data());

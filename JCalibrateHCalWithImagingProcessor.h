@@ -28,14 +28,20 @@
 #include <edm4eic/ProtoCluster.h>
 #include <edm4eic/Cluster.h>
 
-// global constants
-static const size_t NCalibVars(33);
-static const size_t NRange(2);
-static const size_t NComp(3);
 
 
+// JCalibrateWithImagingProcessor definition ----------------------------------
 
 class JCalibrateHCalWithImagingProcessor : public JEventProcessorSequentialRoot {
+
+  // global constants
+  enum CONSTANTS {
+    NCalibVars  = 51,
+    NSciFiLayer = 12,
+    NImageLayer = 6,
+    NRange      = 2,
+    NComp       = 3
+  };
 
   private:
 
@@ -43,10 +49,12 @@ class JCalibrateHCalWithImagingProcessor : public JEventProcessorSequentialRoot 
     PrefetchT<edm4eic::ReconstructedParticle> genParticles       = {this, "GeneratedParticles"};
     PrefetchT<edm4eic::CalorimeterHit>        bhcalRecHits       = {this, "HcalBarrelRecHits"};
     PrefetchT<edm4eic::Cluster>               bhcalClusters      = {this, "HcalBarrelClusters"};
+    PrefetchT<edm4eic::Cluster>               bhcalTruthClusters = {this, "HcalBarrelTruthClusters"};
+    PrefetchT<edm4eic::CalorimeterHit>        scifiRecHits       = {this, "EcalBarrelScFiRecHits"};
+    PrefetchT<edm4eic::CalorimeterHit>        imageRecHits       = {this, "EcalBarrelImagingRecHits"};
     PrefetchT<edm4eic::Cluster>               bemcClusters       = {this, "EcalBarrelImagingMergedClusters"};
     PrefetchT<edm4eic::Cluster>               scifiClusters      = {this, "EcalBarrelScFiClusters"};
     PrefetchT<edm4eic::Cluster>               imageClusters      = {this, "EcalBarrelImagingClusters"};
-    PrefetchT<edm4eic::Cluster>               bhcalTruthClusters = {this, "HcalBarrelTruthClusters"};
 
     // particle histograms
     TH1D *hParChrg                   = nullptr;
@@ -136,29 +144,61 @@ class JCalibrateHCalWithImagingProcessor : public JEventProcessorSequentialRoot 
     TH1D *hEvtHCalLeadTruClustDiff   = nullptr;
     TH2D *hEvtHCalLeadTruClustVsPar  = nullptr;
 
+    // scifi reconstructed hit histograms
+    TH1I *hSciFiRecHitNLayer         = nullptr;
+    TH1D *hSciFiRecHitEta            = nullptr;
+    TH1D *hSciFiRecHitPhi            = nullptr;
+    TH1D *hSciFiRecHitEne            = nullptr;
+    TH1D *hSciFiRecHitPosZ           = nullptr;
+    TH1D *hSciFiRecHitParDiff        = nullptr;
+    TH2D *hSciFiRecHitPosYvsX        = nullptr;
+    TH2D *hSciFiRecHitEtaVsPhi       = nullptr;
+    TH2D *hSciFiRecHitVsParEne       = nullptr;
+    TH2D *hSciFiRecHitEneVsNLayer    = nullptr;
+    // image reconstructed hit histograms
+    TH1I *hImageRecHitNLayer         = nullptr;
+    TH1D *hImageRecHitEta            = nullptr;
+    TH1D *hImageRecHitPhi            = nullptr;
+    TH1D *hImageRecHitEne            = nullptr;
+    TH1D *hImageRecHitPosZ           = nullptr;
+    TH1D *hImageRecHitParDiff        = nullptr;
+    TH2D *hImageRecHitPosYvsX        = nullptr;
+    TH2D *hImageRecHitEtaVsPhi       = nullptr;
+    TH2D *hImageRecHitVsParEne       = nullptr;
+    TH2D *hImageRecHitEneVsNLayer    = nullptr;
     // bemc reconstructed cluster histograms
-    TH1D *hECalClustEta           = nullptr;
-    TH1D *hECalClustPhi           = nullptr;
-    TH1D *hECalClustEne           = nullptr;
-    TH1D *hECalClustPosZ          = nullptr;
-    TH1I *hECalClustNumHit        = nullptr;
-    TH1D *hECalClustParDiff       = nullptr;
-    TH2D *hECalClustPosYvsX       = nullptr;
-    TH2D *hECalClustEtaVsPhi      = nullptr;
-    TH2D *hECalClustVsParEne      = nullptr;
+    TH1D *hECalClustEta              = nullptr;
+    TH1D *hECalClustPhi              = nullptr;
+    TH1D *hECalClustEne              = nullptr;
+    TH1D *hECalClustPosZ             = nullptr;
+    TH1I *hECalClustNumHit           = nullptr;
+    TH1D *hECalClustParDiff          = nullptr;
+    TH2D *hECalClustPosYvsX          = nullptr;
+    TH2D *hECalClustEtaVsPhi         = nullptr;
+    TH2D *hECalClustVsParEne         = nullptr;
+    // scifi hit event-wise histograms
+    TH1D *hEvtSciFiSumEne            = nullptr;
+    TH2D *hEvtSciFiSumEneVsNLayer    = nullptr;
+    TH2D *hEvtSciFiVsHCalHitSumEne   = nullptr;
+    // image hit event-wise histograms
+    TH1D *hEvtImageSumEne            = nullptr;
+    TH2D *hEvtImageSumEneVsNLayer    = nullptr;
+    TH2D *hEvtImageVsHCalHitSumEne   = nullptr;
     // bemc cluster event-wise histograms
-    TH1I *hEvtECalNumClust        = nullptr;
-    TH1D *hEvtECalSumClustEne     = nullptr;
-    TH1D *hEvtECalSumClustDiff    = nullptr;
-    TH2D *hEvtECalSumClustVsPar   = nullptr;
+    TH1I *hEvtECalNumClust           = nullptr;
+    TH1D *hEvtECalSumClustEne        = nullptr;
+    TH1D *hEvtECalSumClustDiff       = nullptr;
+    TH2D *hEvtECalSumClustVsPar      = nullptr;
+    TH2D *hEvtECalVsHCalSumClustEne  = nullptr;
     // bemc lead cluster event-wise histograms
-    TH1I *hEvtECalLeadClustNumHit = nullptr;
-    TH1D *hEvtECalLeadClustEne    = nullptr;
-    TH1D *hEvtECalLeadClustDiff   = nullptr;
-    TH2D *hEvtECalLeadClustVsPar  = nullptr;
+    TH1I *hEvtECalLeadClustNumHit    = nullptr;
+    TH1D *hEvtECalLeadClustEne       = nullptr;
+    TH1D *hEvtECalLeadClustDiff      = nullptr;
+    TH2D *hEvtECalLeadClustVsPar     = nullptr;
+    TH2D *hEvtECalVsHCalLeadClustEne = nullptr;
 
     // ntuple for calibration
-    Float_t  varsForCalibration[NCalibVars];
+    Float_t  varsForCalibration[CONSTANTS::NCalibVars];
     TNtuple *ntForCalibration;
 
   public:
@@ -167,9 +207,10 @@ class JCalibrateHCalWithImagingProcessor : public JEventProcessorSequentialRoot 
     JCalibrateHCalWithImagingProcessor() { SetTypeName(NAME_OF_THIS); }
 
     // inherited methods
-    void InitWithGlobalRootLock()                                      override;
+    void InitWithGlobalRootLock() override;
     void ProcessSequential(const std::shared_ptr<const JEvent>& event) override;
-    void FinishWithGlobalRootLock()                                    override;
-};
+    void FinishWithGlobalRootLock() override;
+
+};  // end JCalibrateHCalWithImagingProcessor definition
 
 // end ------------------------------------------------------------------------
