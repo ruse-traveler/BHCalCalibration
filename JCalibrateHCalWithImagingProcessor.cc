@@ -945,7 +945,7 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   const auto fracParVsLeadECal   = eLeadECalClust / eMcPar;
   const auto fracParVsSumHCal    = eHCalClustSum / eMcPar;
   const auto fracParVsSumECal    = eECalClustSum / eMcPar;
-  const auto fracLeadHCalVsECal  = eLeadECalClust / (eLeadHCalClust + eLeadHCalClust);
+  const auto fracLeadHCalVsECal  = eLeadECalClust / (eLeadHCalClust + eLeadECalClust);
   const auto fracSumHCalVsECal   = eECalClustSum / (eHCalClustSum + eECalClustSum);
   const auto diffHCalHitSum      = (eHCalHitSum - eMcPar) / eMcPar;
   const auto diffHCalClustSum    = (eHCalClustSum - eMcPar) / eMcPar;
