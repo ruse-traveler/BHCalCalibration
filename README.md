@@ -1,9 +1,7 @@
-This repository contains code to evaluate the response of the simulated Hadronic Calorimeter of the ePIC calorimeter. There are a few pieces of code:
+This repository contains code to evaluate the response of the simulated ePIC Barrel Hadronic Calorimeter (BHCal). There are a few pieces of code:
 
-  - `JCalibrateHCal`: A simple JANA plugin to compare the reconstructed hit and cluster energy in the HCal to simulated particles.
-  - `PCalibrateHCal.C`: A macro which uses PODIO's ROOTReader to perform the same analysis as `JCalibrateHCal` with the PODIO output from EICrecon
-
-Both `JCalibrateHCal` and `PCalibrateHCal.C` must be run in the EIC environment.
+  - `JCalibrateHCalWithImaging`: A simple JANA plugin to compare the reconstructed hit and cluster energy in the BHCal and BECal to simulated particles. This prepares a TNtuple to be read in by a ROOT macro to train a TMVA model.
+  - `TrainAndApplyBHCalCalibration.cxx`: A ROOT macro which reads in the TNtuple from `JCalibrateHCalWithImaging` and trains a TMVA model according to set specifications.
 
 ### JCalibrateHCal Usage
 ```
@@ -15,7 +13,7 @@ cmake --build JCalibrateHCal/build --target install
 eicrecon -Pplugins=JCalibrateHCal <input edm4hep file>
 ```
 
-### PCalibrateHCal Usage
+### TrainAndApplyBHCalCalibration Usage
 ```
 root -b -q PCalibrateHCal.C
 ```
@@ -23,4 +21,7 @@ root -b -q PCalibrateHCal.C
 ---
 
 ### TODO items:
+  - [Major] Streamline training/application workflow
+  - [Major] Factor out resolution calculation in training/application macro
+  - [Major] Factor out histogram plotting operations in trainining/application macro
   - [Minor] Refactor histogram creation/style setting
