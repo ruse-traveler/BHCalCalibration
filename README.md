@@ -3,7 +3,9 @@ This repository contains code to evaluate the response of the simulated ePIC Bar
   - `JCalibrateHCalWithImaging`: Found in the `plugin` directory, this is a simple JANA plugin to compare the reconstructed hit and cluster energy in the BHCal and BECal to simulated particles. This also prepares a TNtuple to be read in by a ROOT macro to train a TMVA model.
   - `BHCalCalibration:` The source code is found in the `src` directory which is run with `DoBHCalCalibration.cxx`.  This ingests the TNtuple from `JCalibrateHCalWithImaging` and trains a TMVA model according to set specifications.
 
-There is also `TrainAndApplyBHCalCalibration.cxx`, a ROOT macro which does the same thing as the `BHCalCalibration` package.  It was put together to test training and applying a TMVA model in the same macro. 
+There is also `TrainAndApplyBHCalCalibration.cxx`, a ROOT macro which does the same thing as the `BHCalCalibration` package.  It was put together to test training and applying a TMVA model in the same macro.
+
+The older macros which trained and applied the TMVA model separately (`DoHCalCalibration.C` and `ApplyHCalCalibration.C` respectively) are currently kept the `macros` directory for posterity.
 
 ### JCalibrateHCal Usage
 
@@ -11,7 +13,7 @@ After compiling `EICrecon`, create and compile the plugin with:
 
 ```
 eicmkplugin.py JCalibrateHCal
-cp plugin/JCalibrateHCalProcessor.* $EICrecon_ROOT/JCalibrateHCal/
+cp <path to this repo>/plugin/JCalibrateHCalProcessor.* ./JCalibrateHCal/
 cmake -S JCalibrateHcal -B JCalibrateHCal/build
 cmake --build JCalibrateHCal/build --target install
 ```
@@ -26,7 +28,7 @@ eicrecon -Pplugins=JCalibrateHCal <input edm4hep file>
 
 Compile the source code first with:
 
-``
+```
 cd src/
 ./root-build
 ```
