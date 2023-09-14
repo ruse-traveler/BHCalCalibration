@@ -57,13 +57,19 @@ static const UInt_t NTxt(3);
 static const UInt_t NVtx(4);
 static const UInt_t NHist(4);
 static const UInt_t NRange(2);
+static const UInt_t NMethods(3);
 static const UInt_t NEneBins(10);
 static const UInt_t NTmvaVar(28);
 static const UInt_t NTmvaSpec(1);
+static const UInt_t NCalibBins(4);
+
+// tmva constants
+static const UInt_t NTmvaHistMax(100);
+static const string STmvaPrefix("TMVARegression");
 
 // default arguments
 static const string SInDef("../performance/eicrecon_output/single_particles/merged/forPerformanceStudy.withIndividualECalLayers_includedEPar7.e110th45n20Kneu.d20m7y2023.plugin.root");
-static const string SOutDef("StreamlineTest_Change0_PrunedTraining.train.root");
+static const string SOutDef("StreamlineTest_Change1_AddPrunedApplication.trainAndApply.root");
 static const string STupleDef("JCalibrateHCalWithImaging/ntForCalibration");
 
 
@@ -117,9 +123,14 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
     "eSumImageLayer6"
   };
   const string sTmvaSpec[NTmvaSpec] = {""};
+  const string sMethods[NMethods]   = {"LD", "MLP", "BDTG"};
+
+  // ecal cut parameters
+  const bool   doECalCut(false);
+  const double eneECalRange[NRange] = {0.5, 100.};
 
   // histogram parameters
-  const bool    isCalibrated[NHist] = {false, false, true, true};
+  const bool   isCalibrated[NHist] = {false, false, true, true};
   const string sHCalEne[NEneBins]  = {
     "hHCalEne_ene2",
     "hHCalEne_ene3",
@@ -144,11 +155,14 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
     "hHCalDiff_ene16",
     "hHCalDiff_ene20"
   };
+  const string sHCalCalibBase[NCalibBins] = {"hHCalCalib_ene2",  "hHCalCalib_ene5",  "hHCalCalib_ene10",  "hHCalCalib_ene20"};
 
   // generic resolution parameters
-  const double enePar[NEneBins]    = {2.,  3.,  4.,  5.,  6.,  8,   10.,  12.,  16.,  20.};
-  const double eneParMin[NEneBins] = {1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 9.5,  11.5, 13.5, 18.5};
-  const double eneParMax[NEneBins] = {2.5, 3.5, 4.5, 5.5, 6.5, 9.5, 11.5, 13.5, 18.5, 21.5};
+  const double enePar[NEneBins]        = {2.,  3.,  4.,  5.,  6.,  8,   10.,  12.,  16.,  20.};
+  const double eneParMin[NEneBins]     = {1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 9.5,  11.5, 13.5, 18.5};
+  const double eneParMax[NEneBins]     = {2.5, 3.5, 4.5, 5.5, 6.5, 9.5, 11.5, 13.5, 18.5, 21.5};
+  const double eneCalibMin[NCalibBins] = {1., 3., 7.,  13.};
+  const double eneCalibMax[NCalibBins] = {3., 7., 13., 27.};
 
   // reco vs. par ene resolution parameters
   const double xFitEneMin[NEneBins]  = {0., 0., 0., 1., 1.,  2.,  2.,  4.,  4.,  8.};
@@ -187,6 +201,15 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
     "fFitDiff_ene16",
     "fFitDiff_ene20"
   };
+
+  // calibrated reco vs. par ene resolution parameters
+  const double xFitCalibMin[NCalibBins]  = {0.5, 4.,  8.,  13.};
+  const double xFitCalibMax[NCalibBins]  = {5.5, 8.,  14., 23.};
+  const double ampCalibGuess[NCalibBins] = {1.,  1.,  1.,  1.};
+  const double muCalibGuess[NCalibBins]  = {3.,  6.,  11., 18.};
+  const double sigCalibGuess[NCalibBins] = {2.,  2.,  3.,  5.};
+  const string sFitCalibBase[NCalibBins] = {"fFitCalib_ene2", "fFitCalib_ene5", "fFitCalib_ene10", "fFitCalib_ene20"};
+
 
   // load input ---------------------------------------------------------------
 
@@ -361,12 +384,13 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
   TH1D *hHCalDiffBin[NEneBins];
 
   // histogram binning
-  const Ssiz_t  nEneBins(41);
-  const Ssiz_t  nDiffBins(700);
-  const Ssiz_t  nFracBins(305);
-  const float rEneBins[NRange]  = {-1.,   40.};
-  const float rDiffBins[NRange] = {-1.5,  5.5};
-  const float rFracBins[NRange] = {-0.05, 3.};
+  const size_t nEneBins(41);
+  const size_t nEneBins2D(410);
+  const size_t nDiffBins(700);
+  const size_t nFracBins(305);
+  const float  rEneBins[NRange]  = {-1.,   40.};
+  const float  rDiffBins[NRange] = {-1.5,  5.5};
+  const float  rFracBins[NRange] = {-0.05, 3.};
 
   // declare uncalibrated histograms
   hHCalFrac[0]            = new TH1D("hLeadHCalFrac_uncal",            "", nFracBins, rFracBins[0], rFracBins[1]);
@@ -511,6 +535,65 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
     hHCalEneBin[iEneBin]  -> Sumw2();
     hHCalDiffBin[iEneBin] -> Sumw2();
   }
+
+  // calibrated resolution histograms
+  TH1D *hHCalCalibBin[NMethods][NCalibBins];
+  TH2D *hCalibCalibVsPar[NMethods];
+  TH2D *hHCalCalibVsPar[NMethods];
+  TH2D *hHCalCalibVsCalib[NMethods];
+  TH2D *hHCalCalibVsECal[NMethods];
+  TH2D *hECalCalibVsPar[NMethods];
+  TH2D *hECalCalibVsCalib[NMethods];
+
+  // declare calibrated resolution histograms
+  for (UInt_t iMethod = 0; iMethod < NMethods; iMethod++) {
+    for (UInt_t iCalibBin = 0; iCalibBin < NCalibBins; iCalibBin++) {
+
+      // make name
+      TString sHCalCalib(sHCalCalibBase[iCalibBin].data());
+      sHCalCalib.Append("_");
+      sHCalCalib.Append(sMethods[iMethod].data());
+     
+      hHCalCalibBin[iMethod][iCalibBin] = new TH1D(sHCalCalib.Data(), "", nEneBins, rEneBins[0], rEneBins[1]);
+      hHCalCalibBin[iMethod][iCalibBin] -> Sumw2();
+    }
+
+    // make name
+    TString sCalibCalibVsPar("hCalibCalibVsPar");
+    TString sHCalCalibVsPar("hHCalCalibVsPar");
+    TString sHCalCalibVsCalib("hHCalCalibVsCalib");
+    TString sHCalCalibVsECal("hHCalCalibVsECal");
+    TString sECalCalibVsPar("hECalCalibVsPar");
+    TString sECalCalibVsCalib("hECalCalibVsCalib");
+    sCalibCalibVsPar.Append("_");
+    sHCalCalibVsPar.Append("_");
+    sHCalCalibVsCalib.Append("_");
+    sHCalCalibVsECal.Append("_");
+    sECalCalibVsPar.Append("_");
+    sECalCalibVsCalib.Append("_");
+    sCalibCalibVsPar.Append(sMethods[iMethod].data());
+    sHCalCalibVsPar.Append(sMethods[iMethod].data());
+    sHCalCalibVsCalib.Append(sMethods[iMethod].data());
+    sHCalCalibVsECal.Append(sMethods[iMethod].data());
+    sECalCalibVsPar.Append(sMethods[iMethod].data());
+    sECalCalibVsCalib.Append(sMethods[iMethod].data());
+
+    hCalibCalibVsPar[iMethod]  = new TH2D(sCalibCalibVsPar.Data(),  "", nEneBins,   rEneBins[0], rEneBins[1], nEneBins, rEneBins[0], rEneBins[1]);
+    hHCalCalibVsPar[iMethod]   = new TH2D(sHCalCalibVsPar.Data(),   "", nEneBins2D, rEneBins[0], rEneBins[1], nEneBins, rEneBins[0], rEneBins[1]);
+    hHCalCalibVsCalib[iMethod] = new TH2D(sHCalCalibVsCalib.Data(), "", nEneBins2D, rEneBins[0], rEneBins[1], nEneBins, rEneBins[0], rEneBins[1]);
+    hHCalCalibVsECal[iMethod]  = new TH2D(sHCalCalibVsECal.Data(),  "", nEneBins2D, rEneBins[0], rEneBins[1], nEneBins, rEneBins[0], rEneBins[1]);
+    hECalCalibVsPar[iMethod]   = new TH2D(sECalCalibVsPar.Data(),   "", nEneBins2D, rEneBins[0], rEneBins[1], nEneBins, rEneBins[0], rEneBins[1]);
+    hECalCalibVsCalib[iMethod] = new TH2D(sECalCalibVsCalib.Data(), "", nEneBins2D, rEneBins[0], rEneBins[1], nEneBins, rEneBins[0], rEneBins[1]);
+    hCalibCalibVsPar[iMethod]  -> Sumw2();
+    hHCalCalibVsPar[iMethod]   -> Sumw2();
+    hHCalCalibVsCalib[iMethod] -> Sumw2();
+    hHCalCalibVsECal[iMethod]  -> Sumw2();
+    hECalCalibVsPar[iMethod]   -> Sumw2();
+    hECalCalibVsCalib[iMethod] -> Sumw2();
+  }  // end method loop
+  cout << "    Declared resolution histograms.\n"
+       << "    Beginning application..."
+       << endl;
   cout << "    Declared output histograms." << endl;
 
   // loop over ntuple entries -------------------------------------------------
@@ -689,7 +772,7 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
   grResoDiff     -> SetName("grResoDiff");
   grResoEneHist  -> SetName("grResoEneHist");
   grResoDiffHist -> SetName("grResoDiffHist");
-  cout << "    Made resolution graphs." << endl;
+  cout << "    Made uncalibrated resolution graphs." << endl;
 
   // train tmva ---------------------------------------------------------------
 
@@ -737,18 +820,244 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
 
   // apply model --------------------------------------------------------------
 
-  /* TODO apply trained model here */
+  // default methods to be trained + tested
+  map<string, int> Use;
+  for (UInt_t iMethod = 0; iMethod < NMethods; iMethod++) {
+    const string sToUse(sMethods[iMethod].data());
+    Use[sToUse] = 1;
+  }
+  cout << "\n==> Start TMVARegressionApplication" << endl;
+
+  Reader *reader = new Reader( "!Color:!Silent" );
+  reader -> AddVariable("eLeadBHCal",       &eLeadBHCal);
+  reader -> AddVariable("eLeadBEMC",        &eLeadBEMC);
+  reader -> AddVariable("hLeadBHCal",       &hLeadBHCal);
+  reader -> AddVariable("hLeadBEMC",        &hLeadBEMC);
+  reader -> AddVariable("fLeadBHCal",       &fLeadBHCal);
+  reader -> AddVariable("fLeadBEMC",        &fLeadBEMC);
+  reader -> AddVariable("nHitsLeadBHCal",   &nHitsLeadBHCal);
+  reader -> AddVariable("nHitsLeadBEMC",    &nHitsLeadBEMC);
+  reader -> AddVariable("eSumImage",        &eSumImage);
+  reader -> AddVariable("eSumSciFi",        &eSumSciFi);
+  reader -> AddVariable("eSumSciFiLayer1",  &eSumSciFiLayer1);
+  reader -> AddVariable("eSumSciFiLayer2",  &eSumSciFiLayer2);
+  reader -> AddVariable("eSumSciFiLayer3",  &eSumSciFiLayer3);
+  reader -> AddVariable("eSumSciFiLayer4",  &eSumSciFiLayer4);
+  reader -> AddVariable("eSumSciFiLayer5",  &eSumSciFiLayer5);
+  reader -> AddVariable("eSumSciFiLayer6",  &eSumSciFiLayer6);
+  reader -> AddVariable("eSumSciFiLayer7",  &eSumSciFiLayer7);
+  reader -> AddVariable("eSumSciFiLayer8",  &eSumSciFiLayer8);
+  reader -> AddVariable("eSumSciFiLayer9",  &eSumSciFiLayer9);
+  reader -> AddVariable("eSumSciFiLayer10", &eSumSciFiLayer10);
+  reader -> AddVariable("eSumSciFiLayer11", &eSumSciFiLayer11);
+  reader -> AddVariable("eSumSciFiLayer12", &eSumSciFiLayer12);
+  reader -> AddVariable("eSumImageLayer1",  &eSumImageLayer1);
+  reader -> AddVariable("eSumImageLayer2",  &eSumImageLayer2);
+  reader -> AddVariable("eSumImageLayer3",  &eSumImageLayer3);
+  reader -> AddVariable("eSumImageLayer4",  &eSumImageLayer4);
+  reader -> AddVariable("eSumImageLayer5",  &eSumImageLayer5);
+  reader -> AddVariable("eSumImageLayer6",  &eSumImageLayer6);
+
+  // book method(s)
+  for (map<string, int>::iterator itMethod = Use.begin(); itMethod != Use.end(); itMethod++) {
+    if (itMethod -> second) {
+      string methodName = string(itMethod -> first) + " method";
+      string weightfile = sLoader + "/weights/" + STmvaPrefix + "_" + string(itMethod -> first) + ".weights.xml";
+      reader->BookMVA(methodName, weightfile);
+    }
+  }  // end method loop
+
+  // for tmva histogram binning
+  const UInt_t  nTmvaBins(100);
+  const float rTmvaBins[NRange] = {-100., 600.};
+
+  // Book tmva histograms
+  Int_t  nTmvaHist(-1);
+  TH1   *hTMVA[NTmvaHistMax];
+  for (map<string, int>::iterator itMethod = Use.begin(); itMethod != Use.end(); itMethod++) {
+    string  sName  = string(itMethod -> first.c_str());
+    string  sTitle = string(itMethod -> first) + " method";
+    TH1     *hNew   = new TH1F(sName.data(), sTitle.data(), nTmvaBins, rTmvaBins[0], rTmvaBins[1]);
+    if (!hNew) {
+      cerr << "PANIC: couldn't create TMVA histogram #" << nTmvaHist << "! Aborting code execution!\n" << endl;
+      return;
+    } else {
+      if (itMethod -> second) hTMVA[++nTmvaHist] = hNew;
+    }
+  }  // end method loop
+  nTmvaHist++;
+
+  // begin event loop
+  TStopwatch stopwatch;
+  cout << "--- Processing: " << nEvts << " events" << endl;
+
+  nBytes = 0;
+  stopwatch.Start();
+  for (Long64_t iEvt = 0; iEvt < nEvts; iEvt++) {
+
+    // announce progress
+    if (iEvt % 1000 == 0) {
+      cout << "--- ... Processing event: " << iEvt << endl;
+    }
+
+    const Long64_t bytes = ntToCalibrate -> GetEntry(iEvt);
+    if (bytes < 0.) {
+      cerr << "WARNING something wrong with event " << iEvt << "! Aborting loop!" << endl;
+      break;
+    }
+    nBytes += bytes;
+
+    // loop over methods
+    for (Int_t iTmvaHist = 0; iTmvaHist < nTmvaHist; iTmvaHist++) {
+
+      // grab regression target
+      TString title  = hTMVA[iTmvaHist] -> GetTitle();
+      float target = (reader -> EvaluateRegression(title))[0];
+      hTMVA[iTmvaHist] -> Fill(target);
+
+      // check for method
+      Int_t method = -1;
+      for (UInt_t iMethod = 0; iMethod < NMethods; iMethod++) {
+        bool isMethod = title.Contains(sMethods[iMethod].data());
+        if (isMethod) {
+          method = iMethod;
+          break;
+        }
+      }  // end method loop
+
+      // check for ecal energy
+      const bool methodExists     = (method > -1);
+      const bool isInECalEneRange = ((eLeadBEMC > eneECalRange[0]) && (eLeadBEMC < eneECalRange[1]));
+      if (doECalCut && !isInECalEneRange) continue;
+
+      // fill resolution histograms
+      if (methodExists) {
+        for (UInt_t iCalibBin = 0; iCalibBin < NCalibBins; iCalibBin++) {
+          const bool isInEneCalibBin = ((ePar > eneCalibMin[iCalibBin]) && (ePar < eneCalibMax[iCalibBin]));
+          if (isInEneCalibBin) {
+            hHCalCalibBin[method][iCalibBin] -> Fill(target);
+          }
+        }  // end energy bin loop
+        hCalibCalibVsPar[method]  -> Fill(ePar,      target);
+        hHCalCalibVsPar[method]   -> Fill(ePar,      eLeadBHCal);
+        hHCalCalibVsCalib[method] -> Fill(target,    eLeadBHCal);
+        hHCalCalibVsECal[method]  -> Fill(eLeadBEMC, eLeadBHCal);
+        hECalCalibVsPar[method]   -> Fill(ePar,      eLeadBEMC);
+        hECalCalibVsCalib[method] -> Fill(target,    eLeadBEMC);
+      }  // end if (methodExists)
+    }  // end method loop
+  }  // end event loop
+  stopwatch.Stop();
+
+  // announce end of event loop
+  cout << "--- End of event loop: ";
+  cout << "\n    Application finished!" << endl;
+  stopwatch.Print();
+
+  // calculate calibrated resolution ------------------------------------------
+
+  // for graphs
+  double binSigmaCalib[NMethods][NCalibBins];
+  double valMuCalib[NMethods][NCalibBins];
+  double valMuCalibHist[NMethods][NCalibBins];
+  double valSigmaCalib[NMethods][NCalibBins];
+  double valSigmaCalibHist[NMethods][NCalibBins];
+  double errMuCalib[NMethods][NCalibBins];
+  double errMuCalibHist[NMethods][NCalibBins];
+  double errSigmaCalib[NMethods][NCalibBins];
+  double errSigmaCalibHist[NMethods][NCalibBins];
+
+  // resolution calculation
+  TF1          *fFitCalibBin[NMethods][NCalibBins];
+  TGraphErrors *grLineCalib[NMethods];
+  TGraphErrors *grLineCalibHist[NMethods];
+  TGraphErrors *grResoCalib[NMethods];
+  TGraphErrors *grResoCalibHist[NMethods];
+  for (UInt_t iMethod = 0; iMethod < NMethods; iMethod++) {
+    for (UInt_t iCalibBin = 0; iCalibBin < NCalibBins; iCalibBin++) {
+
+      // normalize hisotgrams
+      const double intCalibBin = hHCalCalibBin[iMethod][iCalibBin]  -> Integral();
+      if (intCalibBin > 0.) hHCalCalibBin[iMethod][iCalibBin] -> Scale(1. / intCalibBin);
+
+      // make name
+      TString sFitCalib(sFitCalibBase[iCalibBin].data());
+      sFitCalib.Append("_");
+      sFitCalib.Append(sMethods[iMethod]);
+
+      // initialize functions
+      fFitCalibBin[iMethod][iCalibBin] = new TF1(sFitCalib.Data(),  "gaus(0)", xFitCalibMin[iCalibBin],  xFitCalibMax[iCalibBin]);
+      fFitCalibBin[iMethod][iCalibBin] -> SetParameter(0, ampCalibGuess[iCalibBin]);
+      fFitCalibBin[iMethod][iCalibBin] -> SetParameter(1, muCalibGuess[iCalibBin]);
+      fFitCalibBin[iMethod][iCalibBin] -> SetParameter(2, sigCalibGuess[iCalibBin]);
+
+      // fit histograms
+      hHCalCalibBin[iMethod][iCalibBin] -> Fit(sFitCalib.Data(), "rQ");
+
+      // grab resolutions and uncertainties
+      const double mu     = fFitCalibBin[iMethod][iCalibBin]  -> GetParameter(1);
+      const double sigma  = fFitCalibBin[iMethod][iCalibBin]  -> GetParameter(2);
+      const double errMu  = fFitCalibBin[iMethod][iCalibBin]  -> GetParError(1);
+      const double errSig = fFitCalibBin[iMethod][iCalibBin]  -> GetParError(2);
+      const double perMu  = errMu / mu;
+      const double perSig = errSig / sigma;
+
+      const double muHist     = hHCalCalibBin[iMethod][iCalibBin]  -> GetMean();
+      const double sigmaHist  = hHCalCalibBin[iMethod][iCalibBin]  -> GetRMS();
+      const double errMuHist  = hHCalCalibBin[iMethod][iCalibBin]  -> GetMeanError();
+      const double errSigHist = hHCalCalibBin[iMethod][iCalibBin]  -> GetRMSError();
+      const double perMuHist  = errMuHist / muHist;
+      const double perSigHist = errSigHist / sigmaHist;
+
+      // set fit values
+      binSigmaCalib[iMethod][iCalibBin] = (eneParMin[iCalibBin] - eneParMax[iCalibBin]) / 2.;
+      valMuCalib[iMethod][iCalibBin]    = mu;
+      valSigmaCalib[iMethod][iCalibBin] = sigma / mu;
+      errMuCalib[iMethod][iCalibBin]    = errMu;
+      errSigmaCalib[iMethod][iCalibBin] = valSigmaCalib[iMethod][iCalibBin] * TMath::Sqrt((perMu * perMu) + (perSig * perSig));
+
+      // set histogram values
+      valMuCalibHist[iMethod][iCalibBin]    = muHist;
+      valSigmaCalibHist[iMethod][iCalibBin] = sigmaHist / muHist;
+      errMuCalibHist[iMethod][iCalibBin]    = errMuHist;
+      errSigmaCalibHist[iMethod][iCalibBin] = valSigmaCalibHist[iMethod][iCalibBin] * TMath::Sqrt((perMuHist * perMuHist) + (perSigHist * perSigHist));
+    }
+    cout << "    Fit resolution histograms." << endl;
+
+    // make name
+    TString sGraphLineCalib("grLineCalib");
+    TString sGraphLineCalibHist("grLineCalibHist");
+    TString sGraphResoCalib("grResoCalib");
+    TString sGraphResoCalibHist("grResoCalibHist");
+    sGraphLineCalib.Append("_");
+    sGraphLineCalibHist.Append("_");
+    sGraphResoCalib.Append("_");
+    sGraphResoCalibHist.Append("_");
+    sGraphLineCalib.Append(sMethods[iMethod].data());
+    sGraphLineCalibHist.Append(sMethods[iMethod].data());
+    sGraphResoCalib.Append(sMethods[iMethod].data());
+    sGraphResoCalibHist.Append(sMethods[iMethod].data());
+
+    // create resolution graphs
+    grLineCalib[iMethod]     = new TGraphErrors(NCalibBins, enePar, valMuCalib[iMethod],        binSigmaCalib[iMethod], errMuCalib[iMethod]);
+    grLineCalibHist[iMethod] = new TGraphErrors(NCalibBins, enePar, valMuCalibHist[iMethod],    binSigmaCalib[iMethod], errMuCalibHist[iMethod]);
+    grResoCalib[iMethod]     = new TGraphErrors(NCalibBins, enePar, valSigmaCalib[iMethod],     binSigmaCalib[iMethod], errSigmaCalib[iMethod]);
+    grResoCalibHist[iMethod] = new TGraphErrors(NCalibBins, enePar, valSigmaCalibHist[iMethod], binSigmaCalib[iMethod], errSigmaCalibHist[iMethod]);
+    grLineCalib[iMethod]     -> SetName(sGraphLineCalib.Data());
+    grLineCalibHist[iMethod] -> SetName(sGraphLineCalibHist.Data());
+    grResoCalib[iMethod]     -> SetName(sGraphResoCalib.Data());
+    grResoCalibHist[iMethod] -> SetName(sGraphResoCalibHist.Data());
+  }  // end method loop
 
   // save output and close ----------------------------------------------------
 
   // save histograms
-  TDirectory *dUncal = (TDirectory*) fOutput -> mkdir("Uncalibrated");
-  TDirectory *dCalib = (TDirectory*) fOutput -> mkdir("Calibrated");
-  TDirectory *dReso  = (TDirectory*) fOutput -> mkdir("Resolution");
+  TDirectory *dUncal = (TDirectory*) fOutput -> mkdir("uncalibrated");
+  TDirectory *dCalib = (TDirectory*) fOutput -> mkdir("calibrated");
+  TDirectory *dReso  = (TDirectory*) fOutput -> mkdir("resolution");
+  TDirectory *dTmva = (TDirectory*) fOutput -> mkdir("tmva");
   for (UInt_t iHist = 0; iHist < NHist; iHist++) {
-    if (isCalibrated[iHist]) {
-      dCalib -> cd();
-    } else {
+    if (!isCalibrated[iHist]) {
       dUncal -> cd();
     }
     hHCalFrac[iHist]            -> Write();
@@ -792,6 +1101,24 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
     fFitEneBin[iEneBin]   -> Write();
     fFitDiffBin[iEneBin]  -> Write();
   }
+
+  dReso -> cd();
+  for (UInt_t iMethod = 0; iMethod < NMethods; iMethod++) {
+    hCalibCalibVsPar[iMethod]  -> Write();
+    hHCalCalibVsPar[iMethod]   -> Write();
+    hHCalCalibVsCalib[iMethod] -> Write();
+    hHCalCalibVsECal[iMethod]  -> Write();
+    hECalCalibVsPar[iMethod]   -> Write();
+    hECalCalibVsCalib[iMethod] -> Write();
+    grLineCalib[iMethod]       -> Write();
+    grLineCalibHist[iMethod]   -> Write();
+    grResoCalib[iMethod]       -> Write();
+    grResoCalibHist[iMethod]   -> Write();
+    for (UInt_t iCalibBin = 0; iCalibBin < NCalibBins; iCalibBin++) {
+      hHCalCalibBin[iMethod][iCalibBin] -> Write();
+      fFitCalibBin[iMethod][iCalibBin]  -> Write();
+    }
+  }  // end method loop
   cout << "    Saved histograms." << endl;
 
   // close files
@@ -804,6 +1131,7 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
   // delete tmva objects and exit
   delete factory;
   delete loader;
+  delete reader;
   return;
 
 }
