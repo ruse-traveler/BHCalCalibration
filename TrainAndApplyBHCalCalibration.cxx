@@ -42,34 +42,30 @@
 #include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/TMVARegGui.h"
-// dataframe related classes
-#include <ROOT/RDataFrame.hxx>
-#include <ROOT/RDF/HistoModels.hxx>
 
 // make common namespaces implicit
 using namespace std;
 using namespace TMVA;
-using namespace ROOT;
-using namespace ROOT::VecOps;
 
 // global constants
 static const UInt_t NTxt(3);
 static const UInt_t NVtx(4);
 static const UInt_t NHist(4);
 static const UInt_t NRange(2);
-static const UInt_t NMethods(3);
+//static const UInt_t NMethods(3);
+static const UInt_t NMethods(1);
 static const UInt_t NEneBins(10);
-static const UInt_t NTmvaVar(28);
+static const UInt_t NTmvaVar(26);
 static const UInt_t NTmvaSpec(1);
-static const UInt_t NCalibBins(4);
+static const UInt_t NCalibBins(10);
 
 // tmva constants
 static const UInt_t NTmvaHistMax(100);
 static const string STmvaPrefix("TMVARegression");
 
 // default arguments
-static const string SInDef("../performance/eicrecon_output/single_particles/merged/forPerformanceStudy.withIndividualECalLayers_includedEPar7.e110th45n20Kneu.d20m7y2023.plugin.root");
-static const string SOutDef("StreamlineTest_Change1_AddPrunedApplication.trainAndApply.root");
+static const string SInDef("./eicrecon_output/merged/forLowThresholdCheck.withDDSim.epic23080image.e220th45n250Kpim.d18m9y2023.plugin.root");
+static const string SOutDef("forLowTresholdCheck.withDDSim.epic23080image.e220th45n250Kpim.d18m9y2023.tmva.root");
 static const string STupleDef("JCalibrateHCalWithImaging/ntForCalibration");
 
 
@@ -88,7 +84,7 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
   const bool   addSpectators(false);
   const float  treeWeight(1.0);
   const string sTarget("ePar");
-  const string sLoader("StreamlineTest_Baseline");
+  const string sLoader("LowThresholdCheck_DDSimPiMinus");
   const TCut   trainCut("eSumBHCal>0");
 
   // tmva training & spectator variables
@@ -116,14 +112,15 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
     "eSumSciFiLayer11",
     "eSumSciFiLayer12",
     "eSumImageLayer1",
-    "eSumImageLayer2",
+    //"eSumImageLayer2",
     "eSumImageLayer3",
     "eSumImageLayer4",
-    "eSumImageLayer5",
+    //"eSumImageLayer5",
     "eSumImageLayer6"
   };
   const string sTmvaSpec[NTmvaSpec] = {""};
-  const string sMethods[NMethods]   = {"LD", "MLP", "BDTG"};
+  //const string sMethods[NMethods]   = {"LD", "MLP", "BDTG"};
+  const string sMethods[NMethods]   = {"LD"};
 
   // ecal cut parameters
   const bool   doECalCut(false);
@@ -155,14 +152,25 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
     "hHCalDiff_ene16",
     "hHCalDiff_ene20"
   };
-  const string sHCalCalibBase[NCalibBins] = {"hHCalCalib_ene2",  "hHCalCalib_ene5",  "hHCalCalib_ene10",  "hHCalCalib_ene20"};
+  const string sHCalCalibBase[NCalibBins] = {
+    "hHCalCalib_ene2",
+    "hHCalCalib_ene3",
+    "hHCalCalib_ene4",
+    "hHCalCalib_ene5",
+    "hHCalCalib_ene6",
+    "hHCalCalib_ene8",
+    "hHCalCalib_ene10",
+    "hHCalCalib_ene12",
+    "hHCalCalib_ene16",
+    "hHCalCalib_ene20"
+  };
 
   // generic resolution parameters
   const double enePar[NEneBins]        = {2.,  3.,  4.,  5.,  6.,  8,   10.,  12.,  16.,  20.};
   const double eneParMin[NEneBins]     = {1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 9.5,  11.5, 13.5, 18.5};
   const double eneParMax[NEneBins]     = {2.5, 3.5, 4.5, 5.5, 6.5, 9.5, 11.5, 13.5, 18.5, 21.5};
-  const double eneCalibMin[NCalibBins] = {1., 3., 7.,  13.};
-  const double eneCalibMax[NCalibBins] = {3., 7., 13., 27.};
+  const double eneCalibMin[NCalibBins] = {1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 9.5,  11.5, 13.5, 18.5};
+  const double eneCalibMax[NCalibBins] = {2.5, 3.5, 4.5, 5.5, 6.5, 9.5, 11.5, 13.5, 18.5, 21.5};
 
   // reco vs. par ene resolution parameters
   const double xFitEneMin[NEneBins]  = {0., 0., 0., 1., 1.,  2.,  2.,  4.,  4.,  8.};
@@ -203,22 +211,33 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
   };
 
   // calibrated reco vs. par ene resolution parameters
-  const double xFitCalibMin[NCalibBins]  = {0.5, 4.,  8.,  13.};
-  const double xFitCalibMax[NCalibBins]  = {5.5, 8.,  14., 23.};
-  const double ampCalibGuess[NCalibBins] = {1.,  1.,  1.,  1.};
-  const double muCalibGuess[NCalibBins]  = {3.,  6.,  11., 18.};
-  const double sigCalibGuess[NCalibBins] = {2.,  2.,  3.,  5.};
-  const string sFitCalibBase[NCalibBins] = {"fFitCalib_ene2", "fFitCalib_ene5", "fFitCalib_ene10", "fFitCalib_ene20"};
-
+  const double xFitCalibMin[NCalibBins]  = {0., 0., 0., 1., 1.,  2.,  2.,  4.,  4.,  8.};
+  const double xFitCalibMax[NCalibBins]  = {4., 6., 8., 9., 11., 14., 18., 20., 28., 32.};
+  const double ampCalibGuess[NCalibBins] = {1., 1., 1., 1., 1.,  1.,  1.,  1.,  1.,  1.};
+  const double muCalibGuess[NCalibBins]  = {2., 3., 4., 5., 6.,  8.,  10., 12., 16., 20.};
+  const double sigCalibGuess[NCalibBins] = {1., 1., 1., 1., 1.,  1.,  3.,  3.,  3.,  7.};
+  const string sFitCalibBase[NCalibBins] = {
+    "fFitCalib_ene2",
+    "fFitCalib_ene3",
+    "fFitCalib_ene4",
+    "fFitCalib_ene5",
+    "fFitCalib_ene6",
+    "fFitCalib_ene8",
+    "fFitCalib_ene10",
+    "fFitCalib_ene12",
+    "fFitCalib_ene16",
+    "fFitCalib_ene20"
+  };
 
   // load input ---------------------------------------------------------------
 
   // open files
-  TFile *fInput  = new TFile(sInput.data(), "read");
-  TFile *fOutput = new TFile(sOutput.data(), "recreate");
-  if (!fInput || !fOutput) {
+  TFile *fOutput  = new TFile(sOutput.data(), "recreate");
+  TFile *fInTrain = new TFile(sInput.data(),  "read");
+  TFile *fInApply = new TFile(sInput.data(),  "read");
+  if (!fOutput || !fInTrain || !fInApply) {
     cerr << "PANIC: couldn't open a file!\n"
-         << "        fInput = " << fInput << ", fOutput = " << fOutput << "\n"
+         << "        fInTrain = " << fInTrain << ", fInApply = " << fInApply << ", fOutput = " << fOutput << "\n"
          << endl;
     return;
   }
@@ -228,123 +247,229 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
        << endl;
 
   // grab input tuple
-  TNtuple *ntToCalibrate = (TNtuple*) fInput -> Get(sTuple.data());
-  if (!ntToCalibrate) {
+  TNtuple *ntToTrain = (TNtuple*) fInTrain -> Get(sTuple.data());
+  TNtuple *ntToApply = (TNtuple*) fInApply -> Get(sTuple.data());
+  if (!ntToTrain || !ntToApply) {
     cerr << "PANIC: couldn't grab input tuple!\n"
-         << "       name  = " << sTuple        << "\n"
-         << "       tuple = " << ntToCalibrate << "\n"
+         << "       name  = " << sTuple    << "\n"
+         << "       train = " << ntToTrain << "\n"
+         << "       apply = " << ntToApply << "\n"
          << endl;
     return;
   }
-  cout << "    Grabbed input tuple:\n"
+  cout << "    Grabbed input tuples:\n"
        << "      tuple = " << sTuple
        << endl;
 
   // declare tuple leaves
-  float ePar;
-  float fracParVsLeadBHCal;
-  float fracParVsLeadBEMC;
-  float fracParVsSumBHCal;
-  float fracParVsSumBEMC;
-  float fracLeadBHCalVsBEMC;
-  float fracSumBHCalVsBEMC;
-  float eLeadBHCal;
-  float eLeadBEMC;
-  float eSumBHCal;
-  float eSumBEMC;
-  float diffLeadBHCal;
-  float diffLeadBEMC;
-  float diffSumBHCal;
-  float diffSumBEMC;
-  float nHitsLeadBHCal;
-  float nHitsLeadBEMC;
-  float nClustBHCal;
-  float nClustBEMC;
-  float hLeadBHCal;
-  float hLeadBEMC;
-  float fLeadBHCal;
-  float fLeadBEMC;
-  float eLeadImage;
-  float eSumImage;
-  float eLeadSciFi;
-  float eSumSciFi;
-  float nClustImage;
-  float nClustSciFi;
-  float hLeadImage;
-  float hLeadSciFi;
-  float fLeadImage;
-  float fLeadSciFi;
-  float eSumSciFiLayer1;
-  float eSumSciFiLayer2;
-  float eSumSciFiLayer3;
-  float eSumSciFiLayer4;
-  float eSumSciFiLayer5;
-  float eSumSciFiLayer6;
-  float eSumSciFiLayer7;
-  float eSumSciFiLayer8;
-  float eSumSciFiLayer9;
-  float eSumSciFiLayer10;
-  float eSumSciFiLayer11;
-  float eSumSciFiLayer12;
-  float eSumImageLayer1;
-  float eSumImageLayer2;
-  float eSumImageLayer3;
-  float eSumImageLayer4;
-  float eSumImageLayer5;
-  float eSumImageLayer6;
+  float ePar_train;
+  float fracParVsLeadBHCal_train;
+  float fracParVsLeadBEMC_train;
+  float fracParVsSumBHCal_train;
+  float fracParVsSumBEMC_train;
+  float fracLeadBHCalVsBEMC_train;
+  float fracSumBHCalVsBEMC_train;
+  float eLeadBHCal_train;
+  float eLeadBEMC_train;
+  float eSumBHCal_train;
+  float eSumBEMC_train;
+  float diffLeadBHCal_train;
+  float diffLeadBEMC_train;
+  float diffSumBHCal_train;
+  float diffSumBEMC_train;
+  float nHitsLeadBHCal_train;
+  float nHitsLeadBEMC_train;
+  float nClustBHCal_train;
+  float nClustBEMC_train;
+  float hLeadBHCal_train;
+  float hLeadBEMC_train;
+  float fLeadBHCal_train;
+  float fLeadBEMC_train;
+  float eLeadImage_train;
+  float eSumImage_train;
+  float eLeadSciFi_train;
+  float eSumSciFi_train;
+  float nClustImage_train;
+  float nClustSciFi_train;
+  float hLeadImage_train;
+  float hLeadSciFi_train;
+  float fLeadImage_train;
+  float fLeadSciFi_train;
+  float eSumSciFiLayer1_train;
+  float eSumSciFiLayer2_train;
+  float eSumSciFiLayer3_train;
+  float eSumSciFiLayer4_train;
+  float eSumSciFiLayer5_train;
+  float eSumSciFiLayer6_train;
+  float eSumSciFiLayer7_train;
+  float eSumSciFiLayer8_train;
+  float eSumSciFiLayer9_train;
+  float eSumSciFiLayer10_train;
+  float eSumSciFiLayer11_train;
+  float eSumSciFiLayer12_train;
+  float eSumImageLayer1_train;
+  float eSumImageLayer2_train;
+  float eSumImageLayer3_train;
+  float eSumImageLayer4_train;
+  float eSumImageLayer5_train;
+  float eSumImageLayer6_train;
+
+  float ePar_apply;
+  float fracParVsLeadBHCal_apply;
+  float fracParVsLeadBEMC_apply;
+  float fracParVsSumBHCal_apply;
+  float fracParVsSumBEMC_apply;
+  float fracLeadBHCalVsBEMC_apply;
+  float fracSumBHCalVsBEMC_apply;
+  float eLeadBHCal_apply;
+  float eLeadBEMC_apply;
+  float eSumBHCal_apply;
+  float eSumBEMC_apply;
+  float diffLeadBHCal_apply;
+  float diffLeadBEMC_apply;
+  float diffSumBHCal_apply;
+  float diffSumBEMC_apply;
+  float nHitsLeadBHCal_apply;
+  float nHitsLeadBEMC_apply;
+  float nClustBHCal_apply;
+  float nClustBEMC_apply;
+  float hLeadBHCal_apply;
+  float hLeadBEMC_apply;
+  float fLeadBHCal_apply;
+  float fLeadBEMC_apply;
+  float eLeadImage_apply;
+  float eSumImage_apply;
+  float eLeadSciFi_apply;
+  float eSumSciFi_apply;
+  float nClustImage_apply;
+  float nClustSciFi_apply;
+  float hLeadImage_apply;
+  float hLeadSciFi_apply;
+  float fLeadImage_apply;
+  float fLeadSciFi_apply;
+  float eSumSciFiLayer1_apply;
+  float eSumSciFiLayer2_apply;
+  float eSumSciFiLayer3_apply;
+  float eSumSciFiLayer4_apply;
+  float eSumSciFiLayer5_apply;
+  float eSumSciFiLayer6_apply;
+  float eSumSciFiLayer7_apply;
+  float eSumSciFiLayer8_apply;
+  float eSumSciFiLayer9_apply;
+  float eSumSciFiLayer10_apply;
+  float eSumSciFiLayer11_apply;
+  float eSumSciFiLayer12_apply;
+  float eSumImageLayer1_apply;
+  float eSumImageLayer2_apply;
+  float eSumImageLayer3_apply;
+  float eSumImageLayer4_apply;
+  float eSumImageLayer5_apply;
+  float eSumImageLayer6_apply;
 
   // set tuple branches
-  ntToCalibrate -> SetBranchAddress("ePar",                &ePar);
-  ntToCalibrate -> SetBranchAddress("fracParVsLeadBHCal",  &fracParVsLeadBHCal);
-  ntToCalibrate -> SetBranchAddress("fracParVsLeadBEMC",   &fracParVsLeadBEMC);
-  ntToCalibrate -> SetBranchAddress("fracParVsSumBHCal",   &fracParVsSumBHCal);
-  ntToCalibrate -> SetBranchAddress("fracParVsSumBEMC",    &fracParVsSumBEMC);
-  ntToCalibrate -> SetBranchAddress("fracLeadBHCalVsBEMC", &fracLeadBHCalVsBEMC);
-  ntToCalibrate -> SetBranchAddress("fracSumBHCalVsBEMC",  &fracSumBHCalVsBEMC);
-  ntToCalibrate -> SetBranchAddress("eLeadBHCal",          &eLeadBHCal);
-  ntToCalibrate -> SetBranchAddress("eLeadBEMC",           &eLeadBEMC);
-  ntToCalibrate -> SetBranchAddress("eSumBHCal",           &eSumBHCal);
-  ntToCalibrate -> SetBranchAddress("eSumBEMC",            &eSumBEMC);
-  ntToCalibrate -> SetBranchAddress("diffLeadBHCal",       &diffLeadBHCal);
-  ntToCalibrate -> SetBranchAddress("diffLeadBEMC",        &diffLeadBEMC);
-  ntToCalibrate -> SetBranchAddress("diffSumBHCal",        &diffSumBHCal);
-  ntToCalibrate -> SetBranchAddress("diffSumBEMC",         &diffSumBEMC);
-  ntToCalibrate -> SetBranchAddress("nHitsLeadBHCal",      &nHitsLeadBHCal);
-  ntToCalibrate -> SetBranchAddress("nHitsLeadBEMC",       &nHitsLeadBEMC);
-  ntToCalibrate -> SetBranchAddress("nClustBHCal",         &nClustBHCal);
-  ntToCalibrate -> SetBranchAddress("nClustBEMC",          &nClustBEMC);
-  ntToCalibrate -> SetBranchAddress("hLeadBHCal",          &hLeadBHCal);
-  ntToCalibrate -> SetBranchAddress("hLeadBEMC",           &hLeadBEMC);
-  ntToCalibrate -> SetBranchAddress("fLeadBHCal",          &fLeadBHCal);
-  ntToCalibrate -> SetBranchAddress("fLeadBEMC",           &fLeadBEMC);
-  ntToCalibrate -> SetBranchAddress("eLeadImage",          &eLeadImage);
-  ntToCalibrate -> SetBranchAddress("eSumImage",           &eSumImage);
-  ntToCalibrate -> SetBranchAddress("eLeadSciFi",          &eLeadSciFi);
-  ntToCalibrate -> SetBranchAddress("eSumSciFi",           &eSumSciFi);
-  ntToCalibrate -> SetBranchAddress("nClustImage",         &nClustImage);
-  ntToCalibrate -> SetBranchAddress("nClustSciFi",         &nClustSciFi);
-  ntToCalibrate -> SetBranchAddress("hLeadImage",          &hLeadImage);
-  ntToCalibrate -> SetBranchAddress("hLeadSciFi",          &hLeadSciFi);
-  ntToCalibrate -> SetBranchAddress("fLeadImage",          &fLeadImage);
-  ntToCalibrate -> SetBranchAddress("fLeadSciFi",          &fLeadSciFi);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer1",     &eSumSciFiLayer1);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer2",     &eSumSciFiLayer2);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer3",     &eSumSciFiLayer3);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer4",     &eSumSciFiLayer4);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer5",     &eSumSciFiLayer5);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer6",     &eSumSciFiLayer6);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer7",     &eSumSciFiLayer7);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer8",     &eSumSciFiLayer8);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer9",     &eSumSciFiLayer9);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer10",    &eSumSciFiLayer10);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer11",    &eSumSciFiLayer11);
-  ntToCalibrate -> SetBranchAddress("eSumSciFiLayer12",    &eSumSciFiLayer12);
-  ntToCalibrate -> SetBranchAddress("eSumImageLayer1",     &eSumImageLayer1);
-  ntToCalibrate -> SetBranchAddress("eSumImageLayer2",     &eSumImageLayer2);
-  ntToCalibrate -> SetBranchAddress("eSumImageLayer3",     &eSumImageLayer3);
-  ntToCalibrate -> SetBranchAddress("eSumImageLayer4",     &eSumImageLayer4);
-  ntToCalibrate -> SetBranchAddress("eSumImageLayer5",     &eSumImageLayer5);
-  ntToCalibrate -> SetBranchAddress("eSumImageLayer6",     &eSumImageLayer6);
+  ntToTrain -> SetBranchAddress("ePar",                &ePar_train);
+  ntToTrain -> SetBranchAddress("fracParVsLeadBHCal",  &fracParVsLeadBHCal_train);
+  ntToTrain -> SetBranchAddress("fracParVsLeadBEMC",   &fracParVsLeadBEMC_train);
+  ntToTrain -> SetBranchAddress("fracParVsSumBHCal",   &fracParVsSumBHCal_train);
+  ntToTrain -> SetBranchAddress("fracParVsSumBEMC",    &fracParVsSumBEMC_train);
+  ntToTrain -> SetBranchAddress("fracLeadBHCalVsBEMC", &fracLeadBHCalVsBEMC_train);
+  ntToTrain -> SetBranchAddress("fracSumBHCalVsBEMC",  &fracSumBHCalVsBEMC_train);
+  ntToTrain -> SetBranchAddress("eLeadBHCal",          &eLeadBHCal_train);
+  ntToTrain -> SetBranchAddress("eLeadBEMC",           &eLeadBEMC_train);
+  ntToTrain -> SetBranchAddress("eSumBHCal",           &eSumBHCal_train);
+  ntToTrain -> SetBranchAddress("eSumBEMC",            &eSumBEMC_train);
+  ntToTrain -> SetBranchAddress("diffLeadBHCal",       &diffLeadBHCal_train);
+  ntToTrain -> SetBranchAddress("diffLeadBEMC",        &diffLeadBEMC_train);
+  ntToTrain -> SetBranchAddress("diffSumBHCal",        &diffSumBHCal_train);
+  ntToTrain -> SetBranchAddress("diffSumBEMC",         &diffSumBEMC_train);
+  ntToTrain -> SetBranchAddress("nHitsLeadBHCal",      &nHitsLeadBHCal_train);
+  ntToTrain -> SetBranchAddress("nHitsLeadBEMC",       &nHitsLeadBEMC_train);
+  ntToTrain -> SetBranchAddress("nClustBHCal",         &nClustBHCal_train);
+  ntToTrain -> SetBranchAddress("nClustBEMC",          &nClustBEMC_train);
+  ntToTrain -> SetBranchAddress("hLeadBHCal",          &hLeadBHCal_train);
+  ntToTrain -> SetBranchAddress("hLeadBEMC",           &hLeadBEMC_train);
+  ntToTrain -> SetBranchAddress("fLeadBHCal",          &fLeadBHCal_train);
+  ntToTrain -> SetBranchAddress("fLeadBEMC",           &fLeadBEMC_train);
+  ntToTrain -> SetBranchAddress("eLeadImage",          &eLeadImage_train);
+  ntToTrain -> SetBranchAddress("eSumImage",           &eSumImage_train);
+  ntToTrain -> SetBranchAddress("eLeadSciFi",          &eLeadSciFi_train);
+  ntToTrain -> SetBranchAddress("eSumSciFi",           &eSumSciFi_train);
+  ntToTrain -> SetBranchAddress("nClustImage",         &nClustImage_train);
+  ntToTrain -> SetBranchAddress("nClustSciFi",         &nClustSciFi_train);
+  ntToTrain -> SetBranchAddress("hLeadImage",          &hLeadImage_train);
+  ntToTrain -> SetBranchAddress("hLeadSciFi",          &hLeadSciFi_train);
+  ntToTrain -> SetBranchAddress("fLeadImage",          &fLeadImage_train);
+  ntToTrain -> SetBranchAddress("fLeadSciFi",          &fLeadSciFi_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer1",     &eSumSciFiLayer1_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer2",     &eSumSciFiLayer2_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer3",     &eSumSciFiLayer3_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer4",     &eSumSciFiLayer4_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer5",     &eSumSciFiLayer5_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer6",     &eSumSciFiLayer6_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer7",     &eSumSciFiLayer7_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer8",     &eSumSciFiLayer8_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer9",     &eSumSciFiLayer9_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer10",    &eSumSciFiLayer10_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer11",    &eSumSciFiLayer11_train);
+  ntToTrain -> SetBranchAddress("eSumSciFiLayer12",    &eSumSciFiLayer12_train);
+  ntToTrain -> SetBranchAddress("eSumImageLayer1",     &eSumImageLayer1_train);
+  ntToTrain -> SetBranchAddress("eSumImageLayer2",     &eSumImageLayer2_train);
+  ntToTrain -> SetBranchAddress("eSumImageLayer3",     &eSumImageLayer3_train);
+  ntToTrain -> SetBranchAddress("eSumImageLayer4",     &eSumImageLayer4_train);
+  ntToTrain -> SetBranchAddress("eSumImageLayer5",     &eSumImageLayer5_train);
+  ntToTrain -> SetBranchAddress("eSumImageLayer6",     &eSumImageLayer6_train);
+
+  ntToApply -> SetBranchAddress("ePar",                &ePar_apply);
+  ntToApply -> SetBranchAddress("fracParVsLeadBHCal",  &fracParVsLeadBHCal_apply);
+  ntToApply -> SetBranchAddress("fracParVsLeadBEMC",   &fracParVsLeadBEMC_apply);
+  ntToApply -> SetBranchAddress("fracParVsSumBHCal",   &fracParVsSumBHCal_apply);
+  ntToApply -> SetBranchAddress("fracParVsSumBEMC",    &fracParVsSumBEMC_apply);
+  ntToApply -> SetBranchAddress("fracLeadBHCalVsBEMC", &fracLeadBHCalVsBEMC_apply);
+  ntToApply -> SetBranchAddress("fracSumBHCalVsBEMC",  &fracSumBHCalVsBEMC_apply);
+  ntToApply -> SetBranchAddress("eLeadBHCal",          &eLeadBHCal_apply);
+  ntToApply -> SetBranchAddress("eLeadBEMC",           &eLeadBEMC_apply);
+  ntToApply -> SetBranchAddress("eSumBHCal",           &eSumBHCal_apply);
+  ntToApply -> SetBranchAddress("eSumBEMC",            &eSumBEMC_apply);
+  ntToApply -> SetBranchAddress("diffLeadBHCal",       &diffLeadBHCal_apply);
+  ntToApply -> SetBranchAddress("diffLeadBEMC",        &diffLeadBEMC_apply);
+  ntToApply -> SetBranchAddress("diffSumBHCal",        &diffSumBHCal_apply);
+  ntToApply -> SetBranchAddress("diffSumBEMC",         &diffSumBEMC_apply);
+  ntToApply -> SetBranchAddress("nHitsLeadBHCal",      &nHitsLeadBHCal_apply);
+  ntToApply -> SetBranchAddress("nHitsLeadBEMC",       &nHitsLeadBEMC_apply);
+  ntToApply -> SetBranchAddress("nClustBHCal",         &nClustBHCal_apply);
+  ntToApply -> SetBranchAddress("nClustBEMC",          &nClustBEMC_apply);
+  ntToApply -> SetBranchAddress("hLeadBHCal",          &hLeadBHCal_apply);
+  ntToApply -> SetBranchAddress("hLeadBEMC",           &hLeadBEMC_apply);
+  ntToApply -> SetBranchAddress("fLeadBHCal",          &fLeadBHCal_apply);
+  ntToApply -> SetBranchAddress("fLeadBEMC",           &fLeadBEMC_apply);
+  ntToApply -> SetBranchAddress("eLeadImage",          &eLeadImage_apply);
+  ntToApply -> SetBranchAddress("eSumImage",           &eSumImage_apply);
+  ntToApply -> SetBranchAddress("eLeadSciFi",          &eLeadSciFi_apply);
+  ntToApply -> SetBranchAddress("eSumSciFi",           &eSumSciFi_apply);
+  ntToApply -> SetBranchAddress("nClustImage",         &nClustImage_apply);
+  ntToApply -> SetBranchAddress("nClustSciFi",         &nClustSciFi_apply);
+  ntToApply -> SetBranchAddress("hLeadImage",          &hLeadImage_apply);
+  ntToApply -> SetBranchAddress("hLeadSciFi",          &hLeadSciFi_apply);
+  ntToApply -> SetBranchAddress("fLeadImage",          &fLeadImage_apply);
+  ntToApply -> SetBranchAddress("fLeadSciFi",          &fLeadSciFi_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer1",     &eSumSciFiLayer1_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer2",     &eSumSciFiLayer2_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer3",     &eSumSciFiLayer3_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer4",     &eSumSciFiLayer4_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer5",     &eSumSciFiLayer5_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer6",     &eSumSciFiLayer6_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer7",     &eSumSciFiLayer7_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer8",     &eSumSciFiLayer8_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer9",     &eSumSciFiLayer9_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer10",    &eSumSciFiLayer10_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer11",    &eSumSciFiLayer11_apply);
+  ntToApply -> SetBranchAddress("eSumSciFiLayer12",    &eSumSciFiLayer12_apply);
+  ntToApply -> SetBranchAddress("eSumImageLayer1",     &eSumImageLayer1_apply);
+  ntToApply -> SetBranchAddress("eSumImageLayer2",     &eSumImageLayer2_apply);
+  ntToApply -> SetBranchAddress("eSumImageLayer3",     &eSumImageLayer3_apply);
+  ntToApply -> SetBranchAddress("eSumImageLayer4",     &eSumImageLayer4_apply);
+  ntToApply -> SetBranchAddress("eSumImageLayer5",     &eSumImageLayer5_apply);
+  ntToApply -> SetBranchAddress("eSumImageLayer6",     &eSumImageLayer6_apply);
   cout << "    Set tuple branches." << endl;
 
   // declare output histograms ------------------------------------------------
@@ -591,99 +716,96 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
     hECalCalibVsPar[iMethod]   -> Sumw2();
     hECalCalibVsCalib[iMethod] -> Sumw2();
   }  // end method loop
-  cout << "    Declared resolution histograms.\n"
-       << "    Beginning application..."
-       << endl;
-  cout << "    Declared output histograms." << endl;
+  cout << "    Declared resolution histograms." << endl;
 
   // loop over ntuple entries -------------------------------------------------
 
   // prepare for uncalibrated tuple loop
-  Long64_t nEvts = ntToCalibrate -> GetEntries();
-  cout << "    Looping over uncalibrated tuple: " << nEvts << " events to process." << endl;
+  Long64_t nEvtsToTrain = ntToTrain -> GetEntries();
+  cout << "    Looping over uncalibrated tuple: " << nEvtsToTrain << " events to process." << endl;
 
   Long64_t nBytes(0);
-  for (Long64_t iEvt = 0; iEvt < nEvts; iEvt++) {
+  for (Long64_t iEvtToTrain = 0; iEvtToTrain < nEvtsToTrain; iEvtToTrain++) {
 
-    const Long64_t bytes = ntToCalibrate -> GetEntry(iEvt);
+    const Long64_t bytes = ntToTrain -> GetEntry(iEvtToTrain);
     if (bytes < 0.) {
-      cerr << "WARNING something wrong with event " << iEvt << "! Aborting loop!" << endl;
+      cerr << "WARNING something wrong with event " << iEvtToTrain << "! Aborting loop!" << endl;
       break;
     }
     nBytes += bytes;
 
     // announce progress
-    const Long64_t iProg = iEvt + 1;
-    if (iProg == nEvts) {
-      cout << "      Proceesing event " << iProg << "/" << nEvts << "..." << endl;
+    const Long64_t iProgToTrain = iEvtToTrain + 1;
+    if (iProgToTrain == nEvtsToTrain) {
+      cout << "      Proceesing event " << iProgToTrain << "/" << nEvtsToTrain << "..." << endl;
     } else {
-      cout << "      Proceesing event " << iProg << "/" << nEvts << "...\r" << flush;
+      cout << "      Proceesing event " << iProgToTrain << "/" << nEvtsToTrain << "...\r" << flush;
     }
 
     // fill uncalibrated histograms & profiles
-    hHCalFrac[0]            -> Fill(fracParVsLeadBHCal);
-    hHCalFrac[1]            -> Fill(fracParVsSumBHCal);
-    hECalFrac[0]            -> Fill(fracParVsLeadBEMC);
-    hECalFrac[1]            -> Fill(fracParVsSumBEMC);
-    hHCalDiff[0]            -> Fill(diffLeadBHCal);
-    hHCalDiff[1]            -> Fill(diffSumBHCal);
-    hECalDiff[0]            -> Fill(diffLeadBEMC);
-    hECalDiff[1]            -> Fill(diffSumBEMC);
-    hHCalEneVsPar[0]        -> Fill(ePar,               eLeadBHCal);
-    pHCalEneVsPar[0]        -> Fill(ePar,               eLeadBHCal);
-    hECalEneVsPar[0]        -> Fill(ePar,               eLeadBEMC);
-    pECalEneVsPar[0]        -> Fill(ePar,               eLeadBEMC);
-    hHCalEneVsPar[1]        -> Fill(ePar,               eSumBHCal);
-    pHCalEneVsPar[1]        -> Fill(ePar,               eSumBHCal);
-    hECalEneVsPar[1]        -> Fill(ePar,               eSumBEMC);
-    pECalEneVsPar[1]        -> Fill(ePar,               eSumBEMC);
-    hHCalFracVsPar[0]       -> Fill(ePar,               fracParVsLeadBHCal);
-    pHCalFracVsPar[0]       -> Fill(ePar,               fracParVsLeadBHCal);
-    hHCalFracVsPar[1]       -> Fill(ePar,               fracParVsSumBHCal);
-    pHCalFracVsPar[1]       -> Fill(ePar,               fracParVsSumBHCal);
-    hHCalDiffVsPar[0]       -> Fill(ePar,               diffLeadBHCal);
-    pHCalDiffVsPar[0]       -> Fill(ePar,               diffSumBHCal);
-    hHCalDiffVsPar[1]       -> Fill(ePar,               diffLeadBHCal);
-    pHCalDiffVsPar[1]       -> Fill(ePar,               diffSumBHCal);
-    hECalFracVsPar[0]       -> Fill(ePar,               fracParVsLeadBEMC);
-    pECalFracVsPar[0]       -> Fill(ePar,               fracParVsLeadBEMC);
-    hECalFracVsPar[1]       -> Fill(ePar,               fracParVsSumBEMC);
-    pECalFracVsPar[1]       -> Fill(ePar,               fracParVsSumBEMC);
-    hECalDiffVsPar[0]       -> Fill(ePar,               diffLeadBEMC);
-    pECalDiffVsPar[0]       -> Fill(ePar,               diffSumBEMC);
-    hECalDiffVsPar[1]       -> Fill(ePar,               diffLeadBEMC);
-    pECalDiffVsPar[1]       -> Fill(ePar,               diffSumBEMC);
-    hHCalVsECalFrac[0]      -> Fill(fracParVsLeadBEMC,  fracParVsLeadBHCal);
-    pHCalVsECalFrac[0]      -> Fill(fracParVsLeadBEMC,  fracParVsLeadBHCal);
-    hHCalVsECalFrac[1]      -> Fill(fracParVsSumBEMC,   fracParVsSumBHCal);
-    pHCalVsECalFrac[1]      -> Fill(fracParVsSumBEMC,   fracParVsSumBHCal);
-    hHCalVsECalDiff[0]      -> Fill(diffLeadBEMC,       diffLeadBHCal);
-    pHCalVsECalDiff[0]      -> Fill(diffLeadBEMC,       diffLeadBHCal);
-    hHCalVsECalDiff[1]      -> Fill(diffSumBEMC,        diffSumBHCal);
-    pHCalVsECalDiff[1]      -> Fill(diffSumBEMC,        diffSumBHCal);
-    hHCalFracVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC, fracParVsLeadBHCal);
-    pHCalFracVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC, fracParVsLeadBHCal);
-    hHCalFracVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, fracParVsSumBHCal);
-    pHCalFracVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, fracParVsSumBHCal);
-    hHCalDiffVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC, diffLeadBHCal);
-    pHCalDiffVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC, diffLeadBHCal);
-    hHCalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, diffSumBHCal);
-    pHCalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, diffSumBHCal);
-    hECalFracVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC, fracParVsLeadBEMC);
-    pECalFracVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC, fracParVsLeadBEMC);
-    hECalFracVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, fracParVsSumBEMC);
-    pECalFracVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, fracParVsSumBEMC);
-    hECalDiffVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC, diffLeadBEMC);
-    pECalDiffVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC, diffLeadBEMC);
-    hECalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, diffSumBEMC);
-    pECalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC, diffSumBEMC);
+    hHCalFrac[0]            -> Fill(fracParVsLeadBHCal_train);
+    hHCalFrac[1]            -> Fill(fracParVsSumBHCal_train);
+    hECalFrac[0]            -> Fill(fracParVsLeadBEMC_train);
+    hECalFrac[1]            -> Fill(fracParVsSumBEMC_train);
+    hHCalDiff[0]            -> Fill(diffLeadBHCal_train);
+    hHCalDiff[1]            -> Fill(diffSumBHCal_train);
+    hECalDiff[0]            -> Fill(diffLeadBEMC_train);
+    hECalDiff[1]            -> Fill(diffSumBEMC_train);
+    hHCalEneVsPar[0]        -> Fill(ePar_train,               eLeadBHCal_train);
+    pHCalEneVsPar[0]        -> Fill(ePar_train,               eLeadBHCal_train);
+    hECalEneVsPar[0]        -> Fill(ePar_train,               eLeadBEMC_train);
+    pECalEneVsPar[0]        -> Fill(ePar_train,               eLeadBEMC_train);
+    hHCalEneVsPar[1]        -> Fill(ePar_train,               eSumBHCal_train);
+    pHCalEneVsPar[1]        -> Fill(ePar_train,               eSumBHCal_train);
+    hECalEneVsPar[1]        -> Fill(ePar_train,               eSumBEMC_train);
+    pECalEneVsPar[1]        -> Fill(ePar_train,               eSumBEMC_train);
+    hHCalFracVsPar[0]       -> Fill(ePar_train,               fracParVsLeadBHCal_train);
+    pHCalFracVsPar[0]       -> Fill(ePar_train,               fracParVsLeadBHCal_train);
+    hHCalFracVsPar[1]       -> Fill(ePar_train,               fracParVsSumBHCal_train);
+    pHCalFracVsPar[1]       -> Fill(ePar_train,               fracParVsSumBHCal_train);
+    hHCalDiffVsPar[0]       -> Fill(ePar_train,               diffLeadBHCal_train);
+    pHCalDiffVsPar[0]       -> Fill(ePar_train,               diffSumBHCal_train);
+    hHCalDiffVsPar[1]       -> Fill(ePar_train,               diffLeadBHCal_train);
+    pHCalDiffVsPar[1]       -> Fill(ePar_train,               diffSumBHCal_train);
+    hECalFracVsPar[0]       -> Fill(ePar_train,               fracParVsLeadBEMC_train);
+    pECalFracVsPar[0]       -> Fill(ePar_train,               fracParVsLeadBEMC_train);
+    hECalFracVsPar[1]       -> Fill(ePar_train,               fracParVsSumBEMC_train);
+    pECalFracVsPar[1]       -> Fill(ePar_train,               fracParVsSumBEMC_train);
+    hECalDiffVsPar[0]       -> Fill(ePar_train,               diffLeadBEMC_train);
+    pECalDiffVsPar[0]       -> Fill(ePar_train,               diffSumBEMC_train);
+    hECalDiffVsPar[1]       -> Fill(ePar_train,               diffLeadBEMC_train);
+    pECalDiffVsPar[1]       -> Fill(ePar_train,               diffSumBEMC_train);
+    hHCalVsECalFrac[0]      -> Fill(fracParVsLeadBEMC_train,  fracParVsLeadBHCal_train);
+    pHCalVsECalFrac[0]      -> Fill(fracParVsLeadBEMC_train,  fracParVsLeadBHCal_train);
+    hHCalVsECalFrac[1]      -> Fill(fracParVsSumBEMC_train,   fracParVsSumBHCal_train);
+    pHCalVsECalFrac[1]      -> Fill(fracParVsSumBEMC_train,   fracParVsSumBHCal_train);
+    hHCalVsECalDiff[0]      -> Fill(diffLeadBEMC_train,       diffLeadBHCal_train);
+    pHCalVsECalDiff[0]      -> Fill(diffLeadBEMC_train,       diffLeadBHCal_train);
+    hHCalVsECalDiff[1]      -> Fill(diffSumBEMC_train,        diffSumBHCal_train);
+    pHCalVsECalDiff[1]      -> Fill(diffSumBEMC_train,        diffSumBHCal_train);
+    hHCalFracVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC_train, fracParVsLeadBHCal_train);
+    pHCalFracVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC_train, fracParVsLeadBHCal_train);
+    hHCalFracVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC_train, fracParVsSumBHCal_train);
+    pHCalFracVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC_train, fracParVsSumBHCal_train);
+    hHCalDiffVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC_train, diffLeadBHCal_train);
+    pHCalDiffVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC_train, diffLeadBHCal_train);
+    hHCalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC_train, diffSumBHCal_train);
+    pHCalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC_train, diffSumBHCal_train);
+    hECalFracVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC_train, fracParVsLeadBEMC_train);
+    pECalFracVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC_train, fracParVsLeadBEMC_train);
+    hECalFracVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC_train, fracParVsSumBEMC_train);
+    pECalFracVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC_train, fracParVsSumBEMC_train);
+    hECalDiffVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC_train, diffLeadBEMC_train);
+    pECalDiffVsTotalFrac[0] -> Fill(fracSumBHCalVsBEMC_train, diffLeadBEMC_train);
+    hECalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC_train, diffSumBEMC_train);
+    pECalDiffVsTotalFrac[1] -> Fill(fracSumBHCalVsBEMC_train, diffSumBEMC_train);
 
     // fill resolution histograms
     for (UInt_t iEneBin = 0; iEneBin < NEneBins; iEneBin++) {
-      const bool isInEneParBin = ((ePar > eneParMin[iEneBin]) && (ePar < eneParMax[iEneBin]));
+      const bool isInEneParBin = ((ePar_train > eneParMin[iEneBin]) && (ePar_train < eneParMax[iEneBin]));
       if (isInEneParBin) {
-        hHCalEneBin[iEneBin]  -> Fill(eLeadBHCal);
-        hHCalDiffBin[iEneBin] -> Fill(diffLeadBHCal);
+        hHCalEneBin[iEneBin]  -> Fill(eLeadBHCal_train);
+        hHCalDiffBin[iEneBin] -> Fill(diffLeadBHCal_train);
       }
     }
   }  // end uncalibrated event loop
@@ -800,7 +922,7 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
   cout << "      Set spectators, variables, and target..." << endl;
 
   // add tree & prepare for training
-  loader -> AddRegressionTree(ntToCalibrate, treeWeight);
+  loader -> AddRegressionTree(ntToTrain, treeWeight);
   loader -> PrepareTrainingAndTestTree(trainCut, "nTrain_Regression=1000:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V");
   cout << "      Added tree and prepared for training..." << endl;
 
@@ -829,34 +951,34 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
   cout << "\n==> Start TMVARegressionApplication" << endl;
 
   Reader *reader = new Reader( "!Color:!Silent" );
-  reader -> AddVariable("eLeadBHCal",       &eLeadBHCal);
-  reader -> AddVariable("eLeadBEMC",        &eLeadBEMC);
-  reader -> AddVariable("hLeadBHCal",       &hLeadBHCal);
-  reader -> AddVariable("hLeadBEMC",        &hLeadBEMC);
-  reader -> AddVariable("fLeadBHCal",       &fLeadBHCal);
-  reader -> AddVariable("fLeadBEMC",        &fLeadBEMC);
-  reader -> AddVariable("nHitsLeadBHCal",   &nHitsLeadBHCal);
-  reader -> AddVariable("nHitsLeadBEMC",    &nHitsLeadBEMC);
-  reader -> AddVariable("eSumImage",        &eSumImage);
-  reader -> AddVariable("eSumSciFi",        &eSumSciFi);
-  reader -> AddVariable("eSumSciFiLayer1",  &eSumSciFiLayer1);
-  reader -> AddVariable("eSumSciFiLayer2",  &eSumSciFiLayer2);
-  reader -> AddVariable("eSumSciFiLayer3",  &eSumSciFiLayer3);
-  reader -> AddVariable("eSumSciFiLayer4",  &eSumSciFiLayer4);
-  reader -> AddVariable("eSumSciFiLayer5",  &eSumSciFiLayer5);
-  reader -> AddVariable("eSumSciFiLayer6",  &eSumSciFiLayer6);
-  reader -> AddVariable("eSumSciFiLayer7",  &eSumSciFiLayer7);
-  reader -> AddVariable("eSumSciFiLayer8",  &eSumSciFiLayer8);
-  reader -> AddVariable("eSumSciFiLayer9",  &eSumSciFiLayer9);
-  reader -> AddVariable("eSumSciFiLayer10", &eSumSciFiLayer10);
-  reader -> AddVariable("eSumSciFiLayer11", &eSumSciFiLayer11);
-  reader -> AddVariable("eSumSciFiLayer12", &eSumSciFiLayer12);
-  reader -> AddVariable("eSumImageLayer1",  &eSumImageLayer1);
-  reader -> AddVariable("eSumImageLayer2",  &eSumImageLayer2);
-  reader -> AddVariable("eSumImageLayer3",  &eSumImageLayer3);
-  reader -> AddVariable("eSumImageLayer4",  &eSumImageLayer4);
-  reader -> AddVariable("eSumImageLayer5",  &eSumImageLayer5);
-  reader -> AddVariable("eSumImageLayer6",  &eSumImageLayer6);
+  reader -> AddVariable("eLeadBHCal",       &eLeadBHCal_apply);
+  reader -> AddVariable("eLeadBEMC",        &eLeadBEMC_apply);
+  reader -> AddVariable("hLeadBHCal",       &hLeadBHCal_apply);
+  reader -> AddVariable("hLeadBEMC",        &hLeadBEMC_apply);
+  reader -> AddVariable("fLeadBHCal",       &fLeadBHCal_apply);
+  reader -> AddVariable("fLeadBEMC",        &fLeadBEMC_apply);
+  reader -> AddVariable("nHitsLeadBHCal",   &nHitsLeadBHCal_apply);
+  reader -> AddVariable("nHitsLeadBEMC",    &nHitsLeadBEMC_apply);
+  reader -> AddVariable("eSumImage",        &eSumImage_apply);
+  reader -> AddVariable("eSumSciFi",        &eSumSciFi_apply);
+  reader -> AddVariable("eSumSciFiLayer1",  &eSumSciFiLayer1_apply);
+  reader -> AddVariable("eSumSciFiLayer2",  &eSumSciFiLayer2_apply);
+  reader -> AddVariable("eSumSciFiLayer3",  &eSumSciFiLayer3_apply);
+  reader -> AddVariable("eSumSciFiLayer4",  &eSumSciFiLayer4_apply);
+  reader -> AddVariable("eSumSciFiLayer5",  &eSumSciFiLayer5_apply);
+  reader -> AddVariable("eSumSciFiLayer6",  &eSumSciFiLayer6_apply);
+  reader -> AddVariable("eSumSciFiLayer7",  &eSumSciFiLayer7_apply);
+  reader -> AddVariable("eSumSciFiLayer8",  &eSumSciFiLayer8_apply);
+  reader -> AddVariable("eSumSciFiLayer9",  &eSumSciFiLayer9_apply);
+  reader -> AddVariable("eSumSciFiLayer10", &eSumSciFiLayer10_apply);
+  reader -> AddVariable("eSumSciFiLayer11", &eSumSciFiLayer11_apply);
+  reader -> AddVariable("eSumSciFiLayer12", &eSumSciFiLayer12_apply);
+  reader -> AddVariable("eSumImageLayer1",  &eSumImageLayer1_apply);
+  //reader -> AddVariable("eSumImageLayer2",  &eSumImageLayer2_apply);
+  reader -> AddVariable("eSumImageLayer3",  &eSumImageLayer3_apply);
+  reader -> AddVariable("eSumImageLayer4",  &eSumImageLayer4_apply);
+  //reader -> AddVariable("eSumImageLayer5",  &eSumImageLayer5_apply);
+  reader -> AddVariable("eSumImageLayer6",  &eSumImageLayer6_apply);
 
   // book method(s)
   for (map<string, int>::iterator itMethod = Use.begin(); itMethod != Use.end(); itMethod++) {
@@ -887,22 +1009,25 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
   }  // end method loop
   nTmvaHist++;
 
-  // begin event loop
+  // get number of events for application
+  const Long64_t nEvtsToApply = ntToApply -> GetEntries();
+
+  // begin application event loop
   TStopwatch stopwatch;
-  cout << "--- Processing: " << nEvts << " events" << endl;
+  cout << "--- Processing: " << nEvtsToApply << " events" << endl;
 
   nBytes = 0;
   stopwatch.Start();
-  for (Long64_t iEvt = 0; iEvt < nEvts; iEvt++) {
+  for (Long64_t iEvtToApply = 0; iEvtToApply < nEvtsToApply; iEvtToApply++) {
 
     // announce progress
-    if (iEvt % 1000 == 0) {
-      cout << "--- ... Processing event: " << iEvt << endl;
+    if (iEvtToApply % 1000 == 0) {
+      cout << "--- ... Processing event: " << iEvtToApply << endl;
     }
 
-    const Long64_t bytes = ntToCalibrate -> GetEntry(iEvt);
+    const Long64_t bytes = ntToApply -> GetEntry(iEvtToApply);
     if (bytes < 0.) {
-      cerr << "WARNING something wrong with event " << iEvt << "! Aborting loop!" << endl;
+      cerr << "WARNING something wrong with event " << iEvtToApply << "! Aborting loop!" << endl;
       break;
     }
     nBytes += bytes;
@@ -927,23 +1052,23 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
 
       // check for ecal energy
       const bool methodExists     = (method > -1);
-      const bool isInECalEneRange = ((eLeadBEMC > eneECalRange[0]) && (eLeadBEMC < eneECalRange[1]));
+      const bool isInECalEneRange = ((eLeadBEMC_apply > eneECalRange[0]) && (eLeadBEMC_apply < eneECalRange[1]));
       if (doECalCut && !isInECalEneRange) continue;
 
       // fill resolution histograms
       if (methodExists) {
         for (UInt_t iCalibBin = 0; iCalibBin < NCalibBins; iCalibBin++) {
-          const bool isInEneCalibBin = ((ePar > eneCalibMin[iCalibBin]) && (ePar < eneCalibMax[iCalibBin]));
+          const bool isInEneCalibBin = ((ePar_apply > eneCalibMin[iCalibBin]) && (ePar_apply < eneCalibMax[iCalibBin]));
           if (isInEneCalibBin) {
             hHCalCalibBin[method][iCalibBin] -> Fill(target);
           }
         }  // end energy bin loop
-        hCalibCalibVsPar[method]  -> Fill(ePar,      target);
-        hHCalCalibVsPar[method]   -> Fill(ePar,      eLeadBHCal);
-        hHCalCalibVsCalib[method] -> Fill(target,    eLeadBHCal);
-        hHCalCalibVsECal[method]  -> Fill(eLeadBEMC, eLeadBHCal);
-        hECalCalibVsPar[method]   -> Fill(ePar,      eLeadBEMC);
-        hECalCalibVsCalib[method] -> Fill(target,    eLeadBEMC);
+        hCalibCalibVsPar[method]  -> Fill(ePar_apply,      target);
+        hHCalCalibVsPar[method]   -> Fill(ePar_apply,      eLeadBHCal_apply);
+        hHCalCalibVsCalib[method] -> Fill(target,          eLeadBHCal_apply);
+        hHCalCalibVsECal[method]  -> Fill(eLeadBEMC_apply, eLeadBHCal_apply);
+        hECalCalibVsPar[method]   -> Fill(ePar_apply,      eLeadBEMC_apply);
+        hECalCalibVsCalib[method] -> Fill(target,          eLeadBEMC_apply);
       }  // end if (methodExists)
     }  // end method loop
   }  // end event loop
@@ -1122,10 +1247,12 @@ void TrainAndApplyBHCalCalibration(const string sInput = SInDef, const string sO
   cout << "    Saved histograms." << endl;
 
   // close files
-  fOutput -> cd();
-  fOutput -> Close();
-  fInput  -> cd();
-  fInput  -> Close();
+  fOutput  -> cd();
+  fOutput  -> Close();
+  fInTrain -> cd();
+  fInTrain -> Close();
+  fInApply -> cd();
+  fInApply -> Close();
   cout << "  Finished BHCal calibration script!\n" << endl;
 
   // delete tmva objects and exit
