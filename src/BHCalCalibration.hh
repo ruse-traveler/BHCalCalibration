@@ -38,7 +38,7 @@ class BHCalCalibration {
   public:
 
     // ctor/dtor
-    BHCalCalibration(const string sFactory = "TMVARegression", const string sLoader = "TMVADir", const string sOutput = "out.root")  {};
+    BHCalCalibration(const string sFactory = "TMVARegression", const string sLoader = "TMVADir", const string sOutput = "out.root");
     ~BHCalCalibration();
 
     // analysis methods
@@ -96,10 +96,10 @@ class BHCalCalibration {
     vector<string> _vecSpecsForTMVA;
 
     // tmva methods, options, and types
-    vector<tuple<string, string, TMVA::Types>> _vecMethodsAndOptsTMVA;
+    vector<tuple<string, string, int>> _vecMethodsAndOptsTMVA;
 
     // method-index map
-    map<string, TMVA::Types> _mapMethodToIndex;
+    map<string, int> _mapMethodToIndex;
 
 };  // end BHCalCalibration definition
 
@@ -126,21 +126,19 @@ BHCalCalibration::BHCalCalibration(const string sFactory, const string sLoader, 
   _mapOutTupleVars.clear();
 
   // create method-index map
-  _mapMethodToIndex = {
-    {"PDERS",    TMVA::Types::kPDERS},
-    {"PDEFoam",  TMVA::Types::kPDEFoam},
-    {"KNN",      TMVA::Types::kKNN},
-    {"LD",       TMVA::Types::kLD},
-    {"FDA_MC",   TMVA::Types::kFDA},
-    {"FDA_GA",   TMVA::Types::kFDA},
-    {"FDA_GAMT", TMVA::Types::kFDA},
-    {"MLP",      TMVA::Types::kMLP},
-    {"DNN_CPU",  TMVA::Types::kDL},
-    {"DNN_GPU",  TMVA::Types::kDL},
-    {"SVM",      TMVA::Types::kSVM},
-    {"BDT",      TMVA::Types::kBDT},
-    {"BDTG",     TMVA::Types::kBDT}
-  };
+  _mapMethodToIndex["PDERS"]    = TMVA::Types::kPDERS;
+  _mapMethodToIndex["PDEFoam"]  = TMVA::Types::kPDEFoam;
+  _mapMethodToIndex["KNN"]      = TMVA::Types::kKNN;
+  _mapMethodToIndex["LD"]       = TMVA::Types::kLD;
+  _mapMethodToIndex["FDA_MC"]   = TMVA::Types::kFDA;
+  _mapMethodToIndex["FDA_GA"]   = TMVA::Types::kFDA;
+  _mapMethodToIndex["FDA_GAMT"] = TMVA::Types::kFDA;
+  _mapMethodToIndex["MLP"]      = TMVA::Types::kMLP;
+  _mapMethodToIndex["DNN_CPU"]  = TMVA::Types::kDL;
+  _mapMethodToIndex["DNN_GPU"]  = TMVA::Types::kDL;
+  _mapMethodToIndex["SVM"]      = TMVA::Types::kSVM;
+  _mapMethodToIndex["BDT"]      = TMVA::Types::kBDT;
+  _mapMethodToIndex["BDTG"]     = TMVA::Types::kBDT;
   cout << "CTOR" << endl;
 
 }  // end ctor

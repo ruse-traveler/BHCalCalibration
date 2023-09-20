@@ -103,11 +103,6 @@ void BHCalCalibration::Train() {
 void BHCalCalibration::Apply() {
 
   // default methods to be trained + tested
-  map<string, int> Use;
-  for (UInt_t iMethod = 0; iMethod < NMethods; iMethod++) {
-    const string sToUse(sMethods[iMethod].data());
-    Use[sToUse] = 1;
-  }
   cout << "    Starting TMVA appllication:" << endl;
 
   // create reader
@@ -251,7 +246,7 @@ void BHCalCalibration::SetTmvaOpts(const string sFactOpt, const string sTrainOpt
 
 
 
-void BHCalCalibration::SetTmvaArgs(const vector<string> vecVars, const vector<string> vecTargs, const vector<string> vecSpecs = {}, const TCut select = "") {
+void BHCalCalibration::SetTmvaArgs(const vector<string> vecVars, const vector<string> vecTargs, const vector<string> vecSpecs, const TCut select) {
 
   _vecVarsForTMVA  = vecVars;
   _vecTargsForTMVA = vecTargs;
