@@ -13,6 +13,7 @@
 #include <cassert>
 #include <iostream>
 // dataframe related classes
+#include <TDirectory.h>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/HistoModels.hxx>
 // class header
@@ -120,27 +121,6 @@ void BHCalCalibration::Apply() {
   }
   cout << "      Booked methods." << endl;
 
-/* TODO  add TMVA histograms
-  const UInt_t nTmvaBins(100);
-  const float rTmvaBins[NRange] = {-100., 600.};
-
-  // Book tmva histograms
-  Int_t  nTmvaHist(-1);
-  TH1   *hTMVA[NTmvaHistMax];
-  for (map<string, int>::iterator itMethod = Use.begin(); itMethod != Use.end(); itMethod++) {
-    string  sName  = string(itMethod -> first.c_str());
-    string  sTitle = string(itMethod -> first) + " method";
-    TH1     *hNew   = new TH1F(sName.data(), sTitle.data(), nTmvaBins, rTmvaBins[0], rTmvaBins[1]);
-    if (!hNew) {
-      cerr << "PANIC: couldn't create TMVA histogram #" << nTmvaHist << "! Aborting code execution!\n" << endl;
-      return;
-    } else {
-      if (itMethod -> second) hTMVA[++nTmvaHist] = hNew;
-    }
-  }  // end method loop
-  nTmvaHist++;
-*/
-
   // begin event loop
   const uint64_t nEntries = _ntInput -> GetEntries();
   cout << "      Beginning event loop:" << nEntries << " entries to process" << endl;
@@ -169,10 +149,7 @@ void BHCalCalibration::Apply() {
 
       // grab regression target
       const float target = (reader -> EvaluateRegression(get<0>(methodAndOpt)))[0];
-
-      // TODO fill TMVA hist
-      //TString title  = hTMVA[iTmvaHist] -> GetTitle();
-      //hTMVA[iTmvaHist] -> Fill(target);
+      _mapTmvaHists[get<0>(methodAndOpt)] -> Fill(target);
 
       /* TODO fill output histograms */
 
@@ -218,7 +195,7 @@ void BHCalCalibration::SetInput(const string sInFile, const string sInTuple, con
 
 
 
-void BHCalCalibration::SetTupleArgs(const vector<string> vecInput) {
+void BHCalCalibration::SetTupleLeaves(const vector<string> vecInput) {
 
   _vecInTupleLeaves = vecInput;
   for (const string inputLeaf : _vecInTupleLeaves) {
@@ -310,7 +287,27 @@ void BHCalCalibration::InitTuples() {
     _ntInput -> SetBranchAddress(leaf.data(), &_mapInTupleVars[leaf]);
   }
 
-  /* TODO set up output tuple */
+  // create map of output leaves
+  string sLeaf     = "";
+  string sLeafList = "";
+  for (const auto methodAndOpt : _vecMethodsAndOptsTMVA) {
+    for (const string target : _vecTargsForTMVA) {
+
+      // form leaf and it to list
+      sLeaf      = get<0>(methodAndOpt) + "_" + target;
+      sLeafList += sLeaf + ":";
+
+      // initialize value of leaf
+      _mapOutTupleVars[sLeaf] = -999.;
+    }
+  }
+
+  // remove extraneous colons and create output tuple
+  const size_t iLastColon = sLeafList.find_last_of(":");
+  if (iLastColon == string::npos) {
+    sLeafList.erase(sLeafList.end() - 1);
+  }
+  _ntOutput = new TNtuple(_sOutTuple.data(), "regression targets", sLeafList.data());
 
   cout << "  INIT TUPLES" << endl;
   return;
@@ -320,6 +317,15 @@ void BHCalCalibration::InitTuples() {
 
 
 void BHCalCalibration::InitHistos() {
+
+  // binning for tmva book keeping histograms
+  const tuple<size_t, float, float> tmvaBins = make_tuple(100, -100., 600.);
+
+  // create tmva book keeping histograms
+  for (const auto methodAndOpt : _vecMethodsAndOptsTMVA) {
+    const string sTmvaName = "h_" + get<0>(methodAndOpt);
+    _mapTmvaHists[get<0>(methodAndOpt)] = new TH1F(sTmvaName.data(), get<0>(methodAndOpt).data(), get<0>(tmvaBins), get<1>(tmvaBins), get<2>(tmvaBins));
+  }
 
   cout << "  INIT HISTOS" << endl;
   return;
@@ -347,6 +353,19 @@ void BHCalCalibration::ComputeReso() {
 
 
 void BHCalCalibration::SaveOutput() {
+
+  // create directories
+  TDirectory *dTMVA = (TDirectory*) _fOutput -> mkdir("tmva");
+
+  // save tmva histograms
+  dTMVA -> cd();
+  for (auto tmvaHist : _mapTmvaHists) {
+    tmvaHist.second -> Write();
+  }
+
+  // save output tuple
+  _fOutput  -> cd();
+  _ntOutput -> Write();
 
   cout << "  SAVE OUTPUT" << endl;
   return;

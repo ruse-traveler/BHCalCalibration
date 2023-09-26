@@ -16,6 +16,7 @@
 #include <string>
 #include <utility>
 // root utilities
+#include <TH1.h>
 #include <TCut.h>
 #include <TFile.h>
 #include <TNtuple.h>
@@ -38,7 +39,7 @@ class BHCalCalibration {
   public:
 
     // ctor/dtor
-    BHCalCalibration(const string sFactory = "TMVARegression", const string sLoader = "TMVADir", const string sOutput = "out.root");
+    BHCalCalibration(const string sFactory = "TMVARegression", const string sLoader = "TMVADir", const string sOutput = "out.root", const string sOutTuple = "ntOutput");
     ~BHCalCalibration();
 
     // analysis methods
@@ -49,7 +50,7 @@ class BHCalCalibration {
 
     // setters
     void SetInput(const string sInFile, const string sInTuple, const float treeWeight = 1.);
-    void SetTupleArgs(const vector<string> vecInput);
+    void SetTupleLeaves(const vector<string> vecInput);
     void SetTmvaOpts(const string sFactOpt, const string sTrainOpt, const string sReadOpt, const bool addSpecs = false);
     void SetTmvaArgs(const vector<string> vecVars, const vector<string> vecTargs, const vector<string> vecSpecs = {}, const TCut select = "");
     void SetTmvaMethods(const vector<pair<string, string>> vecMethodAndOpts);
@@ -66,13 +67,17 @@ class BHCalCalibration {
     void CloseFiles();
 
     // i/o members
-    string   _sOutFile = "";
-    string   _sInFile  = "";
-    string   _sInTuple = "";
-    TFile*   _fInput   = NULL;
-    TFile*   _fOutput  = NULL;
-    TNtuple* _ntInput  = NULL;
-    TNtuple* _ntOutput = NULL;
+    string   _sOutFile  = "";
+    string   _sOutTuple = "";
+    string   _sInFile   = "";
+    string   _sInTuple  = "";
+    TFile*   _fInput    = NULL;
+    TFile*   _fOutput   = NULL;
+    TNtuple* _ntInput   = NULL;
+    TNtuple* _ntOutput  = NULL;
+
+    // output histograms
+    map<string, TH1F*> _mapTmvaHists;
 
     // tuple members
     vector<string>     _vecInTupleLeaves;
@@ -107,11 +112,12 @@ class BHCalCalibration {
 
 // ctor/dtor ------------------------------------------------------------------
 
-BHCalCalibration::BHCalCalibration(const string sFactory, const string sLoader, const string sOutput) {
+BHCalCalibration::BHCalCalibration(const string sFactory, const string sLoader, const string sOutput, const string sOutTuple) {
 
-  _sFactory = sFactory;
-  _sLoader  = sLoader;
-  _sOutFile = sOutput;
+  _sFactory  = sFactory;
+  _sLoader   = sLoader;
+  _sOutFile  = sOutput;
+  _sOutTuple = sOutTuple;
 
   // make sure vectors are clear
   _vecInTupleLeaves.clear();

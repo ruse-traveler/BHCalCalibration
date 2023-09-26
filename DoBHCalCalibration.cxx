@@ -11,6 +11,7 @@
 #include <vector>
 #include <utility>
 // root utilites
+#include <TCut.h>
 #include <TROOT.h>
 #include <TSystem.h>
 // calibration class
@@ -25,22 +26,21 @@ using namespace std;
 
 void DoBHCalCalibration() {
 
-  // load library
-  //gROOT -> ProcessLine(".L ./src/BHCalCalibration.cc++");
-  //gSystem -> Load("./src/BHCalCalibration_cc.so");
-
   // io parameters
-  const string           sOutput = "test.root";
-  const array<string, 2> sInput  = {
+  const pair<string, string> sOutput = {
+    "test.root",
+    "ntCalibratedEnergies"
+  };
+  const pair<string, string> sInput  = {
     "../performance/eicrecon_output/single_particles/merged/forPerformanceStudy.withIndividualECalLayers_includedEPar7.e110th45n20Kneu.d20m7y2023.plugin.root",
     "JCalibrateWithImaging/ntToCalibrate"
   };
 
   // how to use each leaf
-  const enum Usage { Tuple, Train, Target, Specter };
+  const enum Usage { Tuple, Train, Target, Watcher };
 
   // tuple parameters
-  vector<pair<bool, string>> vecTrainAndTupleVars = {
+  vector<pair<int, string>> vecTrainAndTupleVars = {
     {Usage::Target, "ePar"},
     {Usage::Tuple,  "fracParVsLeadBHCal"},
     {Usage::Tuple,  "fracParVsLeadBEMC"},
@@ -95,8 +95,22 @@ void DoBHCalCalibration() {
   };
 
   // tmva parameters
-  const string sLoader("TMVADir");
-  const string sFactory("TMVARegression");
+  const string sLoader  = "TMVADir";
+  const string sFactory = "TMVARegression";
+
+  // general tmva options
+  const string sFactOpt  = "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression";
+  const string sTrainOpt = "nTrain_Regression=1000:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V";
+  const string sReadOpt  = "!Color:!Silent";
+  const TCut   cSelect   = "eSumBHCal>0";
+  const bool   addSpecs  = false;
+
+  // tmva methods and method-specific options
+  const vector<pair<string, string>> vecMethodsAndOpts = {
+    {"LD",   ""},
+    {"MLP",  ""},
+    {"BDTG", ""}
+  };
 
   // sort tuple leaves
   vector<string> vecTupleLeaves;
@@ -111,7 +125,7 @@ void DoBHCalCalibration() {
       case Usage::Target:
         vecTmvaTargets.push_back(trainAndTupleVars.second);
         break;
-      case Usage::Specter:
+      case Usage::Watcher:
         vecTmvaSpectators.push_back(trainAndTupleVars.second);
         break;
     }
@@ -119,10 +133,12 @@ void DoBHCalCalibration() {
   }
 
   // run calibration workflow
-  BHCalCalibration* calibrator = new BHCalCalibration(sFactory, sLoader, sOutput);
-  calibrator -> SetInput(sInput[0], sInput[1]);
-  calibrator -> SetTupleArgs(vecTupleLEaves);
-  calibrator -> SetTmvaArgs(vecTmvaTrainers, vecTmvaTargets, vecTmvaSpectators);
+  BHCalCalibration* calibrator = new BHCalCalibration(sFactory, sLoader, sOutput.first);
+  calibrator -> SetInput(sInput.first, sInput.second);
+  calibrator -> SetTupleLeaves(vecTupleLeaves);
+  calibrator -> SetTmvaOpts(sFactOpt, sTrainOpt, sReadOpt, addSpecs);
+  calibrator -> SetTmvaArgs(vecTmvaTrainers, vecTmvaTargets, vecTmvaSpectators, cSelect);
+  calibrator -> SetTmvaMethods(vecMethodsAndOpts);
   calibrator -> Init();
   calibrator -> Train();
   calibrator -> Apply();
