@@ -145,6 +145,7 @@ void BHCalCalibration::Apply() {
     }
 
     // loop over methods
+    // TODO extend to multiple targets
     for (const auto methodAndOpt : _vecMethodsAndOptsTMVA) {
 
       // grab regression target
@@ -153,7 +154,17 @@ void BHCalCalibration::Apply() {
 
       /* TODO fill output histograms */
 
+      // form leaf and it to list
+      const string sLeaf = get<0>(methodAndOpt) + "_" + _vecTargsForTMVA[0];
+
+      // initialize value of leaf
+      _mapOutTupleVars[sLeaf] = target;;
+
     }  // end method loop
+
+    // fill output tuple with regression targets
+    FillTuples();
+
   }  // end event loop
 
   // announce end of event loop
@@ -316,12 +327,31 @@ void BHCalCalibration::InitTuples() {
 
 
 
+void BHCalCalibration::FillTuples() {
+
+  // load regression targets into a vector
+  _vecOutTupleValues.clear();
+  for (const auto outLeaf : _mapOutTupleVars) {
+    _vecOutTupleValues.push_back(outLeaf.second);
+  }
+
+  // fill output tuple
+  _ntOutput -> Fill(_vecOutTupleValues.data());
+
+  cout << "    FILLED OUTPUT TUPLE" << endl;
+  return;
+
+}  // end 'FillTuples()'
+
+
+
 void BHCalCalibration::InitHistos() {
 
   // binning for tmva book keeping histograms
   const tuple<size_t, float, float> tmvaBins = make_tuple(100, -100., 600.);
 
   // create tmva book keeping histograms
+  // TODO extend to multiple targets
   for (const auto methodAndOpt : _vecMethodsAndOptsTMVA) {
     const string sTmvaName = "h_" + get<0>(methodAndOpt);
     _mapTmvaHists[get<0>(methodAndOpt)] = new TH1F(sTmvaName.data(), get<0>(methodAndOpt).data(), get<0>(tmvaBins), get<1>(tmvaBins), get<2>(tmvaBins));

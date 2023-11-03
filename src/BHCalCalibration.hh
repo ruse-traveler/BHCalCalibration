@@ -60,6 +60,7 @@ class BHCalCalibration {
     // private methods
     void OpenFiles();
     void InitTuples();
+    void FillTuples();
     void InitHistos();
     void FillHistos();
     void ComputeReso();
@@ -80,6 +81,8 @@ class BHCalCalibration {
     map<string, TH1F*> _mapTmvaHists;
 
     // tuple members
+    // FIXME some of these should be more descriptive
+    vector<float>      _vecOutTupleValues;
     vector<string>     _vecInTupleLeaves;
     vector<string>     _vecOutTupleLeaves;
     map<string, float> _mapInTupleVars;
@@ -120,6 +123,7 @@ BHCalCalibration::BHCalCalibration(const string sFactory, const string sLoader, 
   _sOutTuple = sOutTuple;
 
   // make sure vectors are clear
+  _vecOutTupleValues.clear();;
   _vecInTupleLeaves.clear();
   _vecOutTupleLeaves.clear();
   _vecVarsForTMVA.clear();
