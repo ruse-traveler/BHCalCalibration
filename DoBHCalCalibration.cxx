@@ -33,11 +33,11 @@ void DoBHCalCalibration() {
   };
   const pair<string, string> sInput  = {
     "../performance/eicrecon_output/single_particles/merged/forPerformanceStudy.withIndividualECalLayers_includedEPar7.e110th45n20Kneu.d20m7y2023.plugin.root",
-    "JCalibrateWithImaging/ntToCalibrate"
+    "JCalibrateHCalWithImaging/ntForCalibration"
   };
 
   // how to use each leaf
-  const enum Usage { Tuple, Train, Target, Watcher };
+  enum Usage { Tuple, Train, Target, Watcher };
 
   // tuple parameters
   vector<pair<int, string>> vecTrainAndTupleVars = {
