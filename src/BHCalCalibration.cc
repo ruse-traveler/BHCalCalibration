@@ -28,11 +28,14 @@ using namespace TMVA;
 
 void BHCalCalibration::Init() {
 
+  // announce initialization
+  cout << "\n  Beginning BHCal calibration...\n"
+       << "    Initializing:"
+       << endl;
+
   OpenFiles();
   InitTuples();
   InitHistos();
-
-  cout << "INIT" << endl;
   return;
 
 }  // end 'Init()'
@@ -79,10 +82,34 @@ void BHCalCalibration::Train() {
 
   // book methods
   for (const auto methodAndOpts : _vecMethodsAndOptsTMVA) {
-    if (get<1>(methodAndOpts).empty()) {
-      factory -> BookMethod(loader, get<2>(methodAndOpts), get<0>(methodAndOpts).data());
-    } else {
-      factory -> BookMethod(loader, get<2>(methodAndOpts), get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+    switch (get<2>(methodAndOpts)) {
+      case TMVA::Types::kPDERS:
+        factory -> BookMethod(loader, TMVA::Types::kPDERS, get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+        break;
+      case TMVA::Types::kPDEFoam:
+        factory -> BookMethod(loader, TMVA::Types::kPDEFoam, get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+        break;
+      case TMVA::Types::kKNN:
+        factory -> BookMethod(loader, TMVA::Types::kKNN, get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+        break;
+      case TMVA::Types::kLD:
+        factory -> BookMethod(loader, TMVA::Types::kLD, get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+        break;
+      case TMVA::Types::kFDA:
+        factory -> BookMethod(loader, TMVA::Types::kFDA, get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+        break;
+      case TMVA::Types::kMLP:
+        factory -> BookMethod(loader, TMVA::Types::kMLP, get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+        break;
+      case TMVA::Types::kDL:
+        factory -> BookMethod(loader, TMVA::Types::kDL, get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+        break;
+      case TMVA::Types::kSVM:
+        factory -> BookMethod(loader, TMVA::Types::kSVM, get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+        break;
+      case TMVA::Types::kBDT:
+        factory -> BookMethod(loader, TMVA::Types::kBDT, get<0>(methodAndOpts).data(), get<1>(methodAndOpts).data());
+        break;
     }
   }
   cout << "      Booked methods." << endl;
@@ -91,7 +118,7 @@ void BHCalCalibration::Train() {
   factory -> TrainAllMethods();
   factory -> TestAllMethods();
   factory -> EvaluateAllMethods();
-  cout << "      Trained TMVA!" << endl;
+  cout << "    Trained TMVA!" << endl;
 
   delete factory;
   delete loader;
@@ -104,7 +131,7 @@ void BHCalCalibration::Train() {
 void BHCalCalibration::Apply() {
 
   // default methods to be trained + tested
-  cout << "    Starting TMVA appllication:" << endl;
+  cout << "    Starting TMVA application:" << endl;
 
   // create reader
   Reader* reader = new Reader(_sReadOpt.data());
@@ -116,7 +143,7 @@ void BHCalCalibration::Apply() {
   // book methods to use
   for (const auto methodAndOpts : _vecMethodsAndOptsTMVA) {
     const string name    = get<0>(methodAndOpts);
-    const string weights = _sLoader + "/weights/" + _sFactory + get<0>(methodAndOpts) + ".weights.xml";
+    const string weights = _sLoader + "/weights/" + _sFactory + "_" + get<0>(methodAndOpts) + ".weights.xml";
     reader -> BookMVA(name, weights);
   }
   cout << "      Booked methods." << endl;
@@ -145,10 +172,10 @@ void BHCalCalibration::Apply() {
     }
 
     // loop over methods
-    // TODO extend to multiple targets
     for (const auto methodAndOpt : _vecMethodsAndOptsTMVA) {
 
       // grab regression target
+      // TODO extend to multiple targets
       const float target = (reader -> EvaluateRegression(get<0>(methodAndOpt)))[0];
       _mapTmvaHists[get<0>(methodAndOpt)] -> Fill(target);
 
@@ -159,16 +186,16 @@ void BHCalCalibration::Apply() {
 
       // initialize value of leaf
       _mapOutTupleVars[sLeaf] = target;;
-
     }  // end method loop
 
-    // fill output tuple with regression targets
+    // fill output tuple with regression targets & input leaves
+    for (const auto inBranch : _mapInTupleVars) {
+      _mapOutTupleVars[inBranch.first] = inBranch.second;
+    }
     FillTuples();
 
   }  // end event loop
-
-  // announce end of event loop
-  cout << "      Application finished!" << endl;
+  cout << "    Application finished!" << endl;
 
   // delete reader and exit
   delete reader;
@@ -180,11 +207,14 @@ void BHCalCalibration::Apply() {
 
 void BHCalCalibration::End() {
 
+  // announce finishing
+  cout << "    Finishing:" << endl;
+
   FillHistos();
   ComputeReso();
   SaveOutput();
 
-  cout << "END" << endl;
+  cout << "  Finished BHCal calibration!\n" << endl;
   return;
 
 }  // end 'End()'
@@ -198,8 +228,6 @@ void BHCalCalibration::SetInput(const string sInFile, const string sInTuple, con
   _sInFile  = sInFile;
   _sInTuple = sInTuple;
   _weight   = treeWeight;
-
-  cout << "SET INPUT" << endl;
   return;
 
 }  // end 'SetInput(string, string, float)'
@@ -212,8 +240,6 @@ void BHCalCalibration::SetTupleLeaves(const vector<string> vecInput) {
   for (const string inputLeaf : _vecInTupleLeaves) {
     _mapInTupleVars[inputLeaf] = -999.;
   }
-
-  cout << "SET TUPLE ARGS" << endl;
   return;
 
 }  // end 'SetTupleArgs(vector<string>)'
@@ -226,8 +252,6 @@ void BHCalCalibration::SetTmvaOpts(const string sFactOpt, const string sTrainOpt
   _sTrainOpt = sTrainOpt;
   _sReadOpt  = sReadOpt;
   _addSpecs  = addSpecs;
-
-  cout << "SET TMVA OPTS" << endl;
   return;
 
 }  // end 'SetTmvaOpts(string, string, string, bool)'
@@ -240,8 +264,6 @@ void BHCalCalibration::SetTmvaArgs(const vector<string> vecVars, const vector<st
   _vecTargsForTMVA = vecTargs;
   _vecSpecsForTMVA = vecSpecs;
   _cSelect         = select;
-
-  cout << "SET TMVA ARGS" << endl;
   return;
 
 }  // end 'SetTmvaArgs(vector<string>, vector<string>, vector<string>, TCut)'
@@ -255,8 +277,6 @@ void BHCalCalibration::SetTmvaMethods(const vector<pair<string, string>> vecMeth
   }
 
   /* TODO check for duplicate methods */
-
-  cout << "SET TMVA METHODS" << endl;
   return;
 
 }  // end 'SetTmvaMethods(pair<vector<string, vector<string>>)'
@@ -276,10 +296,11 @@ void BHCalCalibration::OpenFiles() {
     assert(_fInput && _fOutput);
   }
 
-  cout << "  OPEN FILES" << endl;
+  cout << "      Opened files." << endl;
   return;
 
 }  // end 'OpenFiles()'
+
 
 
 void BHCalCalibration::InitTuples() {
@@ -293,34 +314,46 @@ void BHCalCalibration::InitTuples() {
     assert(_ntInput);
   }
 
-  // set input branches
+  // set input branches and collect leaves into a list
   for (const string leaf : _vecInTupleLeaves) {
     _ntInput -> SetBranchAddress(leaf.data(), &_mapInTupleVars[leaf]);
   }
 
-  // create map of output leaves
+  // add targets to output leaf list
   string sLeaf     = "";
   string sLeafList = "";
   for (const auto methodAndOpt : _vecMethodsAndOptsTMVA) {
     for (const string target : _vecTargsForTMVA) {
 
-      // form leaf and it to list
-      sLeaf      = get<0>(methodAndOpt) + "_" + target;
-      sLeafList += sLeaf + ":";
+      // form leaf and add it to list
+      sLeaf      = target + "_" + get<0>(methodAndOpt);
+      sLeafList += sLeaf;
+      sLeafList += ":";
 
       // initialize value of leaf
       _mapOutTupleVars[sLeaf] = -999.;
     }
   }
 
-  // remove extraneous colons and create output tuple
-  const size_t iLastColon = sLeafList.find_last_of(":");
-  if (iLastColon == string::npos) {
-    sLeafList.erase(sLeafList.end() - 1);
-  }
-  _ntOutput = new TNtuple(_sOutTuple.data(), "regression targets", sLeafList.data());
+  // determine total no. of input leaves
+  const size_t nLeaves = _vecInTupleLeaves.size();
 
-  cout << "  INIT TUPLES" << endl;
+  // add input leaves to output list
+  size_t iLeaf = 0;
+  for (const string leaf : _vecInTupleLeaves) {
+
+    // form leaf and add it to list
+    sLeafList += leaf;
+    if ((iLeaf + 1) != nLeaves) {
+      sLeafList += ":";
+    }
+
+    _mapOutTupleVars[leaf] = -999.;
+    ++iLeaf;
+  }
+
+  _ntOutput = new TNtuple(_sOutTuple.data(), "regression targets vs. input", sLeafList.data());
+  cout << "      Initialized tuples." << endl;
   return;
 
 }  // end 'InitTuples()'
@@ -337,8 +370,6 @@ void BHCalCalibration::FillTuples() {
 
   // fill output tuple
   _ntOutput -> Fill(_vecOutTupleValues.data());
-
-  cout << "    FILLED OUTPUT TUPLE" << endl;
   return;
 
 }  // end 'FillTuples()'
@@ -357,7 +388,7 @@ void BHCalCalibration::InitHistos() {
     _mapTmvaHists[get<0>(methodAndOpt)] = new TH1F(sTmvaName.data(), get<0>(methodAndOpt).data(), get<0>(tmvaBins), get<1>(tmvaBins), get<2>(tmvaBins));
   }
 
-  cout << "  INIT HISTOS" << endl;
+  cout << "      Initialized histograms." << endl;
   return;
 
 }  // end 'InitHistos()'
@@ -366,7 +397,8 @@ void BHCalCalibration::InitHistos() {
 
 void BHCalCalibration::FillHistos() {
 
-  cout << "  FILL HISTOS" << endl;
+  /* TODO add histogram filling */
+  cout << "      Filled histograms." << endl;
   return;
 
 }  // end 'FillHistos()'
@@ -375,7 +407,8 @@ void BHCalCalibration::FillHistos() {
 
 void BHCalCalibration::ComputeReso() {
 
-  cout << "  COMPUTE RESO" << endl;
+  /* TODO add resolution computation */
+  cout << "      Calculated resolutions." << endl;
   return;
 
 }  // end 'ComputeReso()'
@@ -397,7 +430,7 @@ void BHCalCalibration::SaveOutput() {
   _fOutput  -> cd();
   _ntOutput -> Write();
 
-  cout << "  SAVE OUTPUT" << endl;
+  cout << "      Saved histograms." << endl;
   return;
 
 }  // end 'SaveOutput()'
@@ -411,7 +444,7 @@ void BHCalCalibration::CloseFiles() {
   _fInput  -> cd();
   _fInput  -> Close();
 
-  cout << "  CLOSE FILES" << endl;
+  cout << "     Closed files." << endl;
   return;
 
 }  // end 'CloseFiles()'

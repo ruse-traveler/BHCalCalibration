@@ -81,7 +81,6 @@ class BHCalCalibration {
     map<string, TH1F*> _mapTmvaHists;
 
     // tuple members
-    // FIXME some of these should be more descriptive
     vector<float>      _vecOutTupleValues;
     vector<string>     _vecInTupleLeaves;
     vector<string>     _vecOutTupleLeaves;
@@ -104,6 +103,9 @@ class BHCalCalibration {
     vector<string> _vecSpecsForTMVA;
 
     // tmva methods, options, and types
+    //   <0> = method
+    //   <1> = option
+    //   <2> = TMVA internal index
     vector<tuple<string, string, int>> _vecMethodsAndOptsTMVA;
 
     // method-index map
@@ -149,7 +151,6 @@ BHCalCalibration::BHCalCalibration(const string sFactory, const string sLoader, 
   _mapMethodToIndex["SVM"]      = TMVA::Types::kSVM;
   _mapMethodToIndex["BDT"]      = TMVA::Types::kBDT;
   _mapMethodToIndex["BDTG"]     = TMVA::Types::kBDT;
-  cout << "CTOR" << endl;
 
 }  // end ctor
 
@@ -161,7 +162,6 @@ BHCalCalibration::~BHCalCalibration() {
   delete _fOutput;
   delete _ntInput;
   delete _ntOutput;
-  cout << "DTOR" << endl;
 
 }  // end dtor
 
