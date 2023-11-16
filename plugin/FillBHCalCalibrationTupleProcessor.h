@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// 'JCalibrateHCalWithImagingProcessor.h'
+// 'FillBHCalCalibrationTupleProcessor.h'
 // Derek Anderson
 // 03.02.2023
 //
@@ -32,10 +32,10 @@
 
 // JCalibrateWithImagingProcessor definition ----------------------------------
 
-class JCalibrateHCalWithImagingProcessor : public JEventProcessorSequentialRoot {
+class FillBHCalCalibrationTupleProcessor : public JEventProcessorSequentialRoot {
 
   // global constants
-  enum CONSTANTS {
+  enum CONST {
     NCalibVars  = 51,
     NSciFiLayer = 12,
     NImageLayer = 6,
@@ -198,19 +198,19 @@ class JCalibrateHCalWithImagingProcessor : public JEventProcessorSequentialRoot 
     TH2D *hEvtECalVsHCalLeadClustEne = nullptr;
 
     // ntuple for calibration
-    Float_t  varsForCalibration[CONSTANTS::NCalibVars];
+    Float_t  varsForCalibration[CONST::NCalibVars];
     TNtuple *ntForCalibration;
 
   public:
 
     // ctor
-    JCalibrateHCalWithImagingProcessor() { SetTypeName(NAME_OF_THIS); }
+    FillBHCalCalibrationTupleProcessor() { SetTypeName(NAME_OF_THIS); }
 
     // inherited methods
     void InitWithGlobalRootLock() override;
     void ProcessSequential(const std::shared_ptr<const JEvent>& event) override;
     void FinishWithGlobalRootLock() override;
 
-};  // end JCalibrateHCalWithImagingProcessor definition
+};  // end FillBHCalCalibrationTupleProcessor definition
 
 // end ------------------------------------------------------------------------

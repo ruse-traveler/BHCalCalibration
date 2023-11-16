@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// 'JCalibrateHCalWithImagingProcessor.cc'
+// 'FillBHCalCalibrationTupleProcessor.cc'
 // Derek Anderson
 // 03.02.2023
 //
@@ -15,13 +15,13 @@
 // eicrecon includes 
 #include <services/rootfile/RootFile_service.h>
 // user includes
-#include "JCalibrateHCalWithImagingProcessor.h"
+#include "FillBHCalCalibrationTupleProcessor.h"
 
 // The following just makes this a JANA plugin
 extern "C" {
   void InitPlugin(JApplication *app) {
   InitJANAPlugin(app);
-  app -> Add(new JCalibrateHCalWithImagingProcessor);
+  app -> Add(new FillBHCalCalibrationTupleProcessor);
   }
 }
 
@@ -30,12 +30,12 @@ extern "C" {
 //-------------------------------------------
 // InitWithGlobalRootLock
 //-------------------------------------------
-void JCalibrateHCalWithImagingProcessor::InitWithGlobalRootLock(){
+void FillBHCalCalibrationTupleProcessor::InitWithGlobalRootLock(){
 
   // create directory in output file
   auto rootfile_svc = GetApplication() -> GetService<RootFile_service>();
   auto rootfile     = rootfile_svc     -> GetHistFile();
-  rootfile -> mkdir("JCalibrateHCalWithImaging") -> cd();
+  rootfile -> mkdir("FillBHCalCalibrationTuple") -> cd();
 
   // initialize bhcal histograms
   const unsigned long nNumBin(200);
@@ -48,16 +48,16 @@ void JCalibrateHCalWithImagingProcessor::InitWithGlobalRootLock(){
   const unsigned long nPosTrBin(800);
   const unsigned long nPosLoBin(30);
   const unsigned long nDiffBin(200);
-  const unsigned long rNumBin[CONSTANTS::NRange]   = {0,      200};
-  const double        rChrgBin[CONSTANTS::NRange]  = {-3.,    3.};
-  const double        rMassBin[CONSTANTS::NRange]  = {0.,     5.};
-  const double        rPhiBin[CONSTANTS::NRange]   = {-3.15,  3.15};
-  const double        rEtaBin[CONSTANTS::NRange]   = {-2.,    2.};
-  const double        rEneBin[CONSTANTS::NRange]   = {0.,     100.};
-  const double        rMomBin[CONSTANTS::NRange]   = {-50.,   50.};
-  const double        rPosTrBin[CONSTANTS::NRange] = {-4000., 4000.};
-  const double        rPosLoBin[CONSTANTS::NRange] = {-3000., 3000.};
-  const double        rDiffBin[CONSTANTS::NRange]  = {-5.,    5.};
+  const unsigned long rNumBin[CONST::NRange]   = {0,      200};
+  const double        rChrgBin[CONST::NRange]  = {-3.,    3.};
+  const double        rMassBin[CONST::NRange]  = {0.,     5.};
+  const double        rPhiBin[CONST::NRange]   = {-3.15,  3.15};
+  const double        rEtaBin[CONST::NRange]   = {-2.,    2.};
+  const double        rEneBin[CONST::NRange]   = {0.,     100.};
+  const double        rMomBin[CONST::NRange]   = {-50.,   50.};
+  const double        rPosTrBin[CONST::NRange] = {-4000., 4000.};
+  const double        rPosLoBin[CONST::NRange] = {-3000., 3000.};
+  const double        rDiffBin[CONST::NRange]  = {-5.,    5.};
   // particle histograms
   hParChrg                   = new TH1D("hParChrg",     "Gen. Particles", nChrgBin, rChrgBin[0], rChrgBin[1]);
   hParMass                   = new TH1D("hParMass",     "Gen. Particles", nMassBin, rMassBin[0], rMassBin[1]);
@@ -234,7 +234,7 @@ void JCalibrateHCalWithImagingProcessor::InitWithGlobalRootLock(){
 
   // initialize becal histograms
   const unsigned long nLayerBin(50);
-  const unsigned long rLayerBin[CONSTANTS::NRange] = {0, 50};
+  const unsigned long rLayerBin[CONST::NRange] = {0, 50};
   // scifi reconstructed hit histograms
   hSciFiRecHitNLayer         = new TH1I("hSciFiRecHitNLayer",      "Barrel SciFi", nLayerBin, rLayerBin[0], rLayerBin[1]);
   hSciFiRecHitPhi            = new TH1D("hSciFiRecHitPhi",         "Barrel SciFi", nPhiBin,   rPhiBin[0],   rPhiBin[1]);
@@ -416,7 +416,7 @@ void JCalibrateHCalWithImagingProcessor::InitWithGlobalRootLock(){
 //-------------------------------------------
 // ProcessSequential
 //-------------------------------------------
-void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr<const JEvent>& event) {
+void FillBHCalCalibrationTupleProcessor::ProcessSequential(const std::shared_ptr<const JEvent>& event) {
 
   // clear array for ntuple
   for (size_t iCalibVar = 0; iCalibVar < NCalibVars; iCalibVar++) {
@@ -437,12 +437,10 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   }  // end 1st bhcal hit loop
 
   // if hit sum is 0, skip event
-/*  TEST [07.17.2023]
   const bool isHCalHitSumNonzero = (eHCalHitSum > 0.);
   if (!isHCalHitSumNonzero) {
     return;
   }
-*/
 
   // MC particle properties
   float  cMcPar(0.);
@@ -719,12 +717,12 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   double eSciFiHitSum(0.);
   double eImageHitSum(0.);
 
-  double eSciFiHitSumVsNLayer[CONSTANTS::NSciFiLayer];
-  double eImageHitSumVsNLayer[CONSTANTS::NImageLayer];
-  for (size_t iSciFi = 0; iSciFi < CONSTANTS::NSciFiLayer; iSciFi++) {
+  double eSciFiHitSumVsNLayer[CONST::NSciFiLayer];
+  double eImageHitSumVsNLayer[CONST::NImageLayer];
+  for (size_t iSciFi = 0; iSciFi < CONST::NSciFiLayer; iSciFi++) {
     eSciFiHitSumVsNLayer[iSciFi] = 0.;
   }
-  for (size_t iImage = 0; iImage < CONSTANTS::NImageLayer; iImage++) {
+  for (size_t iImage = 0; iImage < CONST::NImageLayer; iImage++) {
     eImageHitSumVsNLayer[iImage] = 0.;
   }
 
@@ -985,14 +983,14 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
   // fill hit event-wise scifi histograms
   hEvtSciFiSumEne          -> Fill(eSciFiHitSum);
   hEvtSciFiVsHCalHitSumEne -> Fill(eHCalHitSum, eSciFiHitSum);
-  for (size_t iSciFi = 0; iSciFi < CONSTANTS::NSciFiLayer; iSciFi++) {
+  for (size_t iSciFi = 0; iSciFi < CONST::NSciFiLayer; iSciFi++) {
     hEvtSciFiSumEneVsNLayer -> Fill(iSciFi + 1, eSciFiHitSumVsNLayer[iSciFi]);
   }
 
   // fill hit event-wise image histograms
   hEvtImageSumEne          -> Fill(eImageHitSum);
   hEvtImageVsHCalHitSumEne -> Fill(eHCalHitSum, eImageHitSum);
-  for (size_t iImage = 0; iImage < CONSTANTS::NImageLayer; iImage++) {
+  for (size_t iImage = 0; iImage < CONST::NImageLayer; iImage++) {
     hEvtImageSumEneVsNLayer -> Fill(iImage + 1, eImageHitSumVsNLayer[iImage]);
   }
 
@@ -1073,7 +1071,7 @@ void JCalibrateHCalWithImagingProcessor::ProcessSequential(const std::shared_ptr
 //-------------------------------------------
 // FinishWithGlobalRootLock
 //-------------------------------------------
-void JCalibrateHCalWithImagingProcessor::FinishWithGlobalRootLock() {
+void FillBHCalCalibrationTupleProcessor::FinishWithGlobalRootLock() {
 
   // generic axis titles
   const TString sCount("counts");
