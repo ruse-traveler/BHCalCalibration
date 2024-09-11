@@ -24,7 +24,7 @@
 
 // ============================================================================
 //! NTuple Helper
-// ===========================================================================
+// ============================================================================
 /*! A small class to help work with
  *  ROOT TNtuple's.
  */
@@ -46,6 +46,21 @@ class NTupleHelper {
     inline std::vector<std::string> GetVariables() const {return m_variables;}
 
     // ------------------------------------------------------------------------
+    //! Get a specific variable
+    // ------------------------------------------------------------------------
+    inline float GetVariable(const std::string& var) {
+
+      // check if variable exists
+      if (!m_index.count(var)) {
+        assert(m_index.count(var));
+      }
+
+      // then get variable
+      return m_values.at(m_index[var]);
+
+    }  // end 'GetVariable(std::string&)'
+
+    // ------------------------------------------------------------------------
     //! Set a variable
     // ------------------------------------------------------------------------
     inline void SetVariable(const std::string& var, const float val) {
@@ -60,6 +75,18 @@ class NTupleHelper {
       return;
 
     }  // end 'SetVariable(std::string&, float)'
+
+    // ------------------------------------------------------------------------
+    //! Assign variables to TNtuple branches
+    // ------------------------------------------------------------------------
+    inline void SetBranches(TNtuple* tuple) {
+
+      for (const std::string& var : m_variables) {
+        tuple -> SetBranchAddress(var.data(), &m_values.at(m_index[var]));
+      }
+      return;
+
+    }  // end 'SetBranches(TNtuple*)'
 
     // ------------------------------------------------------------------------
     //! Reset values
@@ -102,8 +129,12 @@ class NTupleHelper {
     // ------------------------------------------------------------------------
     NTupleHelper(const std::vector<std::string>& vars) {
 
+      // set variables
       m_variables = vars;
-      for (std::size_t iVar = 0; const std::string& var : m_variables) {
+
+      // create map between name and position in vector
+      std::size_t iVar = 0;
+      for (const std::string& var : m_variables) {
         m_index[var] = iVar;
         ++iVar;
       }
