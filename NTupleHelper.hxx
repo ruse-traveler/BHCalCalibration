@@ -33,9 +33,9 @@ class NTupleHelper {
   private:
 
     // data members
-    std::vector<float>           m_values;
-    std::vector<std::string>     m_variables;
-    std::map<std::string, float> m_index;
+    std::vector<float>                 m_values;
+    std::vector<std::string>           m_variables;
+    std::map<std::string, std::size_t> m_index;
 
   public:
 
