@@ -39,12 +39,14 @@
 // ============================================================================
 struct Options {
   std::string out_file;     // output file
+  std::string out_tmva;     // output tmva directory
   std::string in_file;      // input file
   std::string in_tuple;     // input ntuple
   bool        do_progress;  // print progress through entry loop
 }  DefaultOptions = {
   "test_v0.root",
-  "./input/testRefinedTmvaMacro_calibrationTuple.d10m9y2024.root",
+  "tmva_test",
+  "./input/forRefinedTmvaMacro_calibrationTupleWithNEvt1K.d12m9y2024.root",
   "ntForCalib",
   true
 };
@@ -115,7 +117,41 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
     {TMVAHelper::Use::Train, "eSumImageLayer6"}
   };
 
-  /* TODO add remaining parameters */
+  // methods to use
+  //   - TODO might be good to add field for method-specific options
+  const std::vector<std::string> vecMethods = {
+    "LD",
+    "kNN",
+    "MLP",
+    "BDTG",
+    "FDA_GA",
+    "PDEFoam"
+  };
+
+  // general tmva options
+  const std::vector<std::string> vecFactoryOpts = {
+    "!V",
+    "!Silent",
+    "Color",
+    "DrawProgressBar",
+    "AnalysisType=Regression"
+  };
+  const std::vector<std::string> vecTrainOpts = {
+    "nTrain_Regression=10",
+    "nTest_Regression=0",
+    "SplitMode=Random:NormMode=NumEvents",
+    "!V"
+  };
+  const std::vector<std::string> vecReadOpts = {
+    "!Color",
+    "!Silent"
+  };
+
+  // other tmva options
+  //   - TODO clean up
+  const bool  addSpectators(false);
+  const float treeWeight(1.0);
+  const TCut  trainCut("(eSumBHCal>0)&&(eSumBEMC>=0)&&(abs(hLeadBHCal)<1.1)&&(abs(hLeadBEMC)<1.1)");
 
   // lower verbosity & announce start
   gErrorIgnoreLevel = kError;
@@ -160,25 +196,68 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
             << std::endl;
 
   // create tmva helper
-  //   - TODO fill in remaining setters/etc
   //   - TODO generate list ouf output leaves
-  TMVAHelper tmva_helper;
-  tmva_helper.SetInputVariables(vecUseAndVar);
+  TMVAHelper tmva_helper(vecUseAndVar, vecMethods);
+  tmva_helper.SetFactoryOptions(vecFactoryOpts);
+  tmva_helper.SetTrainOptions(vecTrainOpts);
+  tmva_helper.SetReadOptions(vecReadOpts);
+
+  // lambda to collect input leaves into a single vector
+  auto getLeaves = [](const std::vector<std::pair<TMVAHelper::Use, std::string>>& inputs) {
+    std::vector<std::string> outputs;
+    for (const auto& input : inputs) {
+      outputs.push_back(input.second);
+    }
+    return outputs;
+  };
 
   // create input/output helpers
   //   - TODO fill in
-  NTupleHelper in_helper;
+  NTupleHelper in_helper(getLeaves(vecUseAndVar));
   NTupleHelper out_helper;
 
   // set input tuple branches
+  //  - TODO it might be useful to instead assign
+  //    an external vector the tuple output
+  //  - that way the reader has easy access, too
   in_helper.SetBranches(ntToApply);
-  std::cout << "    Set tuple branches." << std::endl;
+  std::cout << "    Set input/output tuple branches." << std::endl;
 
   // --------------------------------------------------------------------------
   // Train tmva models
   // --------------------------------------------------------------------------
 
-  /* TODO fill in */
+  // instantiate tmva library
+  TMVA::Factory*    factory;
+  TMVA::DataLoader* loader;
+  TMVA::Tools::Instance();
+  std::cout << "    Begin training calibration models:" << std::endl;
+
+  // create tmva factory & load data
+  factory = new TMVA::Factory("TMVARegression", output, tmva_helper.CompressFactoryOptions().data());
+  loader  = new TMVA::DataLoader(opt.out_tmva.data());
+  std::cout << "      Created factory and data loader..." << std::endl;
+
+  // now load variables
+  tmva_helper.LoadVariables(loader, addSpectators);
+  std::cout << "      Loaded variables..." << std::endl;
+
+  // add tree & prepare for training
+  loader -> AddRegressionTree(ntToTrain, treeWeight);
+  loader -> PrepareTrainingAndTestTree(trainCut, tmva_helper.CompressTrainOptions().data());
+  std::cout << "      Added tree, prepared training..." << std::endl;
+
+  // book methods
+  tmva_helper.BookMethodsToTrain(factory, loader);
+  std::cout << "      Booked methods for training..." << std::endl;
+
+  // train, test, & evaluate
+  factory -> TrainAllMethods();
+  factory -> TestAllMethods();
+  factory -> EvaluateAllMethods();
+  std::cout << "      Trained models.\n"
+            << "    Finished training calibration models!"
+            << endl;
 
   // --------------------------------------------------------------------------
   // Apply tmva models
@@ -223,6 +302,10 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
   output -> Close();
   input  -> cd();
   input  -> Close();
+
+  // delete tmva objects
+  delete factory;
+  delete loader;
 
   // announce end & exit
   std::cout << "  Finished BHCal calibration script!\n" << std::endl;
