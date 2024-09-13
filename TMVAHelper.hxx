@@ -20,6 +20,7 @@
 #include <TString.h>
 // tmva components
 #include <TMVA/Tools.h>
+#include <TMVA/Types.h>
 #include <TMVA/Factory.h>
 #include <TMVA/DataLoader.h>
 
@@ -39,6 +40,30 @@ class TMVAHelper {
     //! Use cases for input variables
     // ------------------------------------------------------------------------
     enum Use {Target, Train, Watch};
+
+    // ------------------------------------------------------------------------
+    //! Map of method names to algorithm type
+    // ------------------------------------------------------------------------
+    /*! This map enables automation of booking methods: some variants
+     *  of algorithms (e.g. BDTG) cause TMVA to emit a std::runtime_error
+     *  when attempting to look up the type based on the method name via
+     *  the TMVA::Types helper object.
+     */ 
+    std::map<std::string, TMVA::Types::EMVA> MapNameToType = {
+      {"BDT",      TMVA::Types::EMVA::kBDT},
+      {"BDTG",     TMVA::Types::EMVA::kBDT},
+      {"DNN",      TMVA::Types::EMVA::kDNN},
+      {"FDA_GA",   TMVA::Types::EMVA::kFDA},
+      {"FDA_GAMT", TMVA::Types::EMVA::kFDA},
+      {"FDA_MC",   TMVA::Types::EMVA::kFDA},
+      {"FDA_MT",   TMVA::Types::EMVA::kFDA},
+      {"KNN",      TMVA::Types::EMVA::kKNN},
+      {"LD",       TMVA::Types::EMVA::kLD},
+      {"MLP",      TMVA::Types::EMVA::kMLP},
+      {"PDEFoam",  TMVA::Types::EMVA::kPDEFoam},
+      {"PDERS",    TMVA::Types::EMVA::kPDERS},
+      {"SVM",      TMVA::Types::EMVA::kSVM}
+    };
 
   private:
 
@@ -167,20 +192,14 @@ class TMVAHelper {
     // ------------------------------------------------------------------------
     inline void BookMethodsToTrain(TMVA::Factory* factory, TMVA::DataLoader* loader) {
 
-      // for looking up method type based on name
-      TMVA::Types types = TMVA::Types::Instance();
-
       // book each method currently set
       for (const std::string& method : m_methods) {
         factory -> BookMethod(
           loader,
-          types.GetMethodType( TString(method.data()) ),
+          MapNameToType[method],
           method.data()
         );
       }
-
-      // destory types and exit
-      types.DestroyInstance();
       return;
 
     }  // end 'BookMethodsToTrain(TMVA::Factory*, TMVA::DataLoader*)'
