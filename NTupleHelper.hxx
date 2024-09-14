@@ -142,6 +142,9 @@ class NTupleHelper {
 
     }  // end ctor(std::vector<std::string>&)'
 
+    // make TMVAHelper a friend
+    friend class TMVAHelper;
+
 };  // end NTupleHelper
 
 #endif
