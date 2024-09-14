@@ -14,8 +14,10 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <stdio.h>
 #include <cassert>
 #include <utility>
+#include <iostream>
 // root libraries
 #include <TString.h>
 // tmva components
@@ -23,6 +25,8 @@
 #include <TMVA/Types.h>
 #include <TMVA/Factory.h>
 #include <TMVA/DataLoader.h>
+// analysis utilities
+#include "NTupleHelper.h"
 
 
 
@@ -67,30 +71,29 @@ class TMVAHelper {
 
   private:
 
+    // tmva option members
+    std::vector<std::string> m_vecFactoryOpt;
+    std::vector<std::string> m_vecTrainOpt;
+    std::vector<std::string> m_vecReadOpt;
+
+    // method members
+    std::vector<std::string> m_methods;
+
     // input members
     std::vector<std::string> m_watchers;
     std::vector<std::string> m_trainers;
     std::vector<std::string> m_targets;
 
     // output members
-    std::map<std::string, std::size_t> m_index; 
-    std::vector<float>                 m_values;
-
-    // method members
-    std::vector<std::string> m_methods;
-
-    // tmva option members
-    std::vector<std::string> m_vecFactoryOpt;
-    std::vector<std::string> m_vecTrainOpt;
-    std::vector<std::string> m_vecReadOpt;
+    std::vector<std::string> m_outputs;
 
     // ------------------------------------------------------------------------
     //! Set input variables
     // ------------------------------------------------------------------------
-    inline void SetInputVariables(const std::vector<std::pair<Use, std::string>>& vecInput) {
+    inline void SetInputVariables(const std::vector<std::pair<Use, std::string>>& inputs) {
 
       // assign input leaf to relevant vector
-      for (const auto& input : vecInput) {
+      for (const auto& input : inputs) {
         switch (input.first) {
 
           case Use::Target:
@@ -126,6 +129,20 @@ class TMVAHelper {
     }  // end 'SetMethods(std::vector<std::string>&)'
 
     // ------------------------------------------------------------------------
+    //! Generate list of targets
+    // ------------------------------------------------------------------------
+    inline void GenerateRegressionOutputs() {
+
+      for (const std::string& method : m_methods) {
+        for (const std::string& target : m_targets) {
+          m_outputs.push_back(target + "_" + method);
+        }
+      }
+      return;
+
+    }  // end 'GenerateListOfTargers()'
+
+    // ------------------------------------------------------------------------
     //! Helper method to compress vector of strings into a colon-separated list
     // ------------------------------------------------------------------------
     inline std::string CompressList(const std::vector<std::string>& strings) const {
@@ -142,6 +159,18 @@ class TMVAHelper {
     }  // end 'CompressList(std::vector<std::string>&)'
 
   public:
+
+    // ------------------------------------------------------------------------
+    //! Getters
+    // ------------------------------------------------------------------------
+    inline std::vector<std::string> GetFactoryOptions()  const {return m_vecFactoryOpt;}
+    inline std::vector<std::string> GetTrainingOptions() const {return m_vecTrainOpt;}
+    inline std::vector<std::string> GetReadingOptions()  const {return m_vecReadOpt;}
+    inline std::vector<std::string> GetMethods()         const {return m_methods;}
+    inline std::vector<std::string> GetSpectatingVars()  const {return m_watchers;}
+    inline std::vector<std::string> GetTrainingVars()    const {return m_trainers;}
+    inline std::vector<std::string> GetTargetVars()      const {return m_targets;}
+    inline std::vector<std::string> GetOutputs()         const {return m_outputs;}
 
     // ------------------------------------------------------------------------
     //! Compress lists into colon-separated ones
@@ -168,14 +197,9 @@ class TMVAHelper {
       }
 
       // add training variables
-      //   - TODO might be useful to move map generation to another function
-      std::size_t iTrain = 0;
       for (const std::string& train : m_trainers) {
         loader -> AddVariable(train);
-        m_index[train] = iTrain;
-        ++iTrain;
       }
-      m_values.resize(m_trainers.size());
 
       // if needed, add spectators
       if (add_watchers) {
@@ -186,6 +210,23 @@ class TMVAHelper {
       return;
 
     }  // end 'LoadVariables(TMVA::DataLoader*, bool)'
+
+    // ------------------------------------------------------------------------
+    //! Add NTuple variables to reader
+    // ------------------------------------------------------------------------
+    inline void ReadVariables(TMVA::Reader* reader, NTupleHelper& helper) {
+
+      for (const std::string& train : m_trainers) {
+        if (!helper.m_index.count(train)) {
+          std::cerr << "WARNING: trying to add variable '" << train << "' which is not in input NTuple." << std::endl;
+          continue;
+        } else {
+          reader -> AddVariable(train.data(), helper.m_values.at(m_index[train]));
+        }
+      }
+      return;
+
+    }  // end 'ReadVariables(TMVA::Reader*)'
 
     // ------------------------------------------------------------------------
     //! Book methods to train
@@ -205,6 +246,44 @@ class TMVAHelper {
     }  // end 'BookMethodsToTrain(TMVA::Factory*, TMVA::DataLoader*)'
 
     // ------------------------------------------------------------------------
+    //! Book methods to read by providing the path to a directory
+    // ------------------------------------------------------------------------
+    /*! For each method stored, helper will check for a weights file with
+     *  a name conforming to "<method>.weights.xml" in the directory specified
+     *  by `directory`. If the file exists, helper will book the method to be
+     *  evaulated with that file.
+     */
+    inline void BookMethodsToRead(TMVA::Reader* reader, const std::string& directory) {
+
+      // lambda to check if a file exists or not
+      auto exists = [](const std::string& name) {
+        if (FILE* file = fopen(name.c_str(), "r")) {
+          fclose(file);
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      for (const std::string& method : m_methods) {
+
+        // construct full path, skip if file does not exist
+        const std::string path = directory + "/" method + ".weights.xml";
+        if (!exists(path)) {
+          std::cerr << "WARNING: file '" << path << "' doesn't exist! Not booking method!" << std::endl;
+          continue;
+        }
+
+        // otherwise, construct title and book method
+        const std::string title = method + " method";
+        reader -> BookMVA(title, path);
+
+      }
+      return;
+
+    }  // end 'BookMethodsToRead(TMVA::Reader*, directory)'
+
+    // ------------------------------------------------------------------------
     //! Default ctor/dtor
     // ------------------------------------------------------------------------
     TMVAHelper()  {};
@@ -214,14 +293,16 @@ class TMVAHelper {
     //! ctor accepting a list of variable-use pairs and a list of methods
     // ------------------------------------------------------------------------
     TMVAHelper(
-      const std::vector<std::pair<Use, std::string>>& vecInput,
+      const std::vector<std::pair<Use, std::string>>& inputs,
       const std::vector<std::string>& vecMethods
     ) {
 
-      SetInputVariables(vecInput);
+      // set inputs and methods
+      SetInputVariables(inputs);
       SetMethods(vecMethods);
 
-      /* TODO need to generate vector of output targets */
+      // then set the corresponding outputs
+      GenerateRegressionOutputs();
 
     }  // end ctor(std::vector<std::pair<Use, std::string>>&, std::vector<std::string>&)'
 

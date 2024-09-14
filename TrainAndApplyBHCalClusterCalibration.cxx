@@ -195,8 +195,11 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
             << "      tuple = " << opt.in_tuple
             << std::endl;
 
+  // --------------------------------------------------------------------------
+  // Set up helpers
+  // --------------------------------------------------------------------------
+
   // create tmva helper
-  //   - TODO generate list ouf output leaves
   TMVAHelper tmva_helper(vecUseAndVar, vecMethods);
   tmva_helper.SetFactoryOptions(vecFactoryOpts);
   tmva_helper.SetTrainOptions(vecTrainOpts);
@@ -212,14 +215,11 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
   };
 
   // create input/output helpers
-  //   - TODO fill in
-  NTupleHelper in_helper(getLeaves(vecUseAndVar));
-  NTupleHelper out_helper;
+  NTupleHelper in_helper( getLeaves(vecUseAndVar) );
+  NTupleHelper out_helper( tmva_helper.GetOutputs() );
 
-  // set input tuple branches
-  //  - TODO it might be useful to instead assign
-  //    an external vector the tuple output
-  //  - that way the reader has easy access, too
+  // set input/output tuple branches
+  TNtuple* ntOutput = new TNtuple("ntTmvaOutput", "Output of TMVA regression", out_helper.CompressVariables().data());
   in_helper.SetBranches(ntToApply);
   std::cout << "    Set input/output tuple branches." << std::endl;
 
@@ -263,7 +263,14 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
   // Apply tmva models
   // --------------------------------------------------------------------------
 
-  /* TODO set up reader, etc. */
+  // instantiate reader
+  TMVA::Reader* reader = new Reader(tmva_helper.CompressReadOptions().data());
+  std::cout << "    Begin applying calibration models:" << std::endl;
+
+  // add input variables to reader, book methods
+  tmva_helper.AddVariables(reader, in_helper);
+  tmva_helper.BookMethodsToRead(reader, opt.out_tmva);
+  std::cout << "      Added variables and methods to read." << std::endl;
 
   // get number of events for application
   const uint64_t nEntries = ntToApply -> GetEntries();
@@ -292,6 +299,9 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
       nBytes += bytes;
     }
 
+    // make sure output variables are empty
+    out_helper.ResetValues();
+
     /* TODO evaluate targets, fill output tuple */
 
   }  // end entry loop
@@ -306,6 +316,7 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
   // delete tmva objects
   delete factory;
   delete loader;
+  delete reader;
 
   // announce end & exit
   std::cout << "  Finished BHCal calibration script!\n" << std::endl;
