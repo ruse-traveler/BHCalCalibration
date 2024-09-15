@@ -26,7 +26,7 @@
 #include <TMVA/Factory.h>
 #include <TMVA/DataLoader.h>
 // analysis utilities
-#include "NTupleHelper.h"
+#include "NTupleHelper.hxx"
 
 
 
@@ -221,7 +221,7 @@ class TMVAHelper {
           std::cerr << "WARNING: trying to add variable '" << train << "' which is not in input NTuple." << std::endl;
           continue;
         } else {
-          reader -> AddVariable(train.data(), helper.m_values.at(m_index[train]));
+          reader -> AddVariable(train.data(), &helper.m_values.at(helper.m_index[train]));
         }
       }
       return;
@@ -268,7 +268,7 @@ class TMVAHelper {
       for (const std::string& method : m_methods) {
 
         // construct full path, skip if file does not exist
-        const std::string path = directory + "/" method + ".weights.xml";
+        const std::string path = directory + "/" + method + ".weights.xml";
         if (!exists(path)) {
           std::cerr << "WARNING: file '" << path << "' doesn't exist! Not booking method!" << std::endl;
           continue;
