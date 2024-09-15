@@ -33,7 +33,7 @@
 #include <edm4hep/Vector3f.h>
 #include <edm4hep/utils/vector_utils.h>
 // analysis utilities
-#include "NTupleHelper.hxx"
+#include "../../utility/NTupleHelper.hxx"
 
 
 
@@ -52,8 +52,8 @@ struct Options {
   std::string image_hits;   // ecal (imaging) hit collection
   bool        do_progress;  // print progress through frame loop
 } DefaultOptions = {
-  "./input/testNewSplitMergeEdits_useSetForConsumed.e10pim_central.d2m9y2024.podio.root",
-  "output.root",
+  "./forNewCalibWorkflow.evt5Ke10pim_central.d14m9y2024.podio.root",
+  "forNewTrainingMacro_noNonzeroEvts_andDefinitePrimary.evt5Ke10pim_central.d14m9y2024.root",
   "GeneratedParticles",
   "HcalBarrelClusters",
   "EcalBarrelClusters",
@@ -194,13 +194,19 @@ void FillBHCalClusterCalibrationTuple(const Options& opt = DefaultOptions) {
     // ------------------------------------------------------------------------
     // particle loop
     // ------------------------------------------------------------------------
-    edm4eic::ReconstructedParticle primary;
+    std::optional<edm4eic::ReconstructedParticle> optPrimary = std::nullopt;
     for (edm4eic::ReconstructedParticle particle : genParticles) {
       if (particle.getType() == 1) {
-        primary = particle;
+        optPrimary = particle;
         break;
       }
     }  // end particle loop
+
+    // skip event if no primary found
+    if (!optPrimary.has_value()) {
+      continue;
+    }
+    edm4eic::ReconstructedParticle primary = optPrimary.value();
 
     // set particle output variables
     helper.SetVariable( "ePar", primary.getEnergy() );
@@ -270,6 +276,11 @@ void FillBHCalClusterCalibrationTuple(const Options& opt = DefaultOptions) {
     helper.SetVariable( "fracLeadBHCalVsBEMC", eLeadClust.getEnergy() / (eLeadClust.getEnergy() + hLeadClust.getEnergy()) );
     helper.SetVariable( "diffSumBEMC", (eSumECal - primary.getEnergy()) / primary.getEnergy() );
     helper.SetVariable( "diffLeadBEMC", (eLeadClust.getEnergy() - primary.getEnergy()) / primary.getEnergy() );
+
+    // if no energy in BHCal or BIC, skip event
+    const bool isHCalNonzero = (eSumHCal > 0.);
+    const bool isECalNonzero = (eSumECal > 0.);
+    if (!isHCalNonzero && !isECalNonzero) continue;
 
     // ------------------------------------------------------------------------
     // scfi cluster/hit loops
