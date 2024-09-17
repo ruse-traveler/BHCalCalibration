@@ -45,7 +45,7 @@ struct Options {
   std::string name_tmva;    // name of TMVA process
   bool        do_progress;  // print progress through entry loop
 }  DefaultOptions = {
-  "./forNewTrainingMacro_noNonzeroEvts_andDefinitePrimary.evt5Ke210pim_central.d14m9y2024.root",
+  "./input/forNewTrainingMacro_noNonzeroEvts_andDefinitePrimary.evt5Ke210pim_central.d14m9y2024.root",
   "ntForCalib",
   "test.root",
   "tmva_test",
@@ -206,11 +206,12 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
   // Set up helpers
   // --------------------------------------------------------------------------
 
-  // create tmva helper
-  TMVAHelper tmva_helper(vecUseAndVar, vecMethods);
-  tmva_helper.SetFactoryOptions(vecFactoryOpts);
-  tmva_helper.SetTrainOptions(vecTrainOpts);
-  tmva_helper.SetReadOptions(vecReadOpts);
+  // create tmva helpers
+  TMVAHelper::Trainer train_helper(vecUseAndVar, vecMethods);
+  TMVAHelper::Reader  read_helper(vecUseAndVar, vecMethods);
+  train_helper.SetFactoryOptions(vecFactoryOpts);
+  train_helper.SetTrainOptions(vecTrainOpts);
+  read_helper.SetOptions(vecReadOpts);
 
   // collect input leaves into a single vector
   std::vector<std::string> outputs;
@@ -220,7 +221,7 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
 
   // create input/output helpers
   NTupleHelper in_helper( outputs );
-  NTupleHelper out_helper( tmva_helper.GetOutVars() );
+  NTupleHelper out_helper( read_helper.GetOutputs() );
 
   // set input/output tuple branches
   TNtuple* ntOutput = new TNtuple("ntTmvaOutput", "Output of TMVA regression", out_helper.CompressVariables().data());
@@ -237,21 +238,21 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
   std::cout << "    Begin training calibration models:" << std::endl;
 
   // create tmva factory & load data
-  TMVA::Factory*    factory = new TMVA::Factory(opt.name_tmva.data(), output, tmva_helper.CompressFactoryOptions().data());
+  TMVA::Factory*    factory = new TMVA::Factory(opt.name_tmva.data(), output, train_helper.CompressFactoryOptions().data());
   TMVA::DataLoader* loader  = new TMVA::DataLoader(opt.out_tmva.data());
   std::cout << "      Created factory and data loader..." << std::endl;
 
   // now load variables
-  tmva_helper.LoadVariables(loader, addSpectators);
+  train_helper.LoadVariables(loader, addSpectators);
   std::cout << "      Loaded variables..." << std::endl;
 
   // add tree & prepare for training
   loader -> AddRegressionTree(ntToTrain, treeWeight);
-  loader -> PrepareTrainingAndTestTree(trainCut, tmva_helper.CompressTrainOptions().data());
+  loader -> PrepareTrainingAndTestTree(trainCut, train_helper.CompressTrainingOptions().data());
   std::cout << "      Added tree, prepared training..." << std::endl;
 
   // book methods
-  tmva_helper.BookMethodsToTrain(factory, loader);
+  train_helper.BookMethodsToTrain(factory, loader);
   std::cout << "      Booked methods for training..." << std::endl;
 
   // train, test, & evaluate
@@ -267,12 +268,12 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
   // --------------------------------------------------------------------------
 
   // instantiate reader
-  TMVA::Reader* reader = new TMVA::Reader(tmva_helper.CompressReadOptions().data());
+  TMVA::Reader* reader = new TMVA::Reader(read_helper.CompressOptions().data());
   std::cout << "    Begin applying calibration models:" << std::endl;
 
   // add input variables to reader, book methods
-  tmva_helper.ReadVariables(reader, in_helper);
-  tmva_helper.BookMethodsToRead(reader, opt.out_tmva, opt.name_tmva);
+  read_helper.ReadVariables(reader, in_helper);
+  read_helper.BookMethodsToRead(reader, opt.out_tmva, opt.name_tmva);
   std::cout << "      Added variables and methods to read." << std::endl;
 
   // get number of events for application
@@ -303,18 +304,19 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
 
     // make sure output variables are empty
     out_helper.ResetValues();
-    tmva_helper.ResetValues();
+    read_helper.ResetValues();
 
     // evaluate targets
-    tmva_helper.EvaluateMethods(reader, in_helper);
+    read_helper.EvaluateMethods(reader, in_helper);
 
     // apply ecal cut if need be
-    const bool isInECalEneRange = ((eLeadBEMC_apply > eneECalRange[0]) && (eLeadBEMC_apply < eneECalRange[1]));
-    if (doECalCut && !isInECalEneRange) continue;
+    const double eLeadBEMC   = in_helper.GetVariable("eLeadBEMC");
+    const bool   isInECalCut = ((eLeadBEMC > eneECalRange.first) && (eLeadBEMC < eneECalRange.second));
+    if (doECalCut && !isInECalCut) continue;
 
     // set values in output tuple & fill
-    for (const std::string& output : tmva_helper.GetOutVars()) {
-      out_helper.SetVariable( output, tmva_helper.GetVariable(output) );
+    for (const std::string& output : read_helper.GetOutputs()) {
+      out_helper.SetVariable( output, read_helper.GetVariable(output) );
     }
     ntOutput -> Fill( out_helper.GetValues().data() );
 
@@ -327,7 +329,7 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
 
   // save & close files
   output    -> cd();
-  ntOutput  -> Write();
+  ntOutput  -> Write(); 
   output    -> Close();
   inToTrain -> cd();
   inToTrain -> Close();
