@@ -25,9 +25,9 @@
 #include <TSystem.h>
 // tmva components
 #include <TMVA/Tools.h>
+#include <TMVA/Reader.h>
 #include <TMVA/Factory.h>
 #include <TMVA/DataLoader.h>
-#include <TMVA/TMVARegGui.h>
 // analysis utilities
 #include "../../utility/TMVAHelper.hxx"
 #include "../../utility/NTupleHelper.hxx"
@@ -176,7 +176,7 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
               << "       input  = " << inToTrain << "\n"
               << "       output = " << output
               << std::endl;
-    assert(output && inToTrain && inTOApply);
+    assert(output && inToTrain && inToApply);
   }
 
   // print input/output files
@@ -214,13 +214,13 @@ void TrainAndApplyBHCalClusterCalibration(const Options& opt = DefaultOptions) {
   read_helper.SetOptions(vecReadOpts);
 
   // collect input leaves into a single vector
-  std::vector<std::string> outputs;
+  std::vector<std::string> inputs;
   for (const auto& useAndVar : vecUseAndVar) {
-    outputs.push_back(useAndVar.second);
+    inputs.push_back(useAndVar.second);
   }
 
   // create input/output helpers
-  NTupleHelper in_helper( outputs );
+  NTupleHelper in_helper( inputs );
   NTupleHelper out_helper( read_helper.GetOutputs() );
 
   // set input/output tuple branches
