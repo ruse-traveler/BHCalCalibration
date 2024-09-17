@@ -20,6 +20,11 @@
 // root libraries
 #include <TNtuple.h>
 
+// forward declaration of TMVAHelper::Reader
+namespace TMVAHelper {
+  class Reader;
+}
+
 
 
 // ============================================================================
@@ -142,8 +147,8 @@ class NTupleHelper {
 
     }  // end ctor(std::vector<std::string>&)'
 
-    // make TMVAHelper a friend
-    friend class TMVAHelper;
+    // make TMVAHelper::Reader a friend
+    friend class TMVAHelper::Reader;
 
 };  // end NTupleHelper
 
