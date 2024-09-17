@@ -20,6 +20,7 @@
 #include <iostream>
 #include <algorithm>
 // root libraries
+#include <TCut.h>
 #include <TString.h>
 // tmva components
 #include <TMVA/Tools.h>
@@ -112,6 +113,33 @@ namespace TMVAHelper {
 
 
   // ==========================================================================
+  //! TMVA Parameters
+  // ==========================================================================
+  /*! Struct to consolidate training/application
+   *  parameters used.
+   */
+  struct Parameters {
+
+    // variables & methods
+    std::vector<std::pair<Use, std::string>>         variables;  // input variables & usage
+    std::vector<std::pair<std::string, std::string>> methods;    // methods to use & options
+
+    // tmva options
+    std::vector<std::string> opts_factory;   // general options
+    std::vector<std::string> opts_training;  // training/testing options
+    std::vector<std::string> opts_reading;   // reading/evaluating options
+
+    // other parameters
+    bool  add_spectators;  // whether or not to add spectator variables
+    TCut  training_cuts;   // cuts to apply during training
+    TCut  reading_cuts;    // cuts to apply during reading
+    float tree_weight;     // weight of tree being trained on
+
+  };  // end TMVAHelper::Parameters
+
+
+
+  // ==========================================================================
   //! Base Helper
   // ==========================================================================
   /*! Base TMVA Helper class that the training and
@@ -123,19 +151,21 @@ namespace TMVAHelper {
     protected:
 
       // data members
-      std::vector<std::string> m_methods;
-      std::vector<std::string> m_watchers;
-      std::vector<std::string> m_trainers;
-      std::vector<std::string> m_targets;
+      std::vector<std::string>           m_watchers;
+      std::vector<std::string>           m_trainers;
+      std::vector<std::string>           m_targets;
+      std::vector<std::string>           m_methods;
+      std::map<std::string, std::string> m_opts_method;
 
       // ----------------------------------------------------------------------
       //! Set methods to use
       // ----------------------------------------------------------------------
-      //   - TODO might need a map and another vector for
-      //     method-specific options
-      inline void SetMethods(const std::vector<std::string>& methods) {
+      inline void SetMethods(const std::vector<std::pair<std::string, std::string>>& methods) {
 
-        m_methods = methods;
+        for (const auto& methodAndOpt : methods) {
+          m_methods.push_back( methodAndOpt.first );
+          m_opts_method[methodAndOpt.first] = methodAndOpt.second;
+        }
         return;
 
       }  // end 'SetMethods(std::vector<std::string>&)'
@@ -254,7 +284,8 @@ namespace TMVAHelper {
           factory -> BookMethod(
             loader,
             MapNameToType()[method],
-            method.data()
+            method.data(),
+            m_opts_method[method].data()
           );
         }
         return;
@@ -272,7 +303,7 @@ namespace TMVAHelper {
       // ----------------------------------------------------------------------
       Trainer(
         const std::vector<std::pair<Use, std::string>>& inputs,
-        const std::vector<std::string>& methods
+        const std::vector<std::pair<std::string, std::string>>& methods
       ) {
 
         SetInputVariables(inputs);
@@ -519,7 +550,7 @@ namespace TMVAHelper {
       // ----------------------------------------------------------------------
       Reader(
         const std::vector<std::pair<Use, std::string>>& inputs,
-        const std::vector<std::string>& methods
+        const std::vector<std::pair<std::string, std::string>>& methods
       ) {
 
         SetInputVariables(inputs);
