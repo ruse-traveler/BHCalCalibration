@@ -1,3 +1,5 @@
+**Note:** this is a public archive. This code is now maintained as part of [ruse-traveler/EpicBHCalPTDRStudies](https://github.com/ruse-traveler/EpicBHCalPTDRStudies) and [eic/snippets](https://github.com/eic/snippets).
+
 This repository contains code to evaluate the response of the simulated ePIC Barrel Hadronic Calorimeter (BHCal).  There are a few pieces of code:
 
   - `JCalibrateHCalWithImaging`: Found in the `plugin` directory, this is a simple JANA plugin to compare the reconstructed hit and cluster energy in the BHCal and BECal to simulated particles. This also prepares a TNtuple to be read in by a ROOT macro to train a TMVA model.
@@ -46,11 +48,3 @@ No need to compile this beforehand, just run it in the usual manner.
 ```
 root -b -q TrainAndApplyBHCalCalibration.cxx
 ```
-
----
-
-### TODO items:
-  - [Major] Streamline training/application workflow
-  - [Major] Factor out resolution calculation in training/application macro
-  - [Major] Factor out histogram plotting operations in trainining/application macro
-  - [Minor] Refactor histogram creation/style setting
